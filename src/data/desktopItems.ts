@@ -66,7 +66,9 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     type: 'numerology',
     title: 'Numeroloji Takvimi',
     subtitle: 'Kozmik Sayılar & Burçlar',
-    defaultPosition: { x: 650, y: 175 },
+    alignRight: true,
+    rightOffset: 24,
+    defaultPosition: { x: 0, y: 70 },
     rotation: 0,
     metadata: {
       tag: 'TAKVİM',

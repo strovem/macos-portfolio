@@ -122,6 +122,14 @@ export function DesktopItem({
       initial={
         isMobile
           ? { opacity: 0, y: 15, scale: 0.98 }
+          : item.alignRight
+          ? {
+              x: 0,
+              y: 0,
+              rotate: item.rotation || 0,
+              opacity: 0,
+              scale: 0.92,
+            }
           : {
               x: item.defaultPosition.x,
               y: item.defaultPosition.y,
@@ -159,6 +167,14 @@ export function DesktopItem({
               zIndex: effectiveZIndex,
               display: 'flex',
               justifyContent: 'center',
+            }
+          : item.alignRight
+          ? {
+              position: 'absolute',
+              top: item.defaultPosition.y,
+              right: item.rightOffset ?? 24,
+              zIndex: effectiveZIndex,
+              touchAction: 'none',
             }
           : {
               position: 'absolute',

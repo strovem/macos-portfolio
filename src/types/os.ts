@@ -43,6 +43,8 @@ export interface DesktopCardItem {
   link?: string;
   targetAppId?: AppId;
   defaultPosition: { x: number; y: number };
+  alignRight?: boolean;
+  rightOffset?: number;
   rotation?: number; // e.g. -3 to 3 degrees
   metadata?: Record<string, any>;
 }
