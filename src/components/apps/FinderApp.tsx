@@ -18,10 +18,20 @@ import {
   ChevronDown,
   X,
   ExternalLink,
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Volume2,
+  Sparkles,
+  Disc,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
 import { WindowContext } from '@/components/window/Window';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useAudioStore } from '@/stores/useAudioStore';
+import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 
 type SidebarSection =
   | 'recents'
@@ -34,7 +44,7 @@ type SidebarSection =
 
 type ViewMode = 'grid' | 'list' | 'columns';
 
-interface FinderFileItem {
+export interface FinderFileItem {
   id: string;
   name: string;
   dateModified: string;
@@ -42,9 +52,12 @@ interface FinderFileItem {
   kind: string;
   isMarkdown?: boolean;
   content?: string;
+  category?: string;
+  tags?: string[];
+  track?: MusicTrack;
 }
 
-// Exact files from the user's screenshot
+// Exact files from the user's screenshot with rich blueprints
 const DOCUMENTS_FILES: FinderFileItem[] = [
   {
     id: 'f1',
@@ -53,7 +66,25 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     size: '49 KB',
     kind: 'Markdown document',
     isMarkdown: true,
-    content: `# for_ai.md\n\nCreative Producer: Hüseyin Korumtaş\nMotto: "Ideas into experiences."\n\nPrompt instructions, multidisciplinary creative production blueprints, and sound design layers.`,
+    category: 'Creative Production Master',
+    tags: ['AI Prompts', 'Creative Direction', 'Sound Architecture'],
+    content: `# for_ai.md — Creative Production Master
+
+Creative Producer: Hüseyin Korumtaş
+Motto: "Ideas into experiences."
+
+## Core Philosophy
+Multidisciplinary production that sits at the intersection of cinematic visuals, tactile sound design, and interactive physical & web spaces.
+
+## Production Pipelines
+1. Concept & Narrative Architecture: Grounding abstract creative ideas into cohesive sensory narratives.
+2. Hybrid Sound & Music Synthesis: Real-time modular synth textures, binaural room models, and punchy rhythmic foundations.
+3. Spatial & Interactive Direction: Translating sound and film into spatial web applications, responsive installations, and live exhibition staging.
+
+## Contact & Collaboration
+• Email: korumtashuseyin@gmail.com
+• Locations: Istanbul & Global Remote
+• Disciplines: Creative Production • Audio Direction • Spatial Media`,
   },
   {
     id: 'f2',
@@ -61,7 +92,20 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '514.8 KB',
     kind: 'PDF document',
-    content: `GIANTS — Production Blueprint & Creative Direction Deck.\nExperience architecture, visual rhythm, and sound design layers.`,
+    category: 'Film & Commercial Production',
+    tags: ['Visual Rhythm', 'Cinematography', 'Spatial Soundscapes'],
+    content: `GIANTS — Production Blueprint & Creative Direction Deck
+
+Executive Producer & Creative Direction: Hüseyin Korumtaş
+Duration: 02:45 | Format: 4K HDR Anamorphic | Audio: 5.1 Surround & Binaural
+
+Production Summary:
+A cinematic exploration of monumental architecture and human kinetic movement. Korumtaş oversaw end-to-end creative direction, orchestrating drone cinematography, motion control rigs, and an original low-end tactile soundscape.
+
+Key Highlights:
+• Large-scale lighting rigs synchronized with dynamic sub-bass pulses.
+• Custom sound design capturing structural reverberations and atmospheric sub-frequencies.
+• Post-production color grading tuned for deep shadow contrast and metallic tones.`,
   },
   {
     id: 'f3',
@@ -69,7 +113,17 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '66.6 KB',
     kind: 'PDF document',
-    content: `Gronlandic Edit — Audio Arrangement & Production Notes.\nKey: F Major | Tempo: 122 BPM | Spatial stems configuration.`,
+    category: 'Audio Arrangement & Spatial Stems',
+    tags: ['122 BPM', 'Stem Mixing', 'Spatial Staging'],
+    content: `Gronlandic Edit — Audio Arrangement & Production Notes
+
+Producer & Sound Designer: Hüseyin Korumtaş
+Key: F Major | Tempo: 122 BPM | Stems: 24 Multi-track Channels
+
+Arrangement Blueprint:
+• Bassline: Juno-106 analog filter sweep with subtle sidechain compression.
+• Percussion: Layered organic acoustic claps and 808 transient punch.
+• Spatial Room: 3D binaural convolution reverb simulating a 12-meter high glass atrium.`,
   },
   {
     id: 'f4',
@@ -77,7 +131,19 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '393.2 KB',
     kind: 'PDF document',
-    content: `Juice — Visual Production Treatment.\nCinematography, color grading, tactile sound synthesis.`,
+    category: 'Brand & Visual Treatment',
+    tags: ['Tactile Bass', '118 BPM', 'Modular Waves'],
+    track: ORIGINAL_TRACKS[2],
+    content: `Juice — Visual Production Treatment & Sound Staging
+
+Creative Producer: Hüseyin Korumtaş
+Format: Multi-channel Video & Spatial Sound | Tempo: 118 BPM
+
+Visual Treatment:
+High-energy pacing with rhythmic match cuts synced to tactile bass drops. Built around the tactile friction of materials, vibrant citrus color palettes, and punchy modular synth sequences.
+
+Audio Synthesis Notes:
+Synthesized using analog Moog oscillators with heavy saturation on the 2nd and 3rd harmonics for maximum speaker resonance.`,
   },
   {
     id: 'f5',
@@ -85,7 +151,15 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '449.7 KB',
     kind: 'PDF document',
-    content: `Love on Top — Creative Arrangement & Harmony Blueprint.`,
+    category: 'Harmonic Production',
+    tags: ['Brass Stems', 'Choral Layers', 'Dynamic Staging'],
+    content: `Love on Top — Creative Arrangement & Harmony Blueprint
+
+Creative Direction & Staging: Hüseyin Korumtaş
+Instrumentation: Live Horn Section, Gospel Choral Layers, Analog Synth Bass
+
+Production Concept:
+A modern neo-soul reimagining focused on brass dynamics, polyrhythmic percussion, and expansive vocal harmonizations. Produced for live stage performance and spatial surround streaming.`,
   },
   {
     id: 'f6',
@@ -93,7 +167,16 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '156.2 KB',
     kind: 'PDF document',
-    content: `My Heart With You — Ambient Soundscape & Orchestration Notes.`,
+    category: 'Ambient Soundscape & Neo-Classical',
+    tags: ['92 BPM', 'String Ensembles', 'Emotional Storytelling'],
+    track: ORIGINAL_TRACKS[3],
+    content: `My Heart With You — Ambient Soundscape & Orchestration Notes
+
+Composer & Producer: Hüseyin Korumtaş
+Tempo: 92 BPM | Key: D Minor | Orchestration: Felt Piano & String Quintet
+
+Blueprint Notes:
+Intimate felt piano recorded with close binaural microphones, supported by gentle cello motifs and warm analog pad washes. Designed to evoke nostalgia, emotional warmth, and quiet contemplation.`,
   },
   {
     id: 'f7',
@@ -101,7 +184,19 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '696.9 KB',
     kind: 'PDF document',
-    content: `Quiet — Sound Design & Minimalist Architecture Blueprint.\nSonic silence, reverberant halls, tactile acoustic properties.`,
+    category: 'Minimalist Architecture & Acoustic Space',
+    tags: ['Sonic Silence', '78 BPM', 'Reverb Chambers'],
+    track: ORIGINAL_TRACKS[1],
+    content: `Quiet — Sound Design & Minimalist Architecture Blueprint
+
+Creative Producer: Hüseyin Korumtaş
+Atmospheric Installation & Exhibition Blueprint
+
+Sonic Concept:
+An investigation into intentional silence and micro-sound textures. Utilizing long decay plate reverbs, acoustic resonance in hollow spaces, and subtle sub-bass thrums below 40Hz.
+
+Staging:
+Monolithic black panels with directional ultrasonic sound emitters focused on individual listeners.`,
   },
   {
     id: 'f8',
@@ -109,7 +204,19 @@ const DOCUMENTS_FILES: FinderFileItem[] = [
     dateModified: 'Oct 28, 2026, 9:53 AM',
     size: '871.5 KB',
     kind: 'PDF document',
-    content: `Rhythm Inside x Mud Blood — Hybrid Production Master.\nMultidisciplinary audio-visual performance and staging notes.`,
+    category: 'Hybrid Production Master',
+    tags: ['124 BPM', 'Analog Synths', 'Hybrid Live Performance'],
+    track: ORIGINAL_TRACKS[0],
+    content: `Rhythm Inside x Mud Blood — Hybrid Production Master
+
+Master Production & Creative Direction: Hüseyin Korumtaş
+Tempo: 124 BPM | Key: A Minor | Genres: Electronic / Cinematic / Industrial
+
+Production Breakdown:
+A powerful hybrid production merging tribal rhythm patterns with heavy industrial synthesizer basslines. Designed as the flagship sonic experience for Hüseyin Korumtaş's 2026 Creative Producer Showreel.
+
+Staging & Visuals:
+Dynamic strobe lighting array triggered via MIDI clock with real-time audio reactivity.`,
   },
 ];
 
@@ -164,29 +271,17 @@ const DESKTOP_FILES: FinderFileItem[] = [
   },
 ];
 
-const MUSIC_FILES: FinderFileItem[] = [
-  {
-    id: 'm1',
-    name: 'Rhythm Inside x Mud Blood.wav',
-    dateModified: 'Oct 28, 2026, 9:53 AM',
-    size: '42.1 MB',
-    kind: 'WAV audio',
-  },
-  {
-    id: 'm2',
-    name: 'Quiet_Ambient_Session.wav',
-    dateModified: 'Oct 28, 2026, 9:53 AM',
-    size: '34.8 MB',
-    kind: 'WAV audio',
-  },
-  {
-    id: 'm3',
-    name: 'Juice_Master_Mix.wav',
-    dateModified: 'Oct 28, 2026, 9:53 AM',
-    size: '28.3 MB',
-    kind: 'WAV audio',
-  },
-];
+const MUSIC_FILES: FinderFileItem[] = ORIGINAL_TRACKS.map((t) => ({
+  id: t.id,
+  name: `${t.title}.wav`,
+  dateModified: 'Nov 22, 2026, 6:00 PM',
+  size: t.durationSeconds > 200 ? '42.1 MB' : '34.8 MB',
+  kind: 'WAV audio',
+  category: t.genre,
+  tags: [`${t.bpm} BPM`, t.genre, t.year],
+  content: `${t.title} — Beste & Yapım: Hüseyin Korumtaş\nAlbüm: ${t.album} (${t.year}) | Tempo: ${t.bpm} BPM | Tür: ${t.genre}\n\n${t.description}`,
+  track: t,
+}));
 
 const APPLICATIONS_FILES: FinderFileItem[] = [
   {
@@ -257,6 +352,15 @@ const RedDocIcon: React.FC = () => (
 export const FinderApp: React.FC = () => {
   const windowContext = useContext(WindowContext);
   const openWindow = useWindowStore((state) => state.openWindow);
+
+  const {
+    currentTrack,
+    isPlaying: isAudioPlaying,
+    playTrack,
+    togglePlay,
+    nextTrack,
+    prevTrack,
+  } = useAudioStore();
 
   const [activeSection, setActiveSection] = useState<SidebarSection>('documents');
   const [selectedFileId, setSelectedFileId] = useState<string>('f1');
@@ -640,6 +744,29 @@ export const FinderApp: React.FC = () => {
 
         {/* Content Table / Grid */}
         <div className="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar">
+          {/* Informative Music Studio Banner when in Music section */}
+          {activeSection === 'music' && (
+            <div className="mb-3.5 p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-purple-500/10 border border-indigo-500/20 flex items-start gap-3 text-xs">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white shadow-sm mt-0.5 shrink-0">
+                <Music2 className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Hüseyin Korumtaş — Orijinal Besteler & Ses Tasarımları</span>
+                  <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono">
+                    4 Parça
+                  </span>
+                </h4>
+                <p className="text-[11px] text-slate-600 dark:text-neutral-300 mt-0.5 leading-relaxed">
+                  Tüm besteler Web Audio osilatör mimarisi ile gerçek zamanlı sentezlenir. Dinlemek için satırdaki oynat butonuna basabilir veya çift tıklayarak stüdyo oynatıcısını açabilirsiniz.
+                </p>
+                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1">
+                  💡 Kendi <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.mp3</code> veya <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.wav</code> parçalarınızı projedeki <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">public/music/</code> klasörüne ekleyerek anında sitenizde dinletebilirsiniz.
+                </p>
+              </div>
+            </div>
+          )}
+
           {viewMode === 'list' ? (
             /* EXACT LIST VIEW FROM SCREENSHOT */
             <table className="w-full text-left text-xs border-collapse">
@@ -660,11 +787,19 @@ export const FinderApp: React.FC = () => {
               <tbody>
                 {displayedFiles.map((file) => {
                   const isSelected = selectedFileId === file.id;
+                  const isThisTrackPlaying =
+                    isAudioPlaying && file.track && currentTrack?.id === file.track.id;
+
                   return (
                     <tr
                       key={file.id}
                       onClick={() => setSelectedFileId(file.id)}
-                      onDoubleClick={() => setPreviewFile(file)}
+                      onDoubleClick={() => {
+                        setPreviewFile(file);
+                        if (file.track && !isThisTrackPlaying) {
+                          playTrack(file.track);
+                        }
+                      }}
                       className={`cursor-pointer transition-colors group ${
                         isSelected
                           ? 'bg-[#E8F0FE] dark:bg-[#007AFF]/25 text-[#0066CC] dark:text-[#38BDF8] rounded-md'
@@ -672,10 +807,53 @@ export const FinderApp: React.FC = () => {
                       }`}
                     >
                       <td className="py-1.5 pr-4 flex items-center gap-2.5">
-                        <RedDocIcon />
+                        {file.track ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isThisTrackPlaying) {
+                                togglePlay();
+                              } else {
+                                playTrack(file.track!);
+                              }
+                            }}
+                            title={isThisTrackPlaying ? 'Pause' : 'Play Track'}
+                            className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-all ${
+                              isThisTrackPlaying
+                                ? 'bg-[#007AFF] text-white shadow-xs'
+                                : 'bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-[#007AFF] hover:text-white'
+                            }`}
+                          >
+                            {isThisTrackPlaying ? (
+                              <Pause className="w-3 h-3 fill-current" />
+                            ) : (
+                              <Play className="w-3 h-3 fill-current ml-0.5" />
+                            )}
+                          </button>
+                        ) : (
+                          <RedDocIcon />
+                        )}
                         <span className="font-normal text-xs text-slate-900 dark:text-neutral-100 truncate">
                           {file.name}
                         </span>
+
+                        {isThisTrackPlaying && (
+                          <div className="flex items-end gap-0.5 h-2.5 ml-1">
+                            <span
+                              className="w-0.5 h-2 bg-[#007AFF] rounded-full animate-bounce"
+                              style={{ animationDuration: '0.6s' }}
+                            />
+                            <span
+                              className="w-0.5 h-2.5 bg-[#007AFF] rounded-full animate-bounce"
+                              style={{ animationDuration: '0.4s', animationDelay: '0.15s' }}
+                            />
+                            <span
+                              className="w-0.5 h-1.5 bg-[#007AFF] rounded-full animate-bounce"
+                              style={{ animationDuration: '0.7s', animationDelay: '0.3s' }}
+                            />
+                          </div>
+                        )}
                       </td>
                       <td className="py-1.5 px-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
                         {file.dateModified}
@@ -696,30 +874,54 @@ export const FinderApp: React.FC = () => {
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 py-4">
               {displayedFiles.map((file) => {
                 const isSelected = selectedFileId === file.id;
+                const isThisTrackPlaying =
+                  isAudioPlaying && file.track && currentTrack?.id === file.track.id;
+
                 return (
                   <div
                     key={file.id}
                     onClick={() => setSelectedFileId(file.id)}
-                    onDoubleClick={() => setPreviewFile(file)}
-                    className={`flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer ${
+                    onDoubleClick={() => {
+                      setPreviewFile(file);
+                      if (file.track && !isThisTrackPlaying) {
+                        playTrack(file.track);
+                      }
+                    }}
+                    className={`flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer relative group ${
                       isSelected
                         ? 'bg-[#E8F0FE] dark:bg-[#007AFF]/20 border-[#007AFF]/40 ring-1 ring-[#007AFF]/30'
                         : 'border-transparent hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50'
                     }`}
                   >
-                    <div className="w-12 h-14 mb-2 flex items-center justify-center">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className="w-10 h-10 text-[#EF4444]"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="8" y1="13" x2="16" y2="13" />
-                        <line x1="8" y1="17" x2="14" y2="17" />
-                      </svg>
+                    <div className="w-12 h-14 mb-2 flex items-center justify-center relative">
+                      {file.track ? (
+                        <div
+                          className={`w-11 h-11 rounded-full bg-gradient-to-tr ${
+                            file.track.coverGradient
+                          } flex items-center justify-center text-white shadow-md ${
+                            isThisTrackPlaying ? 'ring-2 ring-[#007AFF]' : ''
+                          }`}
+                        >
+                          {isThisTrackPlaying ? (
+                            <Pause className="w-4 h-4 fill-white" />
+                          ) : (
+                            <Music2 className="w-4 h-4" />
+                          )}
+                        </div>
+                      ) : (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="w-10 h-10 text-[#EF4444]"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="8" y1="13" x2="16" y2="13" />
+                          <line x1="8" y1="17" x2="14" y2="17" />
+                        </svg>
+                      )}
                     </div>
                     <span className="text-xs text-slate-800 dark:text-white font-medium line-clamp-2 break-all">
                       {file.name}
@@ -747,7 +949,11 @@ export const FinderApp: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <RedDocIcon />
+                        {file.track ? (
+                          <Music2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        ) : (
+                          <RedDocIcon />
+                        )}
                         <span className="truncate">{file.name}</span>
                       </div>
                       <span className="text-[10px] opacity-75">{file.size}</span>
@@ -764,8 +970,16 @@ export const FinderApp: React.FC = () => {
                     if (!activeFile) return null;
                     return (
                       <div className="max-w-xs flex flex-col items-center gap-3">
-                        <div className="w-16 h-20 text-[#EF4444] flex items-center justify-center">
-                          <RedDocIcon />
+                        <div className="w-16 h-20 flex items-center justify-center">
+                          {activeFile.track ? (
+                            <div
+                              className={`w-14 h-14 rounded-full bg-gradient-to-tr ${activeFile.track.coverGradient} flex items-center justify-center text-white shadow-md`}
+                            >
+                              <Music2 className="w-6 h-6" />
+                            </div>
+                          ) : (
+                            <RedDocIcon />
+                          )}
                         </div>
                         <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                           {activeFile.name}
@@ -807,13 +1021,21 @@ export const FinderApp: React.FC = () => {
           onClick={() => setPreviewFile(null)}
         >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden flex flex-col"
+            className="w-full max-w-xl rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Top Bar of Quick Look */}
             <div className="h-10 px-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-neutral-100/70 dark:bg-neutral-800/70">
-              <span className="text-xs font-semibold text-slate-800 dark:text-white truncate">
-                {previewFile.name}
-              </span>
+              <div className="flex items-center gap-2 min-w-0">
+                {previewFile.track && previewFile.kind === 'WAV audio' ? (
+                  <Music2 className="w-3.5 h-3.5 text-indigo-500" />
+                ) : (
+                  <RedDocIcon />
+                )}
+                <span className="text-xs font-semibold text-slate-800 dark:text-white truncate">
+                  {previewFile.name} — Quick Look
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => setPreviewFile(null)}
@@ -823,24 +1045,215 @@ export const FinderApp: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 text-xs text-slate-700 dark:text-neutral-300 flex flex-col gap-4 max-h-96 overflow-y-auto">
-              <div className="flex items-center gap-3 pb-3 border-b border-black/5 dark:border-white/5">
-                <RedDocIcon />
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                    {previewFile.name}
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    {previewFile.kind} • {previewFile.size} • {previewFile.dateModified}
-                  </p>
+            {previewFile.track && previewFile.kind === 'WAV audio' ? (
+              /* INTERACTIVE MUSIC TRACK PLAYER VIEW */
+              <div className="p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  {/* Rotating Vinyl Record Artwork */}
+                  <div className="relative w-32 h-32 shrink-0 flex items-center justify-center">
+                    <motion.div
+                      animate={
+                        isAudioPlaying && currentTrack?.id === previewFile.track.id
+                          ? { rotate: 360 }
+                          : { rotate: 0 }
+                      }
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }}
+                      className={`w-32 h-32 rounded-full bg-gradient-to-tr ${previewFile.track.coverGradient} shadow-xl p-1.5 flex items-center justify-center`}
+                    >
+                      <div className="w-full h-full rounded-full border border-white/20 flex items-center justify-center bg-black/40">
+                        <div className="w-11 h-11 rounded-full bg-neutral-900 border-2 border-white/40 flex items-center justify-center shadow-inner">
+                          <Disc className="w-5 h-5 text-white/80" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  {/* Metadata and Controls */}
+                  <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left gap-1.5 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold uppercase tracking-wider">
+                        {previewFile.track.genre}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {previewFile.track.bpm} BPM
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {previewFile.track.year}
+                      </span>
+                    </div>
+
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                      {previewFile.track.title}
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-neutral-400">
+                      {previewFile.track.artist} · <span className="italic">{previewFile.track.album}</span>
+                    </p>
+
+                    {/* Animated Equalizer Waveform */}
+                    <div className="flex items-center gap-1 h-5 my-1.5">
+                      {[4, 12, 18, 10, 22, 14, 8, 20, 16, 12, 6, 18, 14, 22, 10, 6].map((h, i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 rounded-full bg-gradient-to-t from-indigo-500 to-[#007AFF]"
+                          animate={
+                            isAudioPlaying && currentTrack?.id === previewFile.track!.id
+                              ? { height: ['20%', `${Math.min(100, h * 5)}%`, '20%'] }
+                              : { height: '25%' }
+                          }
+                          transition={{
+                            duration: 0.35,
+                            repeat:
+                              isAudioPlaying && currentTrack?.id === previewFile.track!.id
+                                ? Infinity
+                                : 0,
+                            delay: i * 0.04,
+                          }}
+                          style={{ minHeight: '3px' }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Audio Controls */}
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={prevTrack}
+                        title="Previous Track"
+                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
+                      >
+                        <SkipBack className="w-4 h-4 fill-current" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isAudioPlaying && currentTrack?.id === previewFile.track!.id) {
+                            togglePlay();
+                          } else {
+                            playTrack(previewFile.track!);
+                          }
+                        }}
+                        className="px-4 py-1.5 rounded-full bg-[#007AFF] hover:bg-blue-600 text-white font-medium text-xs flex items-center gap-1.5 shadow-md transition-all"
+                      >
+                        {isAudioPlaying && currentTrack?.id === previewFile.track.id ? (
+                          <>
+                            <Pause className="w-3.5 h-3.5 fill-white" />
+                            <span>Durdur</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
+                            <span>Çal & Dinle</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={nextTrack}
+                        title="Next Track"
+                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
+                      >
+                        <SkipForward className="w-4 h-4 fill-current" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description & Production Notes */}
+                <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
+                  <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                    Beste & Ses Tasarımı Notları
+                  </h4>
+                  <p>{previewFile.track.description}</p>
+                </div>
+
+                {/* Info Note on Adding Personal Songs */}
+                <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-300">
+                  <span className="font-bold">📁 Kendi Şarkılarınızı Ekleyin: </span>
+                  Kendi şarkılarınızı <code className="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 font-mono">public/music/</code> klasörüne ekleyerek anında sitenizde dinletebilirsiniz. Dosya olmadığı durumlarda bile dahili Web Audio sentezleyicisi canlı çalar!
                 </div>
               </div>
+            ) : (
+              /* CREATIVE PRODUCER BLUEPRINT VIEW */
+              <div className="p-6 text-xs text-slate-700 dark:text-neutral-300 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+                <div className="flex items-center gap-3 pb-3 border-b border-black/5 dark:border-white/5">
+                  <RedDocIcon />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] font-semibold">
+                        {previewFile.category || 'Production Document'}
+                      </span>
+                      {previewFile.tags?.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-[9px] text-slate-500 dark:text-neutral-400 font-mono"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                      {previewFile.name}
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      {previewFile.kind} • {previewFile.size} • {previewFile.dateModified}
+                    </p>
+                  </div>
+                </div>
 
-              <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 font-mono text-[11px] whitespace-pre-wrap leading-relaxed">
-                {previewFile.content ||
-                  `Document details and production blueprint for ${previewFile.name}. Prepared by Hüseyin Korumtaş.`}
+                {/* Embedded audio player if document is linked to music */}
+                {previewFile.track && (
+                  <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-lg bg-indigo-500 text-white">
+                        <Music2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-xs text-slate-900 dark:text-white">
+                          {previewFile.track.title}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-neutral-400">
+                          {previewFile.track.genre} • {previewFile.track.bpm} BPM
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isAudioPlaying && currentTrack?.id === previewFile.track!.id) {
+                          togglePlay();
+                        } else {
+                          playTrack(previewFile.track!);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium flex items-center gap-1.5 hover:bg-blue-600 transition-colors"
+                    >
+                      {isAudioPlaying && currentTrack?.id === previewFile.track.id ? (
+                        <>
+                          <Pause className="w-3 h-3 fill-white" />
+                          <span>Durdur</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3 h-3 fill-white ml-0.5" />
+                          <span>Stem Dinle</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 font-sans text-xs whitespace-pre-wrap leading-relaxed">
+                  {previewFile.content ||
+                    `Document details and production blueprint for ${previewFile.name}. Prepared by Hüseyin Korumtaş.`}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}

@@ -14,9 +14,12 @@ import {
   Play,
   Pause,
   SkipForward,
+  SkipBack,
+  Music2,
   Check,
 } from 'lucide-react';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useAudioStore } from '@/stores/useAudioStore';
 import { WALLPAPERS } from '@/data/wallpapers';
 
 export interface ControlCenterProps {
@@ -42,15 +45,17 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
     setVolume,
   } = useSettingsStore();
 
-  const [isPlaying, setIsPlaying] = useState(soundEnabled);
+  const {
+    currentTrack,
+    isPlaying: isAudioPlaying,
+    togglePlay: toggleAudioPlay,
+    nextTrack: audioNextTrack,
+    prevTrack: audioPrevTrack,
+  } = useAudioStore();
+
   const [wifiConnected, setWifiConnected] = useState(true);
   const [bluetoothOn, setBluetoothOn] = useState(true);
   const [airDropOn, setAirDropOn] = useState(true);
-
-  // Sync isPlaying with soundEnabled
-  useEffect(() => {
-    setIsPlaying(soundEnabled);
-  }, [soundEnabled]);
 
   // Handle click outside to close
   useEffect(() => {
@@ -384,29 +389,43 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
           {/* Media Player Tile */}
           <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
-                <Play className="w-4 h-4 fill-white" />
+              <div
+                className={`w-9 h-9 rounded-lg bg-gradient-to-tr ${
+                  currentTrack?.coverGradient || 'from-indigo-500 to-purple-600'
+                } flex items-center justify-center text-white shadow-sm flex-shrink-0`}
+              >
+                {isAudioPlaying ? (
+                  <Music2 className="w-4 h-4 animate-pulse" />
+                ) : (
+                  <Play className="w-4 h-4 fill-white ml-0.5" />
+                )}
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-[11px] truncate text-slate-900 dark:text-white leading-tight">
-                  Portfolio Ambient Beats
+                  {currentTrack?.title || 'Portfolio Ambient Beats'}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
-                  Hüseyin Korumtaş · Ideas into experiences
+                  {currentTrack?.artist || 'Hüseyin Korumtaş'} · {currentTrack?.genre || 'Creative Production'}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 type="button"
-                onClick={() => {
-                  toggleSound();
-                  setIsPlaying(!isPlaying);
-                }}
-                className="w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 transition-colors focus:outline-none"
+                onClick={audioPrevTrack}
+                title="Previous Track"
+                className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 transition-colors focus:outline-none text-slate-600 dark:text-slate-300"
               >
-                {soundEnabled && isPlaying ? (
+                <SkipBack className="w-3 h-3 fill-current" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleAudioPlay}
+                title={isAudioPlaying ? 'Pause' : 'Play'}
+                className="w-7 h-7 rounded-full bg-black/10 dark:bg-white/15 flex items-center justify-center hover:bg-black/15 dark:hover:bg-white/25 transition-colors focus:outline-none text-slate-800 dark:text-white"
+              >
+                {isAudioPlaying ? (
                   <Pause className="w-3.5 h-3.5 fill-current" />
                 ) : (
                   <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
@@ -414,10 +433,11 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               </button>
               <button
                 type="button"
-                onClick={toggleSound}
-                className="w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 transition-colors focus:outline-none text-slate-600 dark:text-slate-300"
+                onClick={audioNextTrack}
+                title="Next Track"
+                className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 transition-colors focus:outline-none text-slate-600 dark:text-slate-300"
               >
-                <SkipForward className="w-3.5 h-3.5 fill-current" />
+                <SkipForward className="w-3 h-3 fill-current" />
               </button>
             </div>
           </div>
