@@ -225,8 +225,8 @@ export const TerminalApp: React.FC = () => {
             <div className="my-1 text-slate-200 flex flex-col gap-1">
               <div className="text-emerald-400 font-bold">Contact Channels:</div>
               <div>• Email: <a href="mailto:hello@gucduck.dev" className="text-cyan-400 underline">hello@gucduck.dev</a></div>
-              <div>• GitHub: <a href="https://github.com/gucduck" target="_blank" rel="noreferrer" className="text-cyan-400 underline">github.com/gucduck</a></div>
-              <div>• LinkedIn: <a href="https://linkedin.com/in/gucduck" target="_blank" rel="noreferrer" className="text-cyan-400 underline">linkedin.com/in/gucduck</a></div>
+              <div>• GitHub: <a href="https://github.com/gucduck" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">github.com/gucduck</a></div>
+              <div>• LinkedIn: <a href="https://linkedin.com/in/gucduck" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">linkedin.com/in/gucduck</a></div>
               <div className="text-amber-300 text-xs mt-1">✓ Launched Messages.app for instant direct chat.</div>
             </div>
           ),

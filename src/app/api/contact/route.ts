@@ -18,6 +18,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (name.trim().length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Name must not exceed 100 characters.' },
+        { status: 400 }
+      );
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
@@ -26,10 +32,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (email.trim().length > 254) {
+      return NextResponse.json(
+        { success: false, error: 'Email must not exceed 254 characters.' },
+        { status: 400 }
+      );
+    }
 
     if (!message || typeof message !== 'string' || message.trim().length < 3) {
       return NextResponse.json(
         { success: false, error: 'Please enter a message (at least 3 characters).' },
+        { status: 400 }
+      );
+    }
+    if (message.trim().length > 5000) {
+      return NextResponse.json(
+        { success: false, error: 'Message must not exceed 5,000 characters.' },
         { status: 400 }
       );
     }

@@ -40,8 +40,18 @@ export function Window({
   const windowData = propWindow || storeWindow;
 
   const [isResizing, setIsResizing] = useState(false);
+  const resizeCleanupRef = useRef<(() => void) | null>(null);
   const dragControls = useDragControls();
   const isMobile = useIsMobile();
+
+  // Safely clean up any active resize listeners when window unmounts
+  useEffect(() => {
+    return () => {
+      if (resizeCleanupRef.current) {
+        resizeCleanupRef.current();
+      }
+    };
+  }, []);
 
   const isMaximized = windowData?.isMaximized ?? false;
   const isActive = activeWindowId === id;
@@ -131,7 +141,7 @@ export function Window({
       updateSize(id, { width: newWidth, height: newHeight });
     };
 
-    const onPointerUp = () => {
+    const cleanup = () => {
       setIsResizing(false);
       if (typeof document !== 'undefined') {
         document.body.style.cursor = '';
@@ -139,8 +149,18 @@ export function Window({
       }
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      resizeCleanupRef.current = null;
     };
 
+    const onPointerUp = () => {
+      cleanup();
+    };
+
+    if (resizeCleanupRef.current) {
+      resizeCleanupRef.current();
+    }
+
+    resizeCleanupRef.current = cleanup;
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
   };
