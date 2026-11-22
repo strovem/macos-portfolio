@@ -47,17 +47,32 @@ export interface ProjectItem {
   id: string;
   title: string;
   description: string;
-  category: 'web' | 'mobile' | 'ai' | 'experiments';
+  category: 'web' | 'mobile' | 'ai' | 'experiments' | 'opensource';
   tags: string[];
   image?: string;
   demoUrl?: string;
   githubUrl?: string;
   featured?: boolean;
+  color?: string;
+  icon?: string;
+  date?: string;
+  highlights?: string[];
+  role?: string;
+  stats?: { stars?: number; forks?: number; users?: string };
+}
+
+export interface SkillItem {
+  name: string;
+  level: number;
+  icon?: string;
+  category?: string;
+  years?: string;
+  highlight?: string;
 }
 
 export interface SkillCategory {
   name: string;
-  skills: { name: string; level: number; icon?: string }[];
+  skills: SkillItem[];
 }
 
 export interface NoteEntry {
@@ -66,4 +81,17 @@ export interface NoteEntry {
   date: string;
   category: string;
   content: string;
+  icon?: string;
+}
+
+export interface ExperienceItem {
+  id: string;
+  role: string;
+  company: string;
+  period: string;
+  location: string;
+  description: string;
+  achievements: string[];
+  technologies: string[];
+  type: 'work' | 'education' | 'award';
 }
