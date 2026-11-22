@@ -19,9 +19,36 @@ const ICON_MAP: Record<AppMetadata['iconType'], string> = {
   terminal: '/icons/macos/app_terminal.png',
   settings: '/icons/macos/app_settings.png',
   trash: '/icons/macos/app_trash.png',
+  studio: '',
 };
 
 export function AppIcon({ iconType, badge, className = '' }: AppIconProps) {
+  if (iconType === 'studio') {
+    return (
+      <div className={`relative w-full h-full select-none flex items-center justify-center ${className}`}>
+        <div className="w-full h-full rounded-[22%] bg-gradient-to-br from-[#1E112A] via-[#31154E] to-[#120824] flex flex-col items-center justify-center p-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.45),inset_0_1px_1.5px_rgba(255,255,255,0.4)] border border-purple-400/30 relative overflow-hidden">
+          {/* Subtle glossy top reflection */}
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 via-white/5 to-transparent pointer-events-none rounded-t-[22%]" />
+          
+          {/* Glowing DAW Waveform & Mixer Lines */}
+          <div className="flex items-center justify-center gap-[3px] w-full h-full relative z-10">
+            <span className="w-1.5 h-3 bg-gradient-to-t from-violet-500 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.6)]" />
+            <span className="w-1.5 h-6 bg-gradient-to-t from-purple-500 to-indigo-300 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
+            <span className="w-1.5 h-8 bg-gradient-to-t from-fuchsia-500 to-rose-400 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.8)]" />
+            <span className="w-1.5 h-5 bg-gradient-to-t from-purple-500 to-cyan-300 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
+            <span className="w-1.5 h-7 bg-gradient-to-t from-indigo-500 to-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+            <span className="w-1.5 h-3.5 bg-gradient-to-t from-violet-500 to-sky-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.6)]" />
+          </div>
+        </div>
+        {badge !== undefined && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-white dark:border-slate-800 shadow-md pointer-events-none z-20">
+            {badge}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   const iconSrc = ICON_MAP[iconType] || '/icons/macos/app_finder.png';
 
   return (

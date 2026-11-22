@@ -21,6 +21,7 @@ import { MessagesApp } from '@/components/apps/MessagesApp';
 import { PhotosApp } from '@/components/apps/PhotosApp';
 import { SettingsApp } from '@/components/apps/SettingsApp';
 import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
+import { StudioApp } from '@/components/apps/StudioApp';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function Home() {
@@ -69,6 +70,8 @@ export default function Home() {
         return <SettingsApp />;
       case 'tonegenerator':
         return <ToneGeneratorApp />;
+      case 'studio':
+        return <StudioApp />;
       case 'trash':
         return (
           <div className="h-full p-6 flex flex-col items-center justify-center text-center text-xs bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 font-sans">

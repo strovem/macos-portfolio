@@ -7,7 +7,8 @@ export type AppId =
   | 'terminal'
   | 'settings'
   | 'trash'
-  | 'tonegenerator';
+  | 'tonegenerator'
+  | 'studio';
 
 export interface WindowState {
   id: AppId;

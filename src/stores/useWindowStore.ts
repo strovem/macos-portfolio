@@ -136,6 +136,18 @@ const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
     size: { width: 420, height: 530 },
     defaultSize: { width: 420, height: 530 },
   },
+  studio: {
+    id: 'studio',
+    title: 'Hüseyin Studio — DAW & Audio Lab',
+    icon: 'studio',
+    isOpen: false,
+    isMinimized: false,
+    isMaximized: false,
+    zIndex: 1,
+    position: { x: 120, y: 50 },
+    size: { width: 940, height: 580 },
+    defaultSize: { width: 940, height: 580 },
+  },
 };
 
 /**

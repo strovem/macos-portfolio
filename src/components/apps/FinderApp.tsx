@@ -29,6 +29,7 @@ import {
   RotateCw,
   Folder,
   ArrowUpRight,
+  AudioWaveform,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
@@ -294,6 +295,17 @@ const MUSIC_FILES: FinderFileItem[] = ORIGINAL_TRACKS.map((t) => ({
 }));
 
 const APPLICATIONS_FILES: FinderFileItem[] = [
+  {
+    id: 'app-studio',
+    name: 'Studio.app',
+    dateModified: 'Nov 23, 2026, 12:00 AM',
+    size: '148 MB',
+    kind: 'Application',
+    targetAppId: 'studio',
+    category: 'Digital Audio Workstation',
+    tags: ['DAW', 'Multitrack', 'Logic Pro', 'Ableton', 'Waveforms', 'Mixer'],
+    content: `Hüseyin Studio — Digital Audio Workstation & Multitrack Lab\n\nHüseyin Korumtaş'ın tüm orijinal bestelerinin, club mix'lerinin, reklam jingle'larının (Excalibur vb.) ve ses tasarım çalışmalarının dalga formları, miksaj zincirleri ve mastering künyeleriyle incelenebildiği stüdyo ortamı.`,
+  },
   {
     id: 'app-tone-gen',
     name: 'Tone Generator.app',
@@ -797,13 +809,23 @@ export const FinderApp: React.FC = () => {
                 <Music2 className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>Hüseyin Korumtaş — Orijinal Besteler & Ses Tasarımları</span>
-                  <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono">
-                    4 Parça
-                  </span>
-                </h4>
-                <p className="text-[11px] text-slate-600 dark:text-neutral-300 mt-0.5 leading-relaxed">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Hüseyin Korumtaş — Orijinal Besteler & Ses Tasarımları</span>
+                    <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono">
+                      {ORIGINAL_TRACKS.length} Parça
+                    </span>
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => openWindow('studio')}
+                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
+                  >
+                    <AudioWaveform className="w-3.5 h-3.5" />
+                    <span>Studio.app ile Aç</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-neutral-300 mt-1 leading-relaxed">
                   Tüm besteler Web Audio osilatör mimarisi ile gerçek zamanlı sentezlenir. Dinlemek için satırdaki oynat butonuna basabilir veya çift tıklayarak stüdyo oynatıcısını açabilirsiniz.
                 </p>
                 <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1">
