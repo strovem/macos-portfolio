@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { Sparkles, Calendar as CalendarIcon, User, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface CatYearWidgetProps {
   onOpenApp?: () => void;
 }
 
-// Western Zodiac Signs
+// Western Zodiac Signs (Ordered by calendar year)
 const ZODIAC_SIGNS = [
   { name: 'Aries', symbol: '♈', order: '1st sign', start: [3, 21], end: [4, 19] },
   { name: 'Taurus', symbol: '♉', order: '2nd sign', start: [4, 20], end: [5, 20] },
@@ -119,16 +119,19 @@ function getDayOfYear(year: number, month: number, day: number): number {
 export function CatYearWidget({ item }: CatYearWidgetProps) {
   const [activeTab, setActiveTab] = useState<'calendar' | 'reading'>('calendar');
 
-  // Calendar State (Default November 2026 as in screenshot)
+  // Calendar State (Default November 2026)
   const [currentYear, setCurrentYear] = useState<number>(2026);
   const [currentMonth, setCurrentMonth] = useState<number>(11); // 1-12
   const [selectedDay, setSelectedDay] = useState<number>(22); // Day 22 selected
 
-  // Birthdate Reading State (Default 03/08/2004 from user screenshot)
-  const [birthMonth, setBirthMonth] = useState<string>('03');
-  const [birthDay, setBirthDay] = useState<string>('08');
-  const [birthYear, setBirthYear] = useState<string>('2004');
+  // Birthdate Reading State (Empty by default as requested: Day / Month / Year)
+  const [birthDay, setBirthDay] = useState<string>('');
+  const [birthMonth, setBirthMonth] = useState<string>('');
+  const [birthYear, setBirthYear] = useState<string>('');
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+
+  const monthInputRef = useRef<HTMLInputElement>(null);
+  const yearInputRef = useRef<HTMLInputElement>(null);
 
   // Compute Days for the Calendar View
   const calendarDays = useMemo(() => {
@@ -148,7 +151,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
       const raw = currentMonth + d + yearDigits;
       const { reduced } = reduceToSingleDigit(raw, true);
 
-      // Check if Master Day in GG33 (11, 22, 33, 28, 29)
+      // Master numbers (11, 22, 33, 28, 29)
       const isMaster =
         reduced === 11 ||
         reduced === 22 ||
@@ -169,24 +172,41 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     return days;
   }, [currentYear, currentMonth]);
 
-  // Selected Date Info
+  // Selected Date Info (Formatted in Day / Month / Year)
   const selectedDateInfo = useMemo(() => {
     const lp = calculateLifePath(currentMonth, selectedDay, currentYear);
     const zodiac = getZodiac(currentMonth, selectedDay);
     const cz = getChineseZodiac(currentYear);
+    const dayPadded = String(selectedDay).padStart(2, '0');
+    const monthPadded = String(currentMonth).padStart(2, '0');
     return {
-      dateStr: `${currentMonth} / ${selectedDay} / ${currentYear}`,
+      dateStr: `${dayPadded} / ${monthPadded} / ${currentYear}`,
       lp: `LP ${lp.formatted}`,
       animal: `${cz.animal.symbol} ${cz.animal.name}`,
       zodiac: `${zodiac.symbol} ${zodiac.name}`,
     };
   }, [currentMonth, selectedDay, currentYear]);
 
-  // Birthdate Reading Info (Calculations for Image 2)
+  // Is valid birthdate entered?
+  const isBirthdateEntered = useMemo(() => {
+    const d = parseInt(birthDay, 10);
+    const m = parseInt(birthMonth, 10);
+    const y = parseInt(birthYear, 10);
+    return Boolean(
+      !isNaN(d) && d >= 1 && d <= 31 &&
+      !isNaN(m) && m >= 1 && m <= 12 &&
+      !isNaN(y) && y >= 1900 && y <= 2100 &&
+      birthYear.length === 4
+    );
+  }, [birthDay, birthMonth, birthYear]);
+
+  // Birthdate Reading Info (Calculations based strictly on Gün / Ay / Yıl)
   const readingInfo = useMemo(() => {
-    const m = parseInt(birthMonth, 10) || 1;
-    const d = parseInt(birthDay, 10) || 1;
-    const y = parseInt(birthYear, 10) || 2000;
+    if (!isBirthdateEntered) return null;
+
+    const d = parseInt(birthDay, 10);
+    const m = parseInt(birthMonth, 10);
+    const y = parseInt(birthYear, 10);
 
     const lp = calculateLifePath(m, d, y);
     const zodiac = getZodiac(m, d);
@@ -207,10 +227,10 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
       dayOfYear,
       weekOfYear,
       chineseZodiac: cz,
-      age,
+      age: Math.max(0, age),
       personalYear: `${pyReduced}/${pyRaw} Personal Year (2026)`,
     };
-  }, [birthMonth, birthDay, birthYear]);
+  }, [birthDay, birthMonth, birthYear, isBirthdateEntered]);
 
   const handlePrevMonth = () => {
     if (currentMonth === 1) {
@@ -236,18 +256,18 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
   };
 
   const handleClear = () => {
-    setBirthMonth('');
     setBirthDay('');
+    setBirthMonth('');
     setBirthYear('');
   };
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
 
   return (
-    <div className="relative w-76 p-3 rounded-2xl backdrop-blur-2xl bg-[#FFE4BA]/90 dark:bg-neutral-900/90 border border-amber-300/60 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 font-sans text-slate-800 dark:text-neutral-100">
+    <div className="relative w-76 p-3 rounded-2xl backdrop-blur-2xl bg-[#FFE4BA]/92 dark:bg-neutral-900/92 border border-amber-300/60 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 font-sans text-slate-800 dark:text-neutral-100">
       {/* Top Header & Tab Toggle */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-900/10 dark:border-white/10">
         <div className="flex items-center gap-1.5">
@@ -255,7 +275,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             <Sparkles className="w-3 h-3" />
           </div>
           <span className="text-xs font-bold font-mono tracking-tight text-amber-950 dark:text-amber-200">
-            7CatYear • GG33
+            Numeroloji & Astroloji
           </span>
         </div>
 
@@ -274,7 +294,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             }`}
           >
             <CalendarIcon className="w-2.5 h-2.5" />
-            <span>Calendar</span>
+            <span>Takvim</span>
           </button>
 
           <button
@@ -290,12 +310,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             }`}
           >
             <User className="w-2.5 h-2.5" />
-            <span>Reading</span>
+            <span>Hesapla</span>
           </button>
         </div>
       </div>
 
-      {/* VIEW 1: CALENDAR GRID (From user screenshot 1) */}
+      {/* VIEW 1: CALENDAR GRID */}
       {activeTab === 'calendar' ? (
         <div className="flex flex-col gap-1.5">
           {/* Month & Navigation Bar */}
@@ -331,7 +351,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           <div className="rounded-xl overflow-hidden border border-sky-300/80 dark:border-neutral-700 bg-sky-100/60 dark:bg-neutral-950 shadow-inner">
             {/* Days of Week Header */}
             <div className="grid grid-cols-7 text-[9px] font-semibold text-center py-1 bg-sky-200/70 dark:bg-sky-950/70 text-sky-900 dark:text-sky-300 border-b border-sky-300/70 dark:border-neutral-700">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+              {['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'].map((d, i) => (
                 <div key={i}>{d}</div>
               ))}
             </div>
@@ -350,7 +370,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
 
                 const isSelected = selectedDay === cell.day;
 
-                // Color styles matching Image 1
+                // Color styles
                 let cellClasses =
                   'bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200 border-sky-200/60 dark:border-neutral-700';
                 let subColor = 'text-slate-500 dark:text-neutral-400';
@@ -378,7 +398,6 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                     }}
                     className={`h-10 flex flex-col items-center justify-center p-0.5 rounded cursor-pointer transition-transform active:scale-95 ${cellClasses}`}
                   >
-                    {/* Zodiac icon on selected day like in screenshot */}
                     {isSelected && (
                       <span className="text-[7px] leading-none text-yellow-300 -mt-0.5">
                         ♐
@@ -396,10 +415,10 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             </div>
           </div>
 
-          {/* Selected Date Summary (Exact text layout as in Image 1) */}
+          {/* Selected Date Summary in Gün / Ay / Yıl format */}
           <div className="p-2 rounded-xl bg-sky-200/40 dark:bg-neutral-800/60 border border-sky-300/60 dark:border-white/5 text-[10px] leading-tight flex flex-col gap-0.5">
             <span className="text-[9px] text-sky-800 dark:text-neutral-400">
-              Selected date: (click in the grid)
+              Seçilen Tarih: (takvimden bir güne tıklayın)
             </span>
             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
               <span>{selectedDateInfo.dateStr}</span>
@@ -412,12 +431,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           </div>
         </div>
       ) : (
-        /* VIEW 2: BIRTHDATE READING PROFILE (From user screenshot 2) */
+        /* VIEW 2: BIRTHDATE READING PROFILE (Strict Gün / Ay / Yıl order, empty by default) */
         <div className="flex flex-col gap-2">
           {/* Header Bar */}
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-              Enter a birthdate
+              Doğum Tarihi Girin
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -429,7 +448,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer flex items-center gap-0.5"
               >
                 {savedSuccess ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : null}
-                <span>Save</span>
+                <span>Kaydet</span>
               </button>
               <button
                 type="button"
@@ -439,7 +458,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 }}
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer"
               >
-                Clear
+                Temizle
               </button>
             </div>
           </div>
@@ -447,90 +466,143 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           {/* Life Path Banner */}
           <div className="p-1 rounded-xl bg-amber-200/80 dark:bg-amber-950/50 border border-amber-400/50 text-center">
             <span className="text-sm font-extrabold font-mono text-amber-950 dark:text-amber-200 tracking-tight">
-              {readingInfo.lpFormatted}
+              {readingInfo ? readingInfo.lpFormatted : 'Life Path — / —'}
             </span>
           </div>
 
-          {/* Birthdate Input Box (Exact MM / DD / YYYY layout from Image 2) */}
+          {/* Birthdate Input Box: GÜN / AY / YIL (DD / MM / YYYY) */}
           <div className="p-1.5 rounded-xl bg-white dark:bg-neutral-950 border-2 border-amber-500/50 flex items-center justify-center gap-2 font-mono text-base font-bold text-slate-800 dark:text-white shadow-xs">
-            <input
-              type="text"
-              maxLength={2}
-              value={birthMonth}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => setBirthMonth(e.target.value.replace(/\D/g, ''))}
-              placeholder="MM"
-              className="w-8 text-center bg-transparent focus:outline-none focus:text-amber-600"
-            />
-            <span className="text-amber-400">/</span>
-            <input
-              type="text"
-              maxLength={2}
-              value={birthDay}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => setBirthDay(e.target.value.replace(/\D/g, ''))}
-              placeholder="DD"
-              className="w-8 text-center bg-transparent focus:outline-none focus:text-amber-600"
-            />
-            <span className="text-amber-400">/</span>
-            <input
-              type="text"
-              maxLength={4}
-              value={birthYear}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ''))}
-              placeholder="YYYY"
-              className="w-14 text-center bg-transparent focus:outline-none focus:text-amber-600"
-            />
+            {/* Gün (DD) */}
+            <div className="flex flex-col items-center">
+              <input
+                type="text"
+                maxLength={2}
+                value={birthDay}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setBirthDay(val);
+                  if (val.length === 2 && monthInputRef.current) {
+                    monthInputRef.current.focus();
+                  }
+                }}
+                placeholder="GG"
+                className="w-9 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
+              />
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Gün</span>
+            </div>
+
+            <span className="text-amber-400 text-lg mb-2">/</span>
+
+            {/* Ay (MM) */}
+            <div className="flex flex-col items-center">
+              <input
+                ref={monthInputRef}
+                type="text"
+                maxLength={2}
+                value={birthMonth}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setBirthMonth(val);
+                  if (val.length === 2 && yearInputRef.current) {
+                    yearInputRef.current.focus();
+                  }
+                }}
+                placeholder="AA"
+                className="w-9 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
+              />
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Ay</span>
+            </div>
+
+            <span className="text-amber-400 text-lg mb-2">/</span>
+
+            {/* Yıl (YYYY) */}
+            <div className="flex flex-col items-center">
+              <input
+                ref={yearInputRef}
+                type="text"
+                maxLength={4}
+                value={birthYear}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ''))}
+                placeholder="YYYY"
+                className="w-16 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
+              />
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Yıl</span>
+            </div>
           </div>
 
-          {/* 3 Energy Cards (Pisces, Secondary, Monkey - Exactly as in Image 2) */}
-          <div className="grid grid-cols-3 gap-1 text-center">
-            {/* Card 1: Western Zodiac */}
-            <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
-              <span className="text-sm">{readingInfo.zodiac.symbol}</span>
-              <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                {readingInfo.zodiac.name}
-              </span>
-              <span className="text-[8px] text-amber-800/70 dark:text-neutral-400 italic">
-                {readingInfo.zodiac.order}
-              </span>
-            </div>
-
-            {/* Card 2: Secondary Energy */}
-            <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
-              <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
-                {readingInfo.dayNumber}
-              </span>
-              <span className="text-[8px] font-semibold text-slate-700 dark:text-neutral-300 leading-tight">
-                secondary energy
-              </span>
-              <span className="text-[7px] text-amber-800/70 dark:text-neutral-400 italic mt-0.5">
-                {readingInfo.dayOfYear}th day • {readingInfo.weekOfYear}th week
-              </span>
-            </div>
-
-            {/* Card 3: Chinese Zodiac */}
-            <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
-              <div className="flex items-center gap-0.5 text-xs">
-                <span>{readingInfo.chineseZodiac.element.symbol}</span>
-                <span>{readingInfo.chineseZodiac.animal.symbol}</span>
+          {/* 3 Energy Cards */}
+          {readingInfo ? (
+            <div className="grid grid-cols-3 gap-1 text-center">
+              {/* Card 1: Western Zodiac */}
+              <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
+                <span className="text-sm">{readingInfo.zodiac.symbol}</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                  {readingInfo.zodiac.name}
+                </span>
+                <span className="text-[8px] text-amber-800/70 dark:text-neutral-400 italic">
+                  {readingInfo.zodiac.order}
+                </span>
               </div>
-              <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                {readingInfo.chineseZodiac.animal.name}
-              </span>
-              <span className="text-[8px] text-amber-800/70 dark:text-neutral-400 italic">
-                {readingInfo.chineseZodiac.element.name} • {readingInfo.chineseZodiac.animal.order}
-              </span>
+
+              {/* Card 2: Secondary Energy */}
+              <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
+                <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
+                  {readingInfo.dayNumber}
+                </span>
+                <span className="text-[8px] font-semibold text-slate-700 dark:text-neutral-300 leading-tight">
+                  ikincil enerji
+                </span>
+                <span className="text-[7px] text-amber-800/70 dark:text-neutral-400 italic mt-0.5">
+                  {readingInfo.dayOfYear}. gün • {readingInfo.weekOfYear}. hafta
+                </span>
+              </div>
+
+              {/* Card 3: Chinese Zodiac */}
+              <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
+                <div className="flex items-center gap-0.5 text-xs">
+                  <span>{readingInfo.chineseZodiac.element.symbol}</span>
+                  <span>{readingInfo.chineseZodiac.animal.symbol}</span>
+                </div>
+                <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                  {readingInfo.chineseZodiac.animal.name}
+                </span>
+                <span className="text-[8px] text-amber-800/70 dark:text-neutral-400 italic">
+                  {readingInfo.chineseZodiac.element.name} • {readingInfo.chineseZodiac.animal.order}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-1 text-center py-2 opacity-60">
+              <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
+                <span className="text-sm">✨</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Burç</span>
+              </div>
+              <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
+                <span className="text-sm">⚡</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">İkincil Enerji</span>
+              </div>
+              <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
+                <span className="text-sm">🐉</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Çin Zodyağı</span>
+              </div>
+            </div>
+          )}
 
           {/* Bottom Insights Row */}
-          <div className="p-1.5 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-amber-300/30 text-[9px] flex items-center justify-between text-amber-950 dark:text-amber-200 font-medium">
-            <span>{readingInfo.age} years old</span>
-            <span className="font-bold">{readingInfo.personalYear}</span>
-            <span>🐎 Horse, neutral sign</span>
-          </div>
+          {readingInfo ? (
+            <div className="p-1.5 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-amber-300/30 text-[9px] flex items-center justify-between text-amber-950 dark:text-amber-200 font-medium">
+              <span>{readingInfo.age} yaşında</span>
+              <span className="font-bold">{readingInfo.personalYear}</span>
+              <span>🐎 At, nötr burç</span>
+            </div>
+          ) : (
+            <div className="p-1.5 rounded-xl bg-amber-100/30 dark:bg-neutral-800/30 text-[9px] text-center text-amber-900/60 dark:text-neutral-400">
+              Sonuçları görmek için doğum tarihinizi girin
+            </div>
+          )}
         </div>
       )}
     </div>
