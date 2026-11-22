@@ -102,9 +102,10 @@ export function DesktopFolderItem({
 
   return (
     <div
-      onClick={(e) => {
+      onClick={() => setIsSelected(true)}
+      onDoubleClick={(e) => {
         e.stopPropagation();
-        setIsSelected(true);
+        onOpenApp?.();
       }}
       onBlur={() => setIsSelected(false)}
       tabIndex={0}

@@ -9,7 +9,7 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     content:
       'Creative Producer — Ideas into experiences. Crafting multidisciplinary productions, spatial interactions, original audio, and memorable creative projects.',
     targetAppId: 'notes',
-    defaultPosition: { x: 60, y: 80 },
+    defaultPosition: { x: 50, y: 70 },
     rotation: -1.5,
     metadata: {
       tag: 'PINNED',
@@ -28,7 +28,7 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     title: 'Messages',
     subtitle: 'Hüseyin Korumtaş',
     targetAppId: 'messages',
-    defaultPosition: { x: 330, y: 90 },
+    defaultPosition: { x: 330, y: 75 },
     rotation: 1.5,
     metadata: {
       sender: 'Hüseyin Korumtaş',
@@ -53,7 +53,7 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     title: "My Music's",
     subtitle: '8 items',
     targetAppId: 'finder',
-    defaultPosition: { x: 70, y: 350 },
+    defaultPosition: { x: 660, y: 80 },
     rotation: 0,
     metadata: {
       tag: 'FOLDER',
@@ -62,29 +62,12 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     },
   },
   {
-    id: 'project-cut',
-    type: 'project',
-    title: 'Sound Studio & Synth',
-    subtitle: 'Tactile Audio Synthesizer',
-    content:
-      'Interactive procedural audio synthesizer with real-time waveform visualization and custom stems.',
-    targetAppId: 'finder',
-    defaultPosition: { x: 190, y: 340 },
-    rotation: 1,
-    metadata: {
-      tag: 'SOUND STUDIO',
-      version: 'v2.4',
-      buttonLabel: 'PLAY SYNTH TONES',
-      callToAction: 'Open Music ↗',
-    },
-  },
-  {
     id: 'polaroid-showreel',
     type: 'polaroid',
     title: 'Featured Production',
     subtitle: 'Showreel 2026',
     targetAppId: 'finder',
-    defaultPosition: { x: 390, y: 330 },
+    defaultPosition: { x: 380, y: 340 },
     rotation: -2,
     metadata: {
       scene: 'workspace',
