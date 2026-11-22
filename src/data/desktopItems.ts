@@ -62,22 +62,6 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     },
   },
   {
-    id: 'project-cut',
-    type: 'project',
-    title: 'Tone Generator',
-    subtitle: 'Sine Wave Synthesizer',
-    content:
-      'Web Audio API ile gerçek zamanlı saf sinüs dalgası (sine wave) frekans sentezleyici. İstediğiniz Hz değerini girin ve saf tonu dinleyin.',
-    targetAppId: 'finder',
-    defaultPosition: { x: 640, y: 195 },
-    rotation: 0.5,
-    metadata: {
-      tag: 'TONE GEN',
-      version: 'v3.0',
-      callToAction: "Open Music's ↗",
-    },
-  },
-  {
     id: 'polaroid-showreel',
     type: 'polaroid',
     title: 'Featured Production',

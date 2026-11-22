@@ -28,6 +28,7 @@ import {
   RotateCcw,
   RotateCw,
   Folder,
+  ArrowUpRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
@@ -35,6 +36,8 @@ import { WindowContext } from '@/components/window/Window';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
+import { AppId } from '@/types/os';
+import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
 
 type SidebarSection =
   | 'recents'
@@ -59,6 +62,7 @@ export interface FinderFileItem {
   tags?: string[];
   track?: MusicTrack;
   targetSection?: SidebarSection;
+  targetAppId?: AppId;
 }
 
 // Exact files from the user's screenshot with rich blueprints
@@ -273,13 +277,7 @@ const DESKTOP_FILES: FinderFileItem[] = [
     dateModified: 'Nov 22, 2026, 1:00 PM',
     size: '4.8 MB',
     kind: 'Application',
-  },
-  {
-    id: 'dt3',
-    name: 'Sound Studio.app',
-    dateModified: 'Nov 22, 2026, 1:00 PM',
-    size: '8.2 MB',
-    kind: 'Application',
+    targetAppId: 'messages',
   },
 ];
 
@@ -297,11 +295,23 @@ const MUSIC_FILES: FinderFileItem[] = ORIGINAL_TRACKS.map((t) => ({
 
 const APPLICATIONS_FILES: FinderFileItem[] = [
   {
+    id: 'app-tone-gen',
+    name: 'Tone Generator.app',
+    dateModified: 'Nov 22, 2026, 9:00 PM',
+    size: '6.4 MB',
+    kind: 'Application',
+    targetAppId: 'tonegenerator',
+    category: 'Audio Synthesis & Acoustics',
+    tags: ['Sine Wave', 'Web Audio', 'Oscillator', 'Online Generator'],
+    content: `Tone Generator — Pure Sine Wave Synthesizer\n\nWeb Audio API ile gerçek zamanlı saf sinüs dalgası (sine wave) frekans sentezleyicisi.\n\nÖzellikler:\n• Özel Frekans Girişi (20 Hz — 20,000 Hz)\n• Canlı Matematiksel Osiloskop Ekranı\n• ±1 Hz ve ±10 Hz Hassas Stepper Kontrolleri\n• Hızlı Hazır Ayarlar (432 Hz, 440 Hz, 528 Hz, 1000 Hz, 55 Hz Sub)\n• Ses Seviyesi (Volume) & Mute Kontrolleri`,
+  },
+  {
     id: 'app1',
     name: 'Safari.app',
     dateModified: 'Nov 22, 2026',
     size: '32 MB',
     kind: 'Application',
+    targetAppId: 'safari',
   },
   {
     id: 'app2',
@@ -309,6 +319,7 @@ const APPLICATIONS_FILES: FinderFileItem[] = [
     dateModified: 'Nov 22, 2026',
     size: '18 MB',
     kind: 'Application',
+    targetAppId: 'messages',
   },
   {
     id: 'app3',
@@ -316,6 +327,7 @@ const APPLICATIONS_FILES: FinderFileItem[] = [
     dateModified: 'Nov 22, 2026',
     size: '14 MB',
     kind: 'Application',
+    targetAppId: 'notes',
   },
   {
     id: 'app4',
@@ -323,6 +335,7 @@ const APPLICATIONS_FILES: FinderFileItem[] = [
     dateModified: 'Nov 22, 2026',
     size: '8 MB',
     kind: 'Application',
+    targetAppId: 'terminal',
   },
   {
     id: 'app5',
@@ -330,6 +343,7 @@ const APPLICATIONS_FILES: FinderFileItem[] = [
     dateModified: 'Nov 22, 2026',
     size: '12 MB',
     kind: 'Application',
+    targetAppId: 'settings',
   },
 ];
 
@@ -831,6 +845,10 @@ export const FinderApp: React.FC = () => {
                           setActiveSection(file.targetSection || 'music');
                           return;
                         }
+                        if (file.targetAppId) {
+                          openWindow(file.targetAppId);
+                          return;
+                        }
                         setPreviewFile(file);
                         if (file.track && !isThisTrackPlaying) {
                           playTrack(file.track);
@@ -870,6 +888,10 @@ export const FinderApp: React.FC = () => {
                         ) : file.kind === 'Folder' ? (
                           <div className="w-5 h-5 flex items-center justify-center shrink-0">
                             <Folder className="w-4 h-4 text-[#007AFF] fill-[#007AFF]/25" />
+                          </div>
+                        ) : file.kind === 'Application' ? (
+                          <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                            <Volume2 className="w-3 h-3" />
                           </div>
                         ) : (
                           <RedDocIcon />
@@ -926,6 +948,10 @@ export const FinderApp: React.FC = () => {
                         setActiveSection(file.targetSection || 'music');
                         return;
                       }
+                      if (file.targetAppId) {
+                        openWindow(file.targetAppId);
+                        return;
+                      }
                       setPreviewFile(file);
                       if (file.track && !isThisTrackPlaying) {
                         playTrack(file.track);
@@ -955,6 +981,10 @@ export const FinderApp: React.FC = () => {
                       ) : file.kind === 'Folder' ? (
                         <div className="w-12 h-12 flex items-center justify-center">
                           <Folder className="w-10 h-10 text-[#007AFF] fill-[#007AFF]/25 drop-shadow-sm" />
+                        </div>
+                      ) : file.kind === 'Application' ? (
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-lg border border-white/20">
+                          <Volume2 className="w-6 h-6" />
                         </div>
                       ) : (
                         <svg
@@ -995,6 +1025,10 @@ export const FinderApp: React.FC = () => {
                           setActiveSection(file.targetSection || 'music');
                           return;
                         }
+                        if (file.targetAppId) {
+                          openWindow(file.targetAppId);
+                          return;
+                        }
                         setPreviewFile(file);
                       }}
                       className={`w-full flex items-center justify-between p-2 rounded-lg text-xs text-left transition-colors ${
@@ -1008,6 +1042,8 @@ export const FinderApp: React.FC = () => {
                           <Music2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                         ) : file.kind === 'Folder' ? (
                           <Folder className="w-3.5 h-3.5 text-[#007AFF] fill-[#007AFF]/25 shrink-0" />
+                        ) : file.kind === 'Application' ? (
+                          <Volume2 className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
                         ) : (
                           <RedDocIcon />
                         )}
@@ -1036,6 +1072,10 @@ export const FinderApp: React.FC = () => {
                             </div>
                           ) : activeFile.kind === 'Folder' ? (
                             <Folder className="w-14 h-14 text-[#007AFF] fill-[#007AFF]/25" />
+                          ) : activeFile.kind === 'Application' ? (
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-lg border border-white/20">
+                              <Volume2 className="w-7 h-7" />
+                            </div>
                           ) : (
                             <RedDocIcon />
                           )}
@@ -1055,6 +1095,15 @@ export const FinderApp: React.FC = () => {
                             className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer"
                           >
                             Klasörü Aç
+                          </button>
+                        ) : activeFile.targetAppId ? (
+                          <button
+                            type="button"
+                            onClick={() => openWindow(activeFile.targetAppId!)}
+                            className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer flex items-center gap-1.5"
+                          >
+                            <span>Uygulamayı Aç</span>
+                            <ArrowUpRight className="w-3.5 h-3.5" />
                           </button>
                         ) : (
                           <button
@@ -1096,7 +1145,9 @@ export const FinderApp: React.FC = () => {
             {/* Top Bar of Quick Look */}
             <div className="h-10 px-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-neutral-100/70 dark:bg-neutral-800/70">
               <div className="flex items-center gap-2 min-w-0">
-                {previewFile.track && previewFile.kind.includes('audio') ? (
+                {previewFile.targetAppId === 'tonegenerator' ? (
+                  <Volume2 className="w-3.5 h-3.5 text-cyan-500" />
+                ) : previewFile.track && previewFile.kind.includes('audio') ? (
                   <Music2 className="w-3.5 h-3.5 text-indigo-500" />
                 ) : (
                   <RedDocIcon />
@@ -1114,7 +1165,11 @@ export const FinderApp: React.FC = () => {
               </button>
             </div>
 
-            {previewFile.track && previewFile.kind.includes('audio') ? (
+            {previewFile.targetAppId === 'tonegenerator' ? (
+              <div className="h-[520px] flex flex-col bg-neutral-900">
+                <ToneGeneratorApp />
+              </div>
+            ) : previewFile.track && previewFile.kind.includes('audio') ? (
               /* INTERACTIVE MUSIC TRACK PLAYER VIEW */
               <div className="p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex flex-col sm:flex-row items-center gap-6">

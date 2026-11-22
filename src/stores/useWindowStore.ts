@@ -124,6 +124,18 @@ const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
     size: { width: 600, height: 420 },
     defaultSize: { width: 600, height: 420 },
   },
+  tonegenerator: {
+    id: 'tonegenerator',
+    title: 'Tone Generator',
+    icon: 'tonegenerator',
+    isOpen: false,
+    isMinimized: false,
+    isMaximized: false,
+    zIndex: 1,
+    position: { x: 260, y: 110 },
+    size: { width: 420, height: 530 },
+    defaultSize: { width: 420, height: 530 },
+  },
 };
 
 /**
