@@ -75,20 +75,4 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
       version: 'v1.0',
     },
   },
-  {
-    id: 'polaroid-showreel',
-    type: 'polaroid',
-    title: 'Featured Production',
-    subtitle: 'Showreel 2026',
-    targetAppId: 'finder',
-    defaultPosition: { x: 380, y: 340 },
-    rotation: -2,
-    metadata: {
-      scene: 'workspace',
-      caption: 'Kinetic Echoes • Creative Production',
-      date: '2026 Showreel',
-      tag: 'FEATURED WORK',
-      callToAction: 'View in Finder ↗',
-    },
-  },
 ];
