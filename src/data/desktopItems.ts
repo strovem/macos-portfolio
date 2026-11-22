@@ -32,19 +32,19 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     rotation: 1.5,
     metadata: {
       sender: 'Hüseyin Korumtaş',
-      handle: 'Creative Producer',
-      time: 'Just now',
+      handle: 'Creative Producer & Audio Lead',
+      time: 'Şimdi',
       bubbles: [
         {
-          text: 'Hey there! Welcome to my creative space. 👋\nA collection of ideas, experiments, and projects. Feel free to explore.',
+          text: 'Selam! Kreatif alanıma hoş geldiniz. 👋\nMüzik prodüksiyonu, reklam jingle\'ları veya yeni bir proje için buradan bana doğrudan yazabilirsiniz.',
           isSender: false,
         },
         {
-          text: "Curious about something? Drop me a message. I'd love to hear from you!",
+          text: 'Gönderdiğiniz tüm mesajlar korumtashuseyin@gmail.com adresime anında iletilir!',
           isSender: false,
         },
       ],
-      callToAction: 'Reply in Messages ↗',
+      callToAction: 'Messages\'ta Yanıtla ↗',
     },
   },
   {

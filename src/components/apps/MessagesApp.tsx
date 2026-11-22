@@ -12,6 +12,8 @@ import {
   Check,
   AlertCircle,
   Loader2,
+  Mail,
+  ExternalLink,
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -19,6 +21,7 @@ interface ChatMessage {
   sender: 'user' | 'huseyin';
   text: string;
   time: string;
+  status?: 'sending' | 'delivered';
 }
 
 interface ChatThread {
@@ -35,7 +38,7 @@ const INITIAL_THREADS: ChatThread[] = [
   {
     id: 'huseyin',
     name: 'Hüseyin Korumtaş',
-    role: 'Creative Producer',
+    role: 'Creative Producer & Audio Lead',
     avatarText: 'HK',
     avatarBg: 'bg-gradient-to-tr from-blue-500 to-indigo-600',
     unread: false,
@@ -43,21 +46,21 @@ const INITIAL_THREADS: ChatThread[] = [
       {
         id: 'h1',
         sender: 'huseyin',
-        text: 'Hey there! Welcome to my interactive space. 👋',
-        time: '10:30 AM',
+        text: 'Merhaba! Kreatif çalışma alanıma ve portfolyoma hoş geldiniz. 👋',
+        time: '10:30',
       },
       {
         id: 'h2',
         sender: 'huseyin',
-        text: 'Feel free to leave a direct message, discuss collaborations, or pitch an idea. Fill in your details below and hit send.',
-        time: '10:31 AM',
+        text: 'Müzik prodüksiyonu, reklam jingle\'ları veya kreatif iş birlikleri için doğrudan buradan mesaj bırakabilirsiniz. Gönderdiğiniz mesaj doğrudan korumtashuseyin@gmail.com adresime ulaşır.',
+        time: '10:31',
       },
     ],
   },
   {
     id: 'collaboration',
-    name: 'Collaborations & Projects',
-    role: 'Production Inquiries',
+    name: 'Projeler & İş Birlikleri',
+    role: 'Ticari & Müzik Talepleri',
     avatarText: 'CP',
     avatarBg: 'bg-gradient-to-tr from-emerald-500 to-teal-600',
     unread: false,
@@ -65,14 +68,15 @@ const INITIAL_THREADS: ChatThread[] = [
       {
         id: 'r1',
         sender: 'huseyin',
-        text: 'Hello! Looking to produce an experience or explore creative direction?',
-        time: 'Yesterday',
+        text: 'Selamlar! Excalibur benzeri bir reklam jingle\'ı, kulüp prodüksiyonu veya özel bir ses tasarımı mı planlıyorsunuz?',
+        time: 'Dün',
       },
       {
         id: 'r2',
         sender: 'user',
-        text: 'Yes! Loved your motto "Ideas into experiences" and want to discuss an upcoming production.',
-        time: 'Yesterday',
+        text: 'Evet, görsel-işitsel ritim kurgusu ve ses kimliği üzerine yeni bir kampanya için görüşmek istiyorum.',
+        time: 'Dün',
+        status: 'delivered',
       },
     ],
   },
@@ -111,18 +115,18 @@ export const MessagesApp: React.FC = () => {
 
     if (activeThread.id === 'huseyin') {
       if (!name.trim()) {
-        setFormError('Please enter your name.');
+        setFormError('Lütfen adınızı girin.');
         return;
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email.trim() || !emailRegex.test(email.trim())) {
-        setFormError('Please provide a valid email address.');
+        setFormError('Lütfen geçerli bir e-posta adresi girin (örn: adiniz@alanadi.com).');
         return;
       }
     }
 
     const currentText = messageText.trim();
-    const senderName = name.trim() || 'Visitor';
+    const senderName = name.trim() || 'Ziyaretçi';
     const senderEmail = email.trim();
 
     // Optimistically append sent bubble
@@ -132,6 +136,7 @@ export const MessagesApp: React.FC = () => {
       sender: 'user',
       text: currentText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'delivered',
     };
 
     setThreads((prev) =>
@@ -146,7 +151,7 @@ export const MessagesApp: React.FC = () => {
 
     try {
       if (activeThread.id === 'huseyin') {
-        // Send to real contact API route
+        // Send to real contact API route which forwards to korumtashuseyin@gmail.com
         await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -165,7 +170,7 @@ export const MessagesApp: React.FC = () => {
           const autoReply: ChatMessage = {
             id: 'reply-' + Date.now(),
             sender: 'huseyin',
-            text: `Thanks for reaching out, ${senderName}! I've received your note and will get back to you shortly at ${senderEmail}. — Hüseyin Korumtaş`,
+            text: `Mesajınızı ve notunuzu aldım ${senderName}! En kısa sürede ${senderEmail} üzerinden size dönüş yapacağım. İlginiz için çok teşekkürler! 👋 — Hüseyin Korumtaş`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
 
@@ -204,7 +209,7 @@ export const MessagesApp: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search conversations..."
+                placeholder="Sohbetlerde ara..."
                 className="w-full h-7 pl-8 pr-3 text-xs rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50"
               />
             </div>
@@ -221,7 +226,7 @@ export const MessagesApp: React.FC = () => {
                   key={thread.id}
                   type="button"
                   onClick={() => setActiveThreadId(thread.id)}
-                  className={`w-full p-2.5 rounded-xl text-left transition-colors flex items-center gap-3 ${
+                  className={`w-full p-2.5 rounded-xl text-left transition-colors flex items-center gap-3 cursor-pointer ${
                     isSelected
                       ? 'bg-[#007AFF] text-white shadow-sm'
                       : 'hover:bg-black/5 dark:hover:bg-white/5 text-slate-700 dark:text-neutral-200'
@@ -229,7 +234,7 @@ export const MessagesApp: React.FC = () => {
                 >
                   {/* Contact Avatar */}
                   <div
-                    className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-bold text-xs text-white ${thread.avatarBg}`}
+                    className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-bold text-xs text-white shadow-xs ${thread.avatarBg}`}
                   >
                     {thread.avatarText}
                   </div>
@@ -268,7 +273,7 @@ export const MessagesApp: React.FC = () => {
         {/* Footer status */}
         <div className="p-3 border-t border-black/5 dark:border-white/5 text-[11px] text-center text-slate-400 dark:text-neutral-500 flex items-center justify-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-          <span>iMessage Connected</span>
+          <span>iMessage Aktif & Bağlı</span>
         </div>
       </div>
 
@@ -287,12 +292,12 @@ export const MessagesApp: React.FC = () => {
                 <span>{activeThread.name}</span>
                 {activeThread.id === 'huseyin' && (
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-normal">
-                    Available
+                    İletişime Açık
                   </span>
                 )}
               </div>
               <div className="text-[11px] text-slate-400 dark:text-neutral-500">
-                {activeThread.role}
+                {activeThread.role} · korumtashuseyin@gmail.com
               </div>
             </div>
           </div>
@@ -316,9 +321,18 @@ export const MessagesApp: React.FC = () => {
                 >
                   {msg.text}
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-neutral-500 mt-1 px-1">
-                  {msg.time}
-                </span>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-neutral-500 mt-1 px-1">
+                  <span>{msg.time}</span>
+                  {isUser && (
+                    <>
+                      <span>•</span>
+                      <span className="text-[#007AFF] font-medium flex items-center gap-0.5">
+                        <CheckCheck className="w-3 h-3" />
+                        <span>İletildi</span>
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -353,14 +367,14 @@ export const MessagesApp: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <input
                 type="text"
-                placeholder="Your Name (e.g. Alex Smith)"
+                placeholder="Adınız (Örn: Can Yılmaz / Alex)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-7 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
               />
               <input
                 type="email"
-                placeholder="Your Email (e.g. alex@company.com)"
+                placeholder="E-posta Adresiniz (Örn: can@sirket.com)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-7 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
@@ -377,8 +391,8 @@ export const MessagesApp: React.FC = () => {
                 onChange={(e) => setMessageText(e.target.value)}
                 placeholder={
                   activeThread.id === 'huseyin'
-                    ? 'Write your message or inquiry...'
-                    : `Message ${activeThread.name}...`
+                    ? 'Mesajınızı veya proje teklifinizi yazın...'
+                    : `${activeThread.name} ile mesajlaş...`
                 }
                 className="w-full h-8.5 pl-3 pr-8 rounded-full bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
               />
@@ -387,7 +401,7 @@ export const MessagesApp: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting || !messageText.trim()}
-              className="w-8.5 h-8.5 rounded-full bg-[#007AFF] hover:bg-[#007AFF]/90 disabled:opacity-40 disabled:hover:bg-[#007AFF] text-white flex items-center justify-center transition-all shadow-sm shrink-0"
+              className="w-8.5 h-8.5 rounded-full bg-[#007AFF] hover:bg-[#007AFF]/90 disabled:opacity-40 disabled:hover:bg-[#007AFF] text-white flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer"
             >
               {isSubmitting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
