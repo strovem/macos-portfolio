@@ -20,7 +20,7 @@ const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
     id: 'finder',
     title: 'Finder',
     icon: 'finder',
-    isOpen: true,
+    isOpen: false,
     isMinimized: false,
     isMaximized: false,
     zIndex: 20,

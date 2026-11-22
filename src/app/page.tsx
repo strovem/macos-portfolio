@@ -136,7 +136,7 @@ export default function Home() {
         <div className="flex-1 relative pointer-events-none">
           <AnimatePresence>
             {openWindows.map((win) => (
-              <Window key={win.id} id={win.id}>
+              <Window key={win.id} id={win.id} hideHeader={win.id === 'finder'}>
                 {renderAppContent(win.id)}
               </Window>
             ))}

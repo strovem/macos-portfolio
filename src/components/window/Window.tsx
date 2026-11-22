@@ -9,6 +9,20 @@ import { AppIcon } from '@/components/dock/AppIcon';
 import { AppMetadata } from '@/data/apps';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
+export interface WindowContextType {
+  id: AppId;
+  isActive: boolean;
+  isMaximized: boolean;
+  isMobile: boolean;
+  dragControls: ReturnType<typeof useDragControls>;
+  onClose: () => void;
+  onMinimize: () => void;
+  onMaximize: () => void;
+  onFocus: () => void;
+}
+
+export const WindowContext = React.createContext<WindowContextType | null>(null);
+
 export interface WindowProps {
   id: AppId;
   window?: WindowState;
@@ -17,6 +31,7 @@ export interface WindowProps {
   children?: React.ReactNode;
   className?: string;
   headerContent?: React.ReactNode;
+  hideHeader?: boolean;
 }
 
 export function Window({
@@ -27,6 +42,7 @@ export function Window({
   children,
   className = '',
   headerContent,
+  hideHeader = false,
 }: WindowProps) {
   const storeWindow = useWindowStore((state) => state.windows[id]);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
@@ -234,37 +250,53 @@ export function Window({
         } ${className}`}
       >
         {/* Title Bar Header with Drag Controls & Traffic Lights / Mobile Done */}
-        <WindowHeader
-          title={title || windowData.title}
-          icon={icon || windowData.icon}
-          isActive={isActive}
-          isMaximized={isMaximized}
-          isMobile={isMobile}
-          dragControls={dragControls}
-          onClose={() => closeWindow(id)}
-          onMinimize={() => minimizeWindow(id)}
-          onMaximize={() => maximizeWindow(id)}
-          onFocus={() => focusWindow(id)}
-        >
-          {headerContent}
-        </WindowHeader>
+        {!hideHeader && (
+          <WindowHeader
+            title={title || windowData.title}
+            icon={icon || windowData.icon}
+            isActive={isActive}
+            isMaximized={isMaximized}
+            isMobile={isMobile}
+            dragControls={dragControls}
+            onClose={() => closeWindow(id)}
+            onMinimize={() => minimizeWindow(id)}
+            onMaximize={() => maximizeWindow(id)}
+            onFocus={() => focusWindow(id)}
+          >
+            {headerContent}
+          </WindowHeader>
+        )}
 
         {/* Window Content Body */}
-        <div className="flex-1 relative overflow-auto os-interactive bg-white/70 dark:bg-[#1E1E1E]/80 text-slate-900 dark:text-neutral-100">
-          {children || (
-            <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center select-none text-slate-500 dark:text-neutral-400">
-              <div className="w-14 h-14 mb-3 drop-shadow-sm">
-                <AppIcon iconType={(icon || windowData.icon) as AppMetadata['iconType']} />
+        <WindowContext.Provider
+          value={{
+            id,
+            isActive,
+            isMaximized,
+            isMobile,
+            dragControls,
+            onClose: () => closeWindow(id),
+            onMinimize: () => minimizeWindow(id),
+            onMaximize: () => maximizeWindow(id),
+            onFocus: () => focusWindow(id),
+          }}
+        >
+          <div className="flex-1 relative overflow-hidden os-interactive bg-white/70 dark:bg-[#1E1E1E]/80 text-slate-900 dark:text-neutral-100 flex flex-col">
+            {children || (
+              <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center select-none text-slate-500 dark:text-neutral-400">
+                <div className="w-14 h-14 mb-3 drop-shadow-sm">
+                  <AppIcon iconType={(icon || windowData.icon) as AppMetadata['iconType']} />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-neutral-200 mb-1">
+                  {title || windowData.title}
+                </h3>
+                <p className="text-xs max-w-xs text-slate-500 dark:text-neutral-400">
+                  Application window initialized. Interactivity and subviews loaded.
+                </p>
               </div>
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-neutral-200 mb-1">
-                {title || windowData.title}
-              </h3>
-              <p className="text-xs max-w-xs text-slate-500 dark:text-neutral-400">
-                Application window initialized. Interactivity and subviews loaded.
-              </p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </WindowContext.Provider>
 
         {/* Bottom-right Corner Resize Handle (Desktop only) */}
         {!isMaximized && !isMobile && (
