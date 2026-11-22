@@ -1,12 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import { Wallpaper } from '@/components/desktop/Wallpaper';
 import { FloatingBubbles } from '@/components/desktop/FloatingBubbles';
 import { Menubar } from '@/components/menubar/Menubar';
+import { Dock } from '@/components/dock/Dock';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { AppId } from '@/types/os';
 
 export default function Home() {
   const brightness = useSettingsStore((state) => state.brightness);
+  const [activeAppName, setActiveAppName] = useState<string>('Finder');
+  const [openAppIds, setOpenAppIds] = useState<AppId[]>(['finder']);
+
+  const handleAppClick = (appId: AppId) => {
+    // Format app title for menubar display
+    const title = appId.charAt(0).toUpperCase() + appId.slice(1);
+    setActiveAppName(title);
+
+    // Track active/open apps
+    if (!openAppIds.includes(appId)) {
+      setOpenAppIds((prev) => [...prev, appId]);
+    }
+  };
 
   return (
     <main className="relative w-full h-full overflow-hidden select-none">
@@ -28,7 +44,7 @@ export default function Home() {
       )}
 
       {/* Menubar (top-0 fixed z-50) */}
-      <Menubar activeAppName="Finder" />
+      <Menubar activeAppName={activeAppName} />
 
       {/* Desktop Canvas Root */}
       <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-10">
@@ -37,18 +53,14 @@ export default function Home() {
           <div className="text-center p-6 glass-panel rounded-2xl shadow-window max-w-md mx-4">
             <h1 className="text-lg font-bold text-slate-800 dark:text-white mb-2">macOS Web OS Portfolio</h1>
             <p className="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
-              Desktop canvas initialized. Core scaffolding and Menubar loaded successfully.
+              Desktop canvas initialized. Core scaffolding, Menubar, and spring-magnified Dock loaded successfully.
             </p>
           </div>
         </div>
-
-        {/* Placeholder for Dock */}
-        <footer className="h-16 w-full flex items-center justify-center pb-2 pointer-events-auto">
-          <div className="glass-panel px-4 py-2 rounded-2xl shadow-dock flex items-center space-x-3">
-            <span className="text-xs text-slate-600 dark:text-neutral-300 font-medium">Dock Initialized</span>
-          </div>
-        </footer>
       </div>
+
+      {/* Spring-Magnified macOS Dock (bottom-3 fixed z-40) */}
+      <Dock openAppIds={openAppIds} onAppClick={handleAppClick} />
     </main>
   );
 }
