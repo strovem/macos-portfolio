@@ -232,7 +232,7 @@ export default function Home() {
       </div>
 
       {/* Desktop Canvas Root */}
-      <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-10">
+      <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-20">
         {/* Open Windows Render Canvas */}
         <div className="flex-1 relative pointer-events-none">
           <AnimatePresence>

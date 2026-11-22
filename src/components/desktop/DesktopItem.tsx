@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
-import { DesktopCardItem, AppId } from '@/types/os';
+import { motion } from 'framer-motion';
+import { DesktopCardItem } from '@/types/os';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { ReadmeSticker } from './widgets/ReadmeSticker';
 import { PolaroidCard } from './widgets/PolaroidCard';
