@@ -1,10 +1,19 @@
 'use client';
 
+import { Wallpaper } from '@/components/desktop/Wallpaper';
+import { FloatingBubbles } from '@/components/desktop/FloatingBubbles';
+
 export default function Home() {
   return (
-    <main className="relative w-full h-full overflow-hidden bg-grid-pastel bg-[#f0f4f8]">
+    <main className="relative w-full h-full overflow-hidden select-none">
+      {/* Dynamic Wallpaper Canvas */}
+      <Wallpaper />
+
+      {/* Floating Ambient Glass Bubbles */}
+      <FloatingBubbles />
+
       {/* Desktop Canvas Root */}
-      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
         {/* Placeholder for MenuBar */}
         <header className="h-7 w-full glass-panel border-b border-black/5 flex items-center px-4 pointer-events-auto">
           <span className="text-xs font-semibold tracking-wide"> Portfolio OS</span>
