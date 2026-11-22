@@ -1,0 +1,60 @@
+export type AppId =
+  | 'finder'
+  | 'safari'
+  | 'messages'
+  | 'notes'
+  | 'photos'
+  | 'terminal'
+  | 'settings'
+  | 'trash';
+
+export interface WindowState {
+  id: AppId;
+  title: string;
+  icon: string;
+  isOpen: boolean;
+  isMinimized: boolean;
+  isMaximized: boolean;
+  zIndex: number;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  defaultSize: { width: number; height: number };
+}
+
+export interface DesktopCardItem {
+  id: string;
+  type: 'readme' | 'polaroid' | 'award' | 'project' | 'map';
+  title: string;
+  subtitle?: string;
+  content?: string;
+  image?: string;
+  link?: string;
+  targetAppId?: AppId;
+  defaultPosition: { x: number; y: number };
+  rotation?: number; // e.g. -3 to 3 degrees
+}
+
+export interface ProjectItem {
+  id: string;
+  title: string;
+  description: string;
+  category: 'web' | 'mobile' | 'ai' | 'experiments';
+  tags: string[];
+  image?: string;
+  demoUrl?: string;
+  githubUrl?: string;
+  featured?: boolean;
+}
+
+export interface SkillCategory {
+  name: string;
+  skills: { name: string; level: number; icon?: string }[];
+}
+
+export interface NoteEntry {
+  id: string;
+  title: string;
+  date: string;
+  category: string;
+  content: string;
+}
