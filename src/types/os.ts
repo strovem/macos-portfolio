@@ -30,7 +30,8 @@ export type DesktopCardType =
   | 'map'
   | 'message'
   | 'music'
-  | 'folder';
+  | 'folder'
+  | 'numerology';
 
 export interface DesktopCardItem {
   id: string;

@@ -53,12 +53,24 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     title: "My Music's",
     subtitle: '8 items',
     targetAppId: 'finder',
-    defaultPosition: { x: 660, y: 80 },
+    defaultPosition: { x: 660, y: 65 },
     rotation: 0,
     metadata: {
       tag: 'FOLDER',
       itemCount: 8,
       section: 'music',
+    },
+  },
+  {
+    id: '7catyear-widget',
+    type: 'numerology',
+    title: '7CatYear • GG33',
+    subtitle: 'Numerology & Astrology',
+    defaultPosition: { x: 640, y: 170 },
+    rotation: 0.5,
+    metadata: {
+      tag: 'GG33 CALC',
+      version: 'v1.0',
     },
   },
   {

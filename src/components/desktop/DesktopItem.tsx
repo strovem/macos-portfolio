@@ -12,6 +12,7 @@ import { ProjectPreviewCard } from './widgets/ProjectPreviewCard';
 import { MessageSnippetWidget } from './widgets/MessageSnippetWidget';
 import { MusicDesktopWidget } from './widgets/MusicDesktopWidget';
 import { DesktopFolderItem } from './widgets/DesktopFolderItem';
+import { CatYearWidget } from './widgets/CatYearWidget';
 
 interface DesktopItemProps {
   item: DesktopCardItem;
@@ -99,6 +100,8 @@ export function DesktopItem({
         return <MusicDesktopWidget item={item} onOpenApp={handleOpenApp} />;
       case 'folder':
         return <DesktopFolderItem item={item} onOpenApp={handleOpenApp} isMobile={isMobile} />;
+      case 'numerology':
+        return <CatYearWidget item={item} onOpenApp={handleOpenApp} />;
       default:
         return null;
     }
