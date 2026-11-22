@@ -11,6 +11,7 @@ import { MapWidget } from './widgets/MapWidget';
 import { ProjectPreviewCard } from './widgets/ProjectPreviewCard';
 import { MessageSnippetWidget } from './widgets/MessageSnippetWidget';
 import { MusicDesktopWidget } from './widgets/MusicDesktopWidget';
+import { DesktopFolderItem } from './widgets/DesktopFolderItem';
 
 interface DesktopItemProps {
   item: DesktopCardItem;
@@ -36,7 +37,7 @@ export function DesktopItem({
   const effectiveZIndex = propZIndex !== undefined ? propZIndex : (isDragging ? 25 : localZIndex);
 
   const handleOpenApp = () => {
-    if (item.type === 'music') {
+    if (item.type === 'music' || item.type === 'folder') {
       openFinderToSection('music');
     } else if (item.targetAppId) {
       openWindow(item.targetAppId);
@@ -96,6 +97,8 @@ export function DesktopItem({
         return <MessageSnippetWidget item={item} onOpenApp={handleOpenApp} />;
       case 'music':
         return <MusicDesktopWidget item={item} onOpenApp={handleOpenApp} />;
+      case 'folder':
+        return <DesktopFolderItem item={item} onOpenApp={handleOpenApp} isMobile={isMobile} />;
       default:
         return null;
     }

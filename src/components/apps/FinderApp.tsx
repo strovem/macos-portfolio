@@ -27,6 +27,7 @@ import {
   Disc,
   RotateCcw,
   RotateCw,
+  Folder,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
@@ -57,6 +58,7 @@ export interface FinderFileItem {
   category?: string;
   tags?: string[];
   track?: MusicTrack;
+  targetSection?: SidebarSection;
 }
 
 // Exact files from the user's screenshot with rich blueprints
@@ -248,6 +250,14 @@ const DOWNLOADS_FILES: FinderFileItem[] = [
 ];
 
 const DESKTOP_FILES: FinderFileItem[] = [
+  {
+    id: 'dt-my-musics',
+    name: "My Music's",
+    dateModified: 'Nov 22, 2026, 8:15 PM',
+    size: '8 items',
+    kind: 'Folder',
+    targetSection: 'music',
+  },
   {
     id: 'dt1',
     name: 'README.md',
@@ -446,7 +456,7 @@ export const FinderApp: React.FC = () => {
       case 'documents':
         return 'Documents';
       case 'music':
-        return 'Music';
+        return "My Music's";
       case 'applications':
         return 'Applications';
       case 'trash':
@@ -587,7 +597,7 @@ export const FinderApp: React.FC = () => {
                     }`}
                   >
                     <Music2 className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Music</span>
+                    <span>My Music&apos;s</span>
                   </button>
 
                   <button
@@ -817,6 +827,10 @@ export const FinderApp: React.FC = () => {
                       key={file.id}
                       onClick={() => setSelectedFileId(file.id)}
                       onDoubleClick={() => {
+                        if (file.kind === 'Folder' || file.targetSection) {
+                          setActiveSection(file.targetSection || 'music');
+                          return;
+                        }
                         setPreviewFile(file);
                         if (file.track && !isThisTrackPlaying) {
                           playTrack(file.track);
@@ -853,6 +867,10 @@ export const FinderApp: React.FC = () => {
                               <Play className="w-3 h-3 fill-current ml-0.5" />
                             )}
                           </button>
+                        ) : file.kind === 'Folder' ? (
+                          <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                            <Folder className="w-4 h-4 text-[#007AFF] fill-[#007AFF]/25" />
+                          </div>
                         ) : (
                           <RedDocIcon />
                         )}
@@ -904,6 +922,10 @@ export const FinderApp: React.FC = () => {
                     key={file.id}
                     onClick={() => setSelectedFileId(file.id)}
                     onDoubleClick={() => {
+                      if (file.kind === 'Folder' || file.targetSection) {
+                        setActiveSection(file.targetSection || 'music');
+                        return;
+                      }
                       setPreviewFile(file);
                       if (file.track && !isThisTrackPlaying) {
                         playTrack(file.track);
@@ -929,6 +951,10 @@ export const FinderApp: React.FC = () => {
                           ) : (
                             <Music2 className="w-4 h-4" />
                           )}
+                        </div>
+                      ) : file.kind === 'Folder' ? (
+                        <div className="w-12 h-12 flex items-center justify-center">
+                          <Folder className="w-10 h-10 text-[#007AFF] fill-[#007AFF]/25 drop-shadow-sm" />
                         </div>
                       ) : (
                         <svg
@@ -964,6 +990,13 @@ export const FinderApp: React.FC = () => {
                       key={file.id}
                       type="button"
                       onClick={() => setSelectedFileId(file.id)}
+                      onDoubleClick={() => {
+                        if (file.kind === 'Folder' || file.targetSection) {
+                          setActiveSection(file.targetSection || 'music');
+                          return;
+                        }
+                        setPreviewFile(file);
+                      }}
                       className={`w-full flex items-center justify-between p-2 rounded-lg text-xs text-left transition-colors ${
                         isSelected
                           ? 'bg-[#007AFF] text-white'
@@ -973,6 +1006,8 @@ export const FinderApp: React.FC = () => {
                       <div className="flex items-center gap-2 truncate">
                         {file.track ? (
                           <Music2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        ) : file.kind === 'Folder' ? (
+                          <Folder className="w-3.5 h-3.5 text-[#007AFF] fill-[#007AFF]/25 shrink-0" />
                         ) : (
                           <RedDocIcon />
                         )}
@@ -999,6 +1034,8 @@ export const FinderApp: React.FC = () => {
                             >
                               <Music2 className="w-6 h-6" />
                             </div>
+                          ) : activeFile.kind === 'Folder' ? (
+                            <Folder className="w-14 h-14 text-[#007AFF] fill-[#007AFF]/25" />
                           ) : (
                             <RedDocIcon />
                           )}
@@ -1011,13 +1048,23 @@ export const FinderApp: React.FC = () => {
                           <p>Size: {activeFile.size}</p>
                           <p>Modified: {activeFile.dateModified}</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setPreviewFile(activeFile)}
-                          className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors"
-                        >
-                          Quick Look
-                        </button>
+                        {activeFile.kind === 'Folder' ? (
+                          <button
+                            type="button"
+                            onClick={() => setActiveSection(activeFile.targetSection || 'music')}
+                            className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer"
+                          >
+                            Klasörü Aç
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewFile(activeFile)}
+                            className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer"
+                          >
+                            Quick Look
+                          </button>
+                        )}
                       </div>
                     );
                   })()

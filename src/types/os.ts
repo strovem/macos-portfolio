@@ -28,7 +28,8 @@ export type DesktopCardType =
   | 'project'
   | 'map'
   | 'message'
-  | 'music';
+  | 'music'
+  | 'folder';
 
 export interface DesktopCardItem {
   id: string;
