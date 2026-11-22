@@ -48,20 +48,19 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     },
   },
   {
-    id: 'project-cut',
-    type: 'project',
-    title: 'Sound Studio & Synth',
-    subtitle: 'Tactile Audio Synthesizer',
+    id: 'my-musics',
+    type: 'music',
+    title: "My Music's",
+    subtitle: 'Hüseyin Korumtaş • 8 Tracks',
     content:
-      'Interactive procedural audio synthesizer with real-time waveform visualization and custom stems.',
+      'Özgün yapımlar, kulüp miksleri ve ses tasarımı çalışmaları. Doğrudan masaüstünden dinleyebilir veya Finder klasöründe inceleyebilirsiniz.',
     targetAppId: 'finder',
     defaultPosition: { x: 90, y: 350 },
     rotation: 1,
     metadata: {
-      tag: 'SOUND STUDIO',
-      version: 'v2.4',
-      buttonLabel: 'PLAY SYNTH TONES',
-      callToAction: 'Open Music ↗',
+      tag: "MY MUSIC'S",
+      version: '8 Tracks',
+      callToAction: "Open Music's ↗",
     },
   },
   {

@@ -10,6 +10,7 @@ import { AwardBadge } from './widgets/AwardBadge';
 import { MapWidget } from './widgets/MapWidget';
 import { ProjectPreviewCard } from './widgets/ProjectPreviewCard';
 import { MessageSnippetWidget } from './widgets/MessageSnippetWidget';
+import { MusicDesktopWidget } from './widgets/MusicDesktopWidget';
 
 interface DesktopItemProps {
   item: DesktopCardItem;
@@ -27,6 +28,7 @@ export function DesktopItem({
   isMobile = false,
 }: DesktopItemProps) {
   const openWindow = useWindowStore((state) => state.openWindow);
+  const openFinderToSection = useWindowStore((state) => state.openFinderToSection);
   const [isDragging, setIsDragging] = useState(false);
   const [localZIndex, setLocalZIndex] = useState(1);
   const dragDistanceRef = useRef(0);
@@ -34,7 +36,9 @@ export function DesktopItem({
   const effectiveZIndex = propZIndex !== undefined ? propZIndex : (isDragging ? 25 : localZIndex);
 
   const handleOpenApp = () => {
-    if (item.targetAppId) {
+    if (item.type === 'music') {
+      openFinderToSection('music');
+    } else if (item.targetAppId) {
       openWindow(item.targetAppId);
     }
   };
@@ -90,6 +94,8 @@ export function DesktopItem({
         return <ProjectPreviewCard item={item} onOpenApp={handleOpenApp} />;
       case 'message':
         return <MessageSnippetWidget item={item} onOpenApp={handleOpenApp} />;
+      case 'music':
+        return <MusicDesktopWidget item={item} onOpenApp={handleOpenApp} />;
       default:
         return null;
     }

@@ -1,10 +1,22 @@
 import { create } from 'zustand';
 import { AppId, WindowState } from '@/types/os';
 
+export type FinderSection =
+  | 'recents'
+  | 'downloads'
+  | 'desktop'
+  | 'documents'
+  | 'music'
+  | 'applications'
+  | 'trash';
+
 export interface WindowStoreState {
   windows: Record<AppId, WindowState>;
   activeWindowId: AppId | null;
   maxZIndex: number;
+  finderSection: FinderSection;
+  setFinderSection: (section: FinderSection) => void;
+  openFinderToSection: (section: FinderSection) => void;
   openWindow: (id: AppId) => void;
   closeWindow: (id: AppId) => void;
   minimizeWindow: (id: AppId) => void;
@@ -135,6 +147,15 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
   windows: DEFAULT_WINDOWS,
   activeWindowId: 'finder',
   maxZIndex: 20,
+  finderSection: 'documents',
+
+  setFinderSection: (section: FinderSection) => set({ finderSection: section }),
+
+  openFinderToSection: (section: FinderSection) => {
+    get().openWindow('finder');
+    get().focusWindow('finder');
+    set({ finderSection: section });
+  },
 
   openWindow: (id: AppId) => {
     const { windows, maxZIndex } = get();

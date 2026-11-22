@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import {
   Clock,
   Download,
@@ -374,7 +374,17 @@ export const FinderApp: React.FC = () => {
     prevTrack,
   } = useAudioStore();
 
-  const [activeSection, setActiveSection] = useState<SidebarSection>('documents');
+  const finderSection = useWindowStore((state) => state.finderSection);
+  const [activeSection, setActiveSection] = useState<SidebarSection>(finderSection || 'documents');
+
+  useEffect(() => {
+    if (finderSection) {
+      setActiveSection(finderSection);
+      if (finderSection === 'music') {
+        setSelectedFileId('track-tech-house-lover');
+      }
+    }
+  }, [finderSection]);
   const [selectedFileId, setSelectedFileId] = useState<string>('f1');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
