@@ -7,7 +7,11 @@ import {
   VolumeX,
   Battery,
   Search,
+  Sun,
   CloudSun,
+  Cloud,
+  CloudRain,
+  CloudSnow,
   Music2,
 } from 'lucide-react';
 import { Clock } from './Clock';
@@ -26,6 +30,71 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
   const [showAboutMac, setShowAboutMac] = useState(false);
   const [weatherHover, setWeatherHover] = useState(false);
+  const [weatherData, setWeatherData] = useState({
+    temp: 12,
+    code: 2,
+    condition: 'Parçalı Bulutlu',
+    high: 16,
+    low: 11,
+    city: 'İstanbul',
+  });
+
+  // Fetch real-time weather for Istanbul with European standard (°C)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(
+          'https://api.open-meteo.com/v1/forecast?latitude=41.0082&longitude=28.9784&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FIstanbul'
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isMounted || !data.current) return;
+
+        const currentTemp = Math.round(data.current.temperature_2m);
+        const code = data.current.weather_code;
+        const high = Math.round(data.daily?.temperature_2m_max?.[0] ?? currentTemp + 3);
+        const low = Math.round(data.daily?.temperature_2m_min?.[0] ?? currentTemp - 3);
+
+        let condition = 'Parçalı Bulutlu';
+        if (code === 0) condition = 'Açık';
+        else if (code === 1) condition = 'Çoğunlukla Açık';
+        else if (code === 2) condition = 'Parçalı Bulutlu';
+        else if (code === 3) condition = 'Bulutlu';
+        else if (code === 45 || code === 48) condition = 'Sisli';
+        else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) condition = 'Yağmurlu';
+        else if ([71, 73, 75, 85, 86].includes(code)) condition = 'Karlı';
+        else if ([95, 96, 99].includes(code)) condition = 'Gök Gürültülü Sağanak';
+
+        setWeatherData({
+          temp: currentTemp,
+          code,
+          condition,
+          high,
+          low,
+          city: 'İstanbul',
+        });
+      } catch {
+        // Retain fallback initial state
+      }
+    };
+
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const getWeatherIcon = (code: number) => {
+    if (code === 0) return <Sun className="w-3.5 h-3.5 text-amber-500" />;
+    if (code === 1 || code === 2) return <CloudSun className="w-3.5 h-3.5 text-amber-500" />;
+    if (code === 3 || code === 45 || code === 48) return <Cloud className="w-3.5 h-3.5 text-slate-400" />;
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return <CloudRain className="w-3.5 h-3.5 text-sky-500" />;
+    if ([71, 73, 75, 85, 86].includes(code)) return <CloudSnow className="w-3.5 h-3.5 text-sky-200" />;
+    return <CloudSun className="w-3.5 h-3.5 text-amber-500" />;
+  };
 
   const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode } = useSettingsStore();
   const { isPlaying: isAudioPlaying, currentTrack } = useAudioStore();
@@ -461,20 +530,20 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </button>
           )}
 
-          {/* Weather Pill */}
+          {/* Weather Pill (İstanbul - Celsius / Avrupa Standartları) */}
           <div
             className="hidden md:block relative"
             onMouseEnter={() => setWeatherHover(true)}
             onMouseLeave={() => setWeatherHover(false)}
           >
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default text-[11px] font-medium text-slate-700 dark:text-slate-300">
-              <CloudSun className="w-3.5 h-3.5 text-amber-500" />
-              <span>42°F</span>
+              {getWeatherIcon(weatherData.code)}
+              <span>{weatherData.temp}°C</span>
             </div>
 
             {weatherHover && (
               <div className="absolute top-full right-0 mt-1 px-2.5 py-1.5 rounded-lg backdrop-blur-xl bg-white/90 dark:bg-neutral-900/90 border border-black/10 dark:border-white/10 shadow-xl text-[11px] whitespace-nowrap z-50 text-slate-800 dark:text-slate-200">
-                <span className="font-semibold">Cupertino, CA</span> · Partly Cloudy · H: 54° L: 38°
+                <span className="font-semibold">{weatherData.city}</span> · {weatherData.condition} · Y: {weatherData.high}°C D: {weatherData.low}°C
               </div>
             )}
           </div>
