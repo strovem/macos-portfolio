@@ -25,6 +25,8 @@ import {
   Volume2,
   Sparkles,
   Disc,
+  RotateCcw,
+  RotateCw,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
@@ -349,6 +351,13 @@ const RedDocIcon: React.FC = () => (
   </svg>
 );
 
+const formatAudioTime = (sec: number): string => {
+  if (isNaN(sec) || sec < 0) return '0:00';
+  const mins = Math.floor(sec / 60);
+  const secs = Math.floor(sec % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
+
 export const FinderApp: React.FC = () => {
   const windowContext = useContext(WindowContext);
   const openWindow = useWindowStore((state) => state.openWindow);
@@ -356,6 +365,9 @@ export const FinderApp: React.FC = () => {
   const {
     currentTrack,
     isPlaying: isAudioPlaying,
+    currentTime,
+    duration,
+    seek,
     playTrack,
     togglePlay,
     nextTrack,
@@ -1093,28 +1105,89 @@ export const FinderApp: React.FC = () => {
                       {previewFile.track.artist} · <span className="italic">{previewFile.track.album}</span>
                     </p>
 
-                    {/* Animated Equalizer Waveform */}
-                    <div className="flex items-center gap-1 h-5 my-1.5">
-                      {[4, 12, 18, 10, 22, 14, 8, 20, 16, 12, 6, 18, 14, 22, 10, 6].map((h, i) => (
-                        <motion.div
-                          key={i}
-                          className="w-1 rounded-full bg-gradient-to-t from-indigo-500 to-[#007AFF]"
-                          animate={
-                            isAudioPlaying && currentTrack?.id === previewFile.track!.id
-                              ? { height: ['20%', `${Math.min(100, h * 5)}%`, '20%'] }
-                              : { height: '25%' }
-                          }
-                          transition={{
-                            duration: 0.35,
-                            repeat:
-                              isAudioPlaying && currentTrack?.id === previewFile.track!.id
-                                ? Infinity
-                                : 0,
-                            delay: i * 0.04,
+                    {/* Interactive Audio Scrubbing Bar & Timeline */}
+                    <div className="w-full flex flex-col gap-1.5 my-2">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-neutral-400 select-none">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-800 dark:text-white font-semibold">
+                            {formatAudioTime(
+                              currentTrack?.id === previewFile.track.id ? currentTime : 0
+                            )}
+                          </span>
+                          {isAudioPlaying && currentTrack?.id === previewFile.track.id && (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#007AFF] animate-ping" />
+                          )}
+                        </div>
+
+                        {/* Equalizer animation mini bars */}
+                        <div className="flex items-center gap-0.5 h-3">
+                          {[4, 12, 18, 10, 22, 14, 8, 20, 16, 12, 6, 18, 14, 22, 10, 6].map((h, i) => (
+                            <motion.div
+                              key={i}
+                              className="w-0.5 rounded-full bg-gradient-to-t from-indigo-500 to-[#007AFF]"
+                              animate={
+                                isAudioPlaying && currentTrack?.id === previewFile.track!.id
+                                  ? { height: ['20%', `${Math.min(100, h * 5)}%`, '20%'] }
+                                  : { height: '25%' }
+                              }
+                              transition={{
+                                duration: 0.35,
+                                repeat:
+                                  isAudioPlaying && currentTrack?.id === previewFile.track!.id
+                                    ? Infinity
+                                    : 0,
+                                delay: i * 0.04,
+                              }}
+                              style={{ minHeight: '3px' }}
+                            />
+                          ))}
+                        </div>
+
+                        <span>
+                          {formatAudioTime(
+                            currentTrack?.id === previewFile.track.id && duration > 0
+                              ? duration
+                              : previewFile.track.durationSeconds || 180
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Interactive Scrubbing Slider Bar */}
+                      <div className="relative w-full h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden flex items-center group cursor-pointer hover:h-2.5 transition-all">
+                        {/* Progress Fill */}
+                        <div
+                          className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-500 to-[#007AFF] rounded-full transition-all duration-75 pointer-events-none"
+                          style={{
+                            width: `${
+                              currentTrack?.id === previewFile.track.id && duration > 0
+                                ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
+                                : 0
+                            }%`,
                           }}
-                          style={{ minHeight: '3px' }}
                         />
-                      ))}
+
+                        {/* Transparent range input for smooth seeking / scrubbing */}
+                        <input
+                          type="range"
+                          min={0}
+                          max={
+                            currentTrack?.id === previewFile.track.id && duration > 0
+                              ? duration
+                              : previewFile.track.durationSeconds || 180
+                          }
+                          step={0.5}
+                          value={currentTrack?.id === previewFile.track.id ? currentTime : 0}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            if (currentTrack?.id !== previewFile.track!.id) {
+                              playTrack(previewFile.track!);
+                            }
+                            seek(val);
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                          title="Şarkıyı ileri / geri sar"
+                        />
+                      </div>
                     </div>
 
                     {/* Audio Controls */}
@@ -1122,10 +1195,24 @@ export const FinderApp: React.FC = () => {
                       <button
                         type="button"
                         onClick={prevTrack}
-                        title="Previous Track"
+                        title="Önceki Parça"
                         className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
                       >
                         <SkipBack className="w-4 h-4 fill-current" />
+                      </button>
+
+                      {/* Rewind -10s */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentTrack?.id === previewFile.track!.id) {
+                            seek(Math.max(0, currentTime - 10));
+                          }
+                        }}
+                        title="10 Saniye Geri Sar"
+                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors flex items-center justify-center"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
                       </button>
 
                       <button
@@ -1152,10 +1239,24 @@ export const FinderApp: React.FC = () => {
                         )}
                       </button>
 
+                      {/* Fast-Forward +10s */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentTrack?.id === previewFile.track!.id) {
+                            seek(Math.min(duration || 9999, currentTime + 10));
+                          }
+                        }}
+                        title="10 Saniye İleri Sar"
+                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors flex items-center justify-center"
+                      >
+                        <RotateCw className="w-3.5 h-3.5" />
+                      </button>
+
                       <button
                         type="button"
                         onClick={nextTrack}
-                        title="Next Track"
+                        title="Sonraki Parça"
                         className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
                       >
                         <SkipForward className="w-4 h-4 fill-current" />
