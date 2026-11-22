@@ -23,7 +23,7 @@ const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
     isOpen: true,
     isMinimized: false,
     isMaximized: false,
-    zIndex: 10,
+    zIndex: 20,
     position: { x: 100, y: 60 },
     size: { width: 820, height: 520 },
     defaultSize: { width: 820, height: 520 },
@@ -134,7 +134,7 @@ function getNextActiveWindowId(
 export const useWindowStore = create<WindowStoreState>((set, get) => ({
   windows: DEFAULT_WINDOWS,
   activeWindowId: 'finder',
-  maxZIndex: 10,
+  maxZIndex: 20,
 
   openWindow: (id: AppId) => {
     const { windows, maxZIndex } = get();

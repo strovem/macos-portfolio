@@ -10,12 +10,26 @@ import { Window } from '@/components/window/Window';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { AppId } from '@/types/os';
+import { DESKTOP_ITEMS } from '@/data/desktopItems';
+import { DesktopItem } from '@/components/desktop/DesktopItem';
 import { Folder, HardDrive, Terminal as TermIcon, Globe, Image as ImageIcon, MessageCircle, FileText, Settings as GearIcon, Trash2 } from 'lucide-react';
 
 export default function Home() {
   const brightness = useSettingsStore((state) => state.brightness);
   const windows = useWindowStore((state) => state.windows);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
+
+  // Desktop items z-index management for tactile elevation
+  const [itemZIndices, setItemZIndices] = React.useState<Record<string, number>>({});
+  const [maxItemZ, setMaxItemZ] = React.useState(1);
+
+  const bringItemToFront = (id: string) => {
+    setMaxItemZ((prev) => {
+      const nextZ = prev + 1;
+      setItemZIndices((indices) => ({ ...indices, [id]: nextZ }));
+      return nextZ;
+    });
+  };
 
   // Synchronize menubar activeAppName with activeWindowId
   const activeAppName = activeWindowId
@@ -204,6 +218,18 @@ export default function Home() {
 
       {/* Menubar (top-0 fixed z-50) */}
       <Menubar activeAppName={activeAppName} />
+
+      {/* Draggable Desktop Canvas Playground (gucduck-style cards & tactile stickers) */}
+      <div className="absolute inset-0 pt-7 pb-20 pointer-events-none z-[15] overflow-hidden">
+        {DESKTOP_ITEMS.map((item) => (
+          <DesktopItem
+            key={item.id}
+            item={item}
+            zIndex={itemZIndices[item.id] || 1}
+            onFocus={() => bringItemToFront(item.id)}
+          />
+        ))}
+      </div>
 
       {/* Desktop Canvas Root */}
       <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-10">

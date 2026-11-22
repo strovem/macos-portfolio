@@ -21,9 +21,17 @@ export interface WindowState {
   defaultSize: { width: number; height: number };
 }
 
+export type DesktopCardType =
+  | 'readme'
+  | 'polaroid'
+  | 'award'
+  | 'project'
+  | 'map'
+  | 'message';
+
 export interface DesktopCardItem {
   id: string;
-  type: 'readme' | 'polaroid' | 'award' | 'project' | 'map';
+  type: DesktopCardType;
   title: string;
   subtitle?: string;
   content?: string;
@@ -32,6 +40,7 @@ export interface DesktopCardItem {
   targetAppId?: AppId;
   defaultPosition: { x: number; y: number };
   rotation?: number; // e.g. -3 to 3 degrees
+  metadata?: Record<string, any>;
 }
 
 export interface ProjectItem {
