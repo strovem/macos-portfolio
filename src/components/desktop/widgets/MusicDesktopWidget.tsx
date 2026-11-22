@@ -107,7 +107,7 @@ export function MusicDesktopWidget({ item, onOpenApp }: MusicDesktopWidgetProps)
               e.stopPropagation();
               prevTrack();
             }}
-            title="Önceki Şarkı"
+            title="Previous Track"
             className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
           >
             <SkipBack className="w-3.5 h-3.5 fill-current" />
@@ -119,18 +119,18 @@ export function MusicDesktopWidget({ item, onOpenApp }: MusicDesktopWidgetProps)
               e.stopPropagation();
               togglePlay();
             }}
-            title={isPlaying ? 'Durdur' : 'Çal'}
+            title={isPlaying ? 'Pause' : 'Play'}
             className="px-3 py-1 rounded-full bg-[#007AFF] hover:bg-blue-600 text-white font-medium text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
           >
             {isPlaying ? (
               <>
                 <Pause className="w-3.5 h-3.5 fill-white" />
-                <span>Durdur</span>
+                <span>Pause</span>
               </>
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
-                <span>Dinle</span>
+                <span>Play</span>
               </>
             )}
           </button>
@@ -141,7 +141,7 @@ export function MusicDesktopWidget({ item, onOpenApp }: MusicDesktopWidgetProps)
               e.stopPropagation();
               nextTrack();
             }}
-            title="Sonraki Şarkı"
+            title="Next Track"
             className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
           >
             <SkipForward className="w-3.5 h-3.5 fill-current" />
@@ -152,7 +152,7 @@ export function MusicDesktopWidget({ item, onOpenApp }: MusicDesktopWidgetProps)
       {/* Description / Subtext */}
       <p className="text-[10px] text-slate-600 dark:text-neutral-400 mb-2 leading-relaxed">
         {item.content ||
-          'Hüseyin Korumtaş özgün yapımları ve ses tasarımları. Doğrudan masaüstünden dinleyebilir veya Finder klasöründe inceleyebilirsiniz.'}
+          'Original music compositions and sound design by Hüseyin Korumtaş. Listen directly from the desktop or explore in the Finder folder.'}
       </p>
 
       {/* Footer with Quick Finder Link */}

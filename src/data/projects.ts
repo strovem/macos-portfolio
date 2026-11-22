@@ -3,9 +3,9 @@ import { ProjectItem } from '@/types/os';
 export const PROJECTS: ProjectItem[] = [
   {
     id: 'case-excalibur',
-    title: 'Casper Excalibur — Ticari Lansman & Marka Sesi (Jingle)',
+    title: 'Casper Excalibur — Commercial Launch & Sonic Identity',
     description:
-      'Casper Excalibur oyuncu ve performans serisi için bestelenmiş resmi ticari jingle, ses logosu ve sinematik post-prodüksiyon miksajı.',
+      'Official commercial jingle, sonic mnemonic logo, and cinematic post-production mix for the Casper Excalibur performance gaming series.',
     category: 'web',
     tags: ['Brand Jingle', 'Sound Identity', 'Commercial Music', 'Cinematic Mix'],
     role: 'Creative Producer & Audio Lead',
@@ -13,16 +13,16 @@ export const PROJECTS: ProjectItem[] = [
     featured: true,
     color: '#EAB308',
     highlights: [
-      'Güç ve hızı simgeleyen sinematik perküsyonlar ve modern synth dokuları',
-      'Ulusal televizyon, YouTube ve dijital kanallar için broadcast loudness optimizasyonu',
-      'Akılda kalıcı, marka hafızası oluşturan özgün 3 saniyelik ses logosu ve tam reklam kurgusu',
+      'Cinematic taiko percussion and modern analog synthesizer textures symbolizing raw computing power',
+      'Broadcast loudness calibration optimized for national television, YouTube, and digital platforms',
+      'High-recall 3-second mnemonic signature logo designed for cross-channel brand recognition',
     ],
   },
   {
     id: 'case-tech-house',
     title: 'Tech House — "I AM A LOVER" Club Master',
     description:
-      'Sürükleyici 126 BPM analog TB-303 bas hattı, "I Am A Lover" hipnotik vokal kancası ve dans pistine yönelik kulüp prodüksiyonu.',
+      'Hypnotic 126 BPM analog TB-303 bassline, driving percussion polyrhythms, and club-ready vocal hook production.',
     category: 'experiments',
     tags: ['Tech House', 'Club Master', 'Analog 303', 'Vocal Chop'],
     role: 'Music Producer & Mixing Engineer',
@@ -30,16 +30,16 @@ export const PROJECTS: ProjectItem[] = [
     featured: true,
     color: '#06B6D4',
     highlights: [
-      'Analog synthesizer poliritimleri ve canlı bas dinamizmi',
-      'Kulüp ses sistemleri için özel analog summing ve stereo mastering zinciri',
-      'Modern dans müziği standartlarında temiz ve sert kick/bass ayrımı',
+      'Analog synthesizer polyrhythms with dynamic low-end articulation',
+      'Analog summing and stereo bus compressor chain tailored for club sound systems',
+      'Surgical kick/bass phase alignment meeting modern electronic dance standards',
     ],
   },
   {
     id: 'case-hoodtrap',
-    title: 'Hoodtrap "Bangır Bangır" — Ağır Bas & Ritmik Kurgu',
+    title: 'Hoodtrap "Bangır Bangır" — Heavy 808 & Rhythmic Edit',
     description:
-      'Sarsıcı 808 sub-bass dalgaları, 140 BPM agresif trap hi-hat rolları ve yüksek enerjili club trap prodüksiyonu.',
+      'Earth-shattering 808 sub-bass waves, aggressive 140 BPM trap hi-hat rolls, and explosive club trap arrangement.',
     category: 'mobile',
     tags: ['Hoodtrap', '808 Bass', 'Club Trap', 'Sound Design'],
     role: 'Music Producer & Beatmaker',
@@ -47,16 +47,16 @@ export const PROJECTS: ProjectItem[] = [
     featured: true,
     color: '#EF4444',
     highlights: [
-      'Hoparlör ve subwoofer limitlerini zorlayan zengin harmonikli 808 distortion tasarımı',
-      'Hızlı ve senkoplu perküsyon koreografisi',
-      'Ritmik video kurguları için milisaniyelik dinamik dur-kalklar',
+      'Rich harmonic saturation engineered to push subwoofer limits with zero digital clipping',
+      'Syncopated percussion choreography designed for fast-paced video edits',
+      'Millisecond-precise dynamic dropouts and risers',
     ],
   },
   {
     id: 'case-ethnic-garage',
-    title: 'Ethnic Garage & Tribal Psy — Kültürel Füzyon',
+    title: 'Ethnic Garage & Tribal Psy — Cultural Fusion',
     description:
-      'Geleneksel Orta Doğu enstrümanlarının (saz, ney) 2-step UK Garage ve 138 BPM Psytrance ritimleriyle buluştuğu melez stüdyo albüm çalışması.',
+      'Cultural synthesis fusing traditional Middle Eastern instruments (ney, saz) with 2-step UK Garage and 138 BPM Psytrance rhythms.',
     category: 'opensource',
     tags: ['Ethnic Fusion', 'UK Garage', 'Psytrance', 'Acoustic Folk'],
     role: 'Composer & Sound Designer',
@@ -64,9 +64,9 @@ export const PROJECTS: ProjectItem[] = [
     featured: false,
     color: '#8B5CF6',
     highlights: [
-      'Geleneksel organik saz ve flüt kayıtlarının modern elektronik alt yapılarla sentezi',
-      'Binaural 3D uzamsal reverb alanları ve hipnotik stereo genişliği',
-      'İki zıt müzik kültürünü kusursuz birleştiren harmonik aranjman',
+      'Authentic acoustic folk instrument multi-samples woven over cutting-edge electronic rhythms',
+      'Binaural 3D spatial reverberation fields and immersive stereo width',
+      'Harmonic arrangements bridging two contrasting musical traditions into a coherent journey',
     ],
   },
 ];

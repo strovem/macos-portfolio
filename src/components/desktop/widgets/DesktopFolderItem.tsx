@@ -92,7 +92,7 @@ export function DesktopFolderItem({
             {item.title || "My Music's"}
           </div>
           <div className="text-xs text-slate-500 dark:text-neutral-400">
-            {item.subtitle || '8 Tracks'} • Finder&apos;da Aç
+            {item.subtitle || '8 Tracks'} • Open in Finder
           </div>
         </div>
         <ArrowUpRight className="w-4 h-4 text-[#007AFF]" />

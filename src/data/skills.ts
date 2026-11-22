@@ -2,32 +2,32 @@ import { SkillCategory } from '@/types/os';
 
 export const SKILL_CATEGORIES: SkillCategory[] = [
   {
-    name: 'Müzik Prodüksiyonu & Ses Tasarımı',
+    name: 'Music Production & Sound Design',
     skills: [
-      { name: 'Ableton Live 12 & Logic Pro 11', level: 98, years: '6+ yıl', highlight: 'Çok kanallı aranjman, mixing ve mastering' },
-      { name: 'Analog Ses Sentezi (Synthesizers)', level: 95, years: '5+ yıl', highlight: 'Moog, Roland TB-303, Dave Smith, Serum, Diva' },
-      { name: 'Ticari Jingle & Marka Sesi (Sound Branding)', level: 96, years: '4+ yıl', highlight: 'Excalibur ve marka reklamları için özgün ses logoları' },
-      { name: 'Miksaj & Mastering Zinciri', level: 94, years: '5+ yıl', highlight: 'FabFilter, SSL G-Bus, Universal Audio, Ozone 11' },
-      { name: 'Beatmaking & Trap / 808 Bas Tasarımı', level: 97, years: '6+ yıl', highlight: 'Hoodtrap, Club Trap, sert ve zengin harmonikli 808\'ler' },
-      { name: 'Tech House & Elektronik Kulüp Prodüksiyonu', level: 96, years: '5+ yıl', highlight: 'Dans pistine yönelik groove baslar ve perküsyon kurguları' },
+      { name: 'Ableton Live 12 & Logic Pro 11', level: 98, years: '6+ yrs', highlight: 'Multitrack arrangement, mixing, and mastering' },
+      { name: 'Analog Sound Synthesis', level: 95, years: '5+ yrs', highlight: 'Moog Sub 37, Roland TB-303, Dave Smith, Serum, Diva' },
+      { name: 'Commercial Jingles & Sonic Branding', level: 96, years: '4+ yrs', highlight: 'Bespoke mnemonic logos & campaign scores (Excalibur)' },
+      { name: 'Mixing & Mastering Chain', level: 94, years: '5+ yrs', highlight: 'FabFilter Pro, SSL G-Master Bus, UAD, Ozone 11' },
+      { name: 'Beatmaking & 808 Bass Design', level: 97, years: '6+ yrs', highlight: 'Hoodtrap, Club Trap, harmonic distortion shaping' },
+      { name: 'Tech House & Club Grooves', level: 96, years: '5+ yrs', highlight: 'Floor-focused basslines, vocal chops, and groove timing' },
     ],
   },
   {
-    name: 'Kreatif Yapımcılık & Yönetmenlik',
+    name: 'Creative Production & Direction',
     skills: [
-      { name: 'Kreatif Yapımcılık (Creative Producing)', level: 95, years: '5+ yıl', highlight: 'Fikirden nihai deneyime uçtan uca yapım yönetimi' },
-      { name: 'Video Kurgusu & Ritim Senkronizasyonu', level: 92, years: '4+ yıl', highlight: 'DaVinci Resolve & Premiere ile müzikal video montajı' },
-      { name: 'Konsept Geliştirme & Sanat Yönetimi', level: 93, years: '5+ yıl', highlight: 'Görsel kimlik, sahne tasarımı ve hikaye kurgusu' },
-      { name: 'Ses & Görüntü Entegrasyonu', level: 96, years: '5+ yıl', highlight: 'Milisaniyelik görsel-işitsel ritmik uyum' },
+      { name: 'Creative Producing', level: 95, years: '5+ yrs', highlight: 'End-to-end production management from ideation to delivery' },
+      { name: 'Video Editing & Visual Rhythm', level: 92, years: '4+ yrs', highlight: 'Musical video cutting with DaVinci Resolve & Premiere' },
+      { name: 'Concept Development & Art Direction', level: 93, years: '5+ yrs', highlight: 'Visual identity, set aesthetics, and narrative rhythm' },
+      { name: 'Audiovisual Synchronization', level: 96, years: '5+ yrs', highlight: 'Millisecond-accurate audiovisual impact and energy flow' },
     ],
   },
   {
-    name: 'Kreatif Teknoloji & Dijital Vitrin',
+    name: 'Creative Tech & Digital Showcase',
     skills: [
-      { name: 'Web Audio API & Frekans Sentezi', level: 94, years: '4+ yıl', highlight: 'Tarayıcı içinde gerçek zamanlı osilatör ve filtre modelleme' },
-      { name: 'Next.js & React İnteraktif Vitrinler', level: 92, years: '4+ yıl', highlight: 'Akıcı masaüstü deneyimleri, App Router & ses kontrolleri' },
-      { name: 'Framer Motion & Taktil Arayüzler', level: 95, years: '4+ yıl', highlight: 'Skeuomorfik yay fiziği ve interaktif arayüz dinamikleri' },
-      { name: 'TypeScript & Tailwind CSS', level: 93, years: '5+ yıl', highlight: 'Hızlı, modüler ve yüksek performanslı bileşen mimarisi' },
+      { name: 'Web Audio API & Sound Synthesis', level: 94, years: '4+ yrs', highlight: 'Real-time in-browser oscillators, filters, and audio nodes' },
+      { name: 'Next.js & React Web Experiences', level: 92, years: '4+ yrs', highlight: 'Fluid desktop OS simulations, App Router, responsive design' },
+      { name: 'Framer Motion & Tactile Interfaces', level: 95, years: '4+ yrs', highlight: 'Skeuomorphic spring physics, window management, drag states' },
+      { name: 'TypeScript & Tailwind CSS', level: 93, years: '5+ yrs', highlight: 'Strict type safety, token architectures, and performance' },
     ],
   },
 ];

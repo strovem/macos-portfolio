@@ -28,7 +28,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-cyan-500 via-blue-700 to-slate-900',
     src: '/music/tech house I AM A LOVER.wav',
     synthFrequencies: [130.81, 164.81, 196, 246.94],
-    description: 'Sürükleyici perküsyon poliritimleri, "I Am A Lover" vokal kancası ve dans pistine yönelik güçlü analog bas hattı.',
+    description: 'Hypnotic vocal hook, driving analog TB-303 bassline, and floor-focused syncopated percussion.',
   },
   {
     id: 'track-hoodtrap',
@@ -43,7 +43,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-red-600 via-rose-800 to-black',
     src: '/music/hoodtrap bangır bangır.mp3',
     synthFrequencies: [110, 146.83, 164.81, 220],
-    description: 'Derin 808 sub-bass dalgaları, agresif trap hi-hat rolları ve yüksek enerjili club trap kurgusu.',
+    description: 'Thunderous 808 sub-bass oscillations, rapid trap hi-hat rolls, and explosive club energy.',
   },
   {
     id: 'track-dark-elektro',
@@ -58,7 +58,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-purple-900 via-indigo-950 to-neutral-900',
     src: '/music/dark elektro.mp3',
     synthFrequencies: [220, 261.63, 329.63, 392],
-    description: 'Karanlık analog synthesizer basları, endüstriyel ses dokuları ve dinamik perküsyon mimarisi.',
+    description: 'Distorted Moog basslines, industrial synth textures, and dark cinematic nocturnal atmospheres.',
   },
   {
     id: 'track-ethnic-garage',
@@ -73,7 +73,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-amber-600 via-orange-700 to-stone-900',
     src: '/music/ethnic garage.mp3',
     synthFrequencies: [174.61, 220, 261.63, 349.23],
-    description: 'Geleneksel etnik motifler ile modern 2-step UK Garage ritimlerinin melez harmonik kurgusu.',
+    description: 'Organic Middle Eastern acoustics and ney melodies woven over swinging 2-step UK Garage rhythms.',
   },
   {
     id: 'track-ethnic-psy',
@@ -88,7 +88,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-emerald-600 via-teal-800 to-indigo-950',
     src: '/music/ethnic psy.mp3',
     synthFrequencies: [146.83, 196, 220, 293.66],
-    description: 'Hızlı bas sekansları, hipnotik etnik flüt ve telli tınılar, psikedelik uzamsal reverb katmanları.',
+    description: 'Rapid-fire rolling basslines, tribal percussions, and mind-expanding spatial reverberation fields.',
   },
   {
     id: 'track-guitar-house',
@@ -103,7 +103,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-rose-500 via-pink-600 to-purple-900',
     src: '/music/guitar house.mp3',
     synthFrequencies: [196, 246.94, 293.66, 392],
-    description: 'Sıcak akustik gitar riffleri, kulüp uyumlu groove bas yürüyüşü ve ferah melodik atmosfer.',
+    description: 'Warm live Stratocaster riffs, organic acoustic plucks, and uplifting sunset Deep House grooves.',
   },
   {
     id: 'track-tech-house-club',
@@ -118,7 +118,7 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-blue-600 via-indigo-800 to-neutral-950',
     src: '/music/tech house.mp3',
     synthFrequencies: [130.81, 164.81, 196, 246.94],
-    description: 'Hipnotik ve minimal tech house ritmi, modüler synthesizer filtre süpürmeleri ve dans pisti enerjisi.',
+    description: 'Minimalist tech rhythm, modular filter sweeps, and tightly synchronized analog kick-bass synergy.',
   },
   {
     id: 'track-excalibur',
@@ -133,6 +133,6 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     coverGradient: 'from-yellow-500 via-amber-600 to-neutral-900',
     src: '/music/EXCALIBUR JINGLE.wav',
     synthFrequencies: [261.63, 329.63, 392, 523.25],
-    description: 'Marka ve görsel prodüksiyon için bestelenmiş dinamik sinematik jingle ve ses logosu.',
+    description: 'High-impact cinematic mnemonic logo and trailer theme composed for Casper Excalibur.',
   },
 ];

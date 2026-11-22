@@ -200,7 +200,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     );
   }, [birthDay, birthMonth, birthYear]);
 
-  // Birthdate Reading Info (Calculations based strictly on Gün / Ay / Yıl)
+  // Birthdate Reading Info (Calculations based strictly on Day / Month / Year)
   const readingInfo = useMemo(() => {
     if (!isBirthdateEntered) return null;
 
@@ -262,8 +262,8 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
   };
 
   const monthNames = [
-    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
   return (
@@ -275,7 +275,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             <Sparkles className="w-3 h-3" />
           </div>
           <span className="text-xs font-bold font-mono tracking-tight text-amber-950 dark:text-amber-200">
-            Numeroloji & Astroloji
+            Numerology & Astrology
           </span>
         </div>
 
@@ -294,7 +294,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             }`}
           >
             <CalendarIcon className="w-2.5 h-2.5" />
-            <span>Takvim</span>
+            <span>Calendar</span>
           </button>
 
           <button
@@ -310,7 +310,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             }`}
           >
             <User className="w-2.5 h-2.5" />
-            <span>Hesapla</span>
+            <span>Reading</span>
           </button>
         </div>
       </div>
@@ -351,7 +351,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           <div className="rounded-xl overflow-hidden border border-sky-300/80 dark:border-neutral-700 bg-sky-100/60 dark:bg-neutral-950 shadow-inner">
             {/* Days of Week Header */}
             <div className="grid grid-cols-7 text-[9px] font-semibold text-center py-1 bg-sky-200/70 dark:bg-sky-950/70 text-sky-900 dark:text-sky-300 border-b border-sky-300/70 dark:border-neutral-700">
-              {['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'].map((d, i) => (
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
                 <div key={i}>{d}</div>
               ))}
             </div>
@@ -415,10 +415,10 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             </div>
           </div>
 
-          {/* Selected Date Summary in Gün / Ay / Yıl format */}
+          {/* Selected Date Summary in Day / Month / Year format */}
           <div className="p-2 rounded-xl bg-sky-200/40 dark:bg-neutral-800/60 border border-sky-300/60 dark:border-white/5 text-[10px] leading-tight flex flex-col gap-0.5">
             <span className="text-[9px] text-sky-800 dark:text-neutral-400">
-              Seçilen Tarih: (takvimden bir güne tıklayın)
+              Selected Date: (click any day in the grid)
             </span>
             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
               <span>{selectedDateInfo.dateStr}</span>
@@ -431,12 +431,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           </div>
         </div>
       ) : (
-        /* VIEW 2: BIRTHDATE READING PROFILE (Strict Gün / Ay / Yıl order, empty by default) */
+        /* VIEW 2: BIRTHDATE READING PROFILE (Strict Day / Month / Year order, empty by default) */
         <div className="flex flex-col gap-2">
           {/* Header Bar */}
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-              Doğum Tarihi Girin
+              Enter a birthdate
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -448,7 +448,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer flex items-center gap-0.5"
               >
                 {savedSuccess ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : null}
-                <span>Kaydet</span>
+                <span>Save</span>
               </button>
               <button
                 type="button"
@@ -458,7 +458,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 }}
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer"
               >
-                Temizle
+                Clear
               </button>
             </div>
           </div>
@@ -470,9 +470,9 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             </span>
           </div>
 
-          {/* Birthdate Input Box: GÜN / AY / YIL (DD / MM / YYYY) */}
+          {/* Birthdate Input Box: DAY / MONTH / YEAR (DD / MM / YYYY) */}
           <div className="p-1.5 rounded-xl bg-white dark:bg-neutral-950 border-2 border-amber-500/50 flex items-center justify-center gap-2 font-mono text-base font-bold text-slate-800 dark:text-white shadow-xs">
-            {/* Gün (DD) */}
+            {/* Day (DD) */}
             <div className="flex flex-col items-center">
               <input
                 type="text"
@@ -486,15 +486,15 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                     monthInputRef.current.focus();
                   }
                 }}
-                placeholder="GG"
+                placeholder="DD"
                 className="w-9 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
               />
-              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Gün</span>
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Day</span>
             </div>
 
             <span className="text-amber-400 text-lg mb-2">/</span>
 
-            {/* Ay (MM) */}
+            {/* Month (MM) */}
             <div className="flex flex-col items-center">
               <input
                 ref={monthInputRef}
@@ -509,15 +509,15 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                     yearInputRef.current.focus();
                   }
                 }}
-                placeholder="AA"
+                placeholder="MM"
                 className="w-9 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
               />
-              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Ay</span>
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Month</span>
             </div>
 
             <span className="text-amber-400 text-lg mb-2">/</span>
 
-            {/* Yıl (YYYY) */}
+            {/* Year (YYYY) */}
             <div className="flex flex-col items-center">
               <input
                 ref={yearInputRef}
@@ -529,7 +529,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 placeholder="YYYY"
                 className="w-16 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
               />
-              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Yıl</span>
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Year</span>
             </div>
           </div>
 
@@ -553,10 +553,10 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                   {readingInfo.dayNumber}
                 </span>
                 <span className="text-[8px] font-semibold text-slate-700 dark:text-neutral-300 leading-tight">
-                  ikincil enerji
+                  secondary energy
                 </span>
                 <span className="text-[7px] text-amber-800/70 dark:text-neutral-400 italic mt-0.5">
-                  {readingInfo.dayOfYear}. gün • {readingInfo.weekOfYear}. hafta
+                  Day {readingInfo.dayOfYear} • Week {readingInfo.weekOfYear}
                 </span>
               </div>
 
@@ -578,15 +578,15 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             <div className="grid grid-cols-3 gap-1 text-center py-2 opacity-60">
               <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
                 <span className="text-sm">✨</span>
-                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Burç</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Zodiac</span>
               </div>
               <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
                 <span className="text-sm">⚡</span>
-                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">İkincil Enerji</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Secondary Energy</span>
               </div>
               <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
                 <span className="text-sm">🐉</span>
-                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Çin Zodyağı</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Chinese Zodiac</span>
               </div>
             </div>
           )}
@@ -594,13 +594,13 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           {/* Bottom Insights Row */}
           {readingInfo ? (
             <div className="p-1.5 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-amber-300/30 text-[9px] flex items-center justify-between text-amber-950 dark:text-amber-200 font-medium">
-              <span>{readingInfo.age} yaşında</span>
+              <span>{readingInfo.age} years old</span>
               <span className="font-bold">{readingInfo.personalYear}</span>
-              <span>🐎 At, nötr burç</span>
+              <span>🐎 Horse, neutral sign</span>
             </div>
           ) : (
             <div className="p-1.5 rounded-xl bg-amber-100/30 dark:bg-neutral-800/30 text-[9px] text-center text-amber-900/60 dark:text-neutral-400">
-              Sonuçları görmek için doğum tarihinizi girin
+              Enter your birthdate to reveal your cosmic profile
             </div>
           )}
         </div>

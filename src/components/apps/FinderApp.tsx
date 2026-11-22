@@ -290,7 +290,7 @@ const MUSIC_FILES: FinderFileItem[] = ORIGINAL_TRACKS.map((t) => ({
   kind: t.src?.endsWith('.mp3') ? 'MP3 audio' : 'WAV audio',
   category: t.genre,
   tags: [`${t.bpm} BPM`, t.genre, t.year],
-  content: `${t.title} — Beste & Yapım: Hüseyin Korumtaş\nAlbüm: ${t.album} (${t.year}) | Tempo: ${t.bpm} BPM | Tür: ${t.genre}\n\n${t.description}`,
+  content: `${t.title} — Composed & Produced by Hüseyin Korumtaş\nAlbum: ${t.album} (${t.year}) | Tempo: ${t.bpm} BPM | Genre: ${t.genre}\n\n${t.description}`,
   track: t,
 }));
 
@@ -304,7 +304,7 @@ const APPLICATIONS_FILES: FinderFileItem[] = [
     targetAppId: 'studio',
     category: 'Digital Audio Workstation',
     tags: ['DAW', 'Multitrack', 'Logic Pro', 'Ableton', 'Waveforms', 'Mixer'],
-    content: `Hüseyin Studio — Digital Audio Workstation & Multitrack Lab\n\nHüseyin Korumtaş'ın tüm orijinal bestelerinin, club mix'lerinin, reklam jingle'larının (Excalibur vb.) ve ses tasarım çalışmalarının dalga formları, miksaj zincirleri ve mastering künyeleriyle incelenebildiği stüdyo ortamı.`,
+    content: `Hüseyin Studio — Digital Audio Workstation & Multitrack Lab\n\nExplore all original club mixes, commercial campaign jingles (Casper Excalibur), and sound design productions with interactive waveforms, real-time spectrum analysis, and mastering chains.`,
   },
   {
     id: 'app-tone-gen',
@@ -315,7 +315,7 @@ const APPLICATIONS_FILES: FinderFileItem[] = [
     targetAppId: 'tonegenerator',
     category: 'Audio Synthesis & Acoustics',
     tags: ['Sine Wave', 'Web Audio', 'Oscillator', 'Online Generator'],
-    content: `Tone Generator — Pure Sine Wave Synthesizer\n\nWeb Audio API ile gerçek zamanlı saf sinüs dalgası (sine wave) frekans sentezleyicisi.\n\nÖzellikler:\n• Özel Frekans Girişi (20 Hz — 20,000 Hz)\n• Canlı Matematiksel Osiloskop Ekranı\n• ±1 Hz ve ±10 Hz Hassas Stepper Kontrolleri\n• Hızlı Hazır Ayarlar (432 Hz, 440 Hz, 528 Hz, 1000 Hz, 55 Hz Sub)\n• Ses Seviyesi (Volume) & Mute Kontrolleri`,
+    content: `Tone Generator — Pure Sine Wave Synthesizer\n\nReal-time pure sine wave tone generator powered by Web Audio API.\n\nFeatures:\n• Custom Frequency Input (20 Hz — 20,000 Hz)\n• Real-Time Mathematical Waveform Scope\n• ±1 Hz and ±10 Hz Fine Tuning Steppers\n• Quick Presets (432 Hz, 440 Hz, 528 Hz, 1000 Hz, 55 Hz Sub)\n• Volume & Mute Controls`,
   },
   {
     id: 'app1',
@@ -811,9 +811,9 @@ export const FinderApp: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Hüseyin Korumtaş — Orijinal Besteler & Ses Tasarımları</span>
+                    <span>Hüseyin Korumtaş — Original Compositions & Audio Productions</span>
                     <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono">
-                      {ORIGINAL_TRACKS.length} Parça
+                      {ORIGINAL_TRACKS.length} Tracks
                     </span>
                   </h4>
                   <button
@@ -822,14 +822,14 @@ export const FinderApp: React.FC = () => {
                     className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
                   >
                     <AudioWaveform className="w-3.5 h-3.5" />
-                    <span>Studio.app ile Aç</span>
+                    <span>Open in Studio.app</span>
                   </button>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-neutral-300 mt-1 leading-relaxed">
-                  Tüm besteler Web Audio osilatör mimarisi ile gerçek zamanlı sentezlenir. Dinlemek için satırdaki oynat butonuna basabilir veya çift tıklayarak stüdyo oynatıcısını açabilirsiniz.
+                  All tracks are rendered with in-browser Web Audio synthesis and original studio stems. Click the play button on any row to preview, or open Studio.app for interactive waveforms and mixing notes.
                 </p>
                 <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1">
-                  💡 Kendi <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.mp3</code> veya <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.wav</code> parçalarınızı projedeki <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">public/music/</code> klasörüne ekleyerek anında sitenizde dinletebilirsiniz.
+                  💡 Drop your own <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.mp3</code> or <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.wav</code> tracks into the project's <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">public/music/</code> folder to stream them instantly.
                 </p>
               </div>
             </div>
@@ -1116,7 +1116,7 @@ export const FinderApp: React.FC = () => {
                             onClick={() => setActiveSection(activeFile.targetSection || 'music')}
                             className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer"
                           >
-                            Klasörü Aç
+                            Open Folder
                           </button>
                         ) : activeFile.targetAppId ? (
                           <button
@@ -1124,7 +1124,7 @@ export const FinderApp: React.FC = () => {
                             onClick={() => openWindow(activeFile.targetAppId!)}
                             className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer flex items-center gap-1.5"
                           >
-                            <span>Uygulamayı Aç</span>
+                            <span>Open App</span>
                             <ArrowUpRight className="w-3.5 h-3.5" />
                           </button>
                         ) : (
@@ -1319,7 +1319,7 @@ export const FinderApp: React.FC = () => {
                             seek(val);
                           }}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                          title="Şarkıyı ileri / geri sar"
+                          title="Scrub track backward / forward"
                         />
                       </div>
                     </div>
@@ -1329,7 +1329,7 @@ export const FinderApp: React.FC = () => {
                       <button
                         type="button"
                         onClick={prevTrack}
-                        title="Önceki Parça"
+                        title="Previous Track"
                         className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
                       >
                         <SkipBack className="w-4 h-4 fill-current" />
@@ -1343,7 +1343,7 @@ export const FinderApp: React.FC = () => {
                             seek(Math.max(0, currentTime - 10));
                           }
                         }}
-                        title="10 Saniye Geri Sar"
+                        title="Rewind 10s"
                         className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors flex items-center justify-center"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
@@ -1363,12 +1363,12 @@ export const FinderApp: React.FC = () => {
                         {isAudioPlaying && currentTrack?.id === previewFile.track.id ? (
                           <>
                             <Pause className="w-3.5 h-3.5 fill-white" />
-                            <span>Durdur</span>
+                            <span>Pause</span>
                           </>
                         ) : (
                           <>
                             <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
-                            <span>Çal & Dinle</span>
+                            <span>Play & Listen</span>
                           </>
                         )}
                       </button>
@@ -1381,7 +1381,7 @@ export const FinderApp: React.FC = () => {
                             seek(Math.min(duration || 9999, currentTime + 10));
                           }
                         }}
-                        title="10 Saniye İleri Sar"
+                        title="Fast Forward 10s"
                         className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors flex items-center justify-center"
                       >
                         <RotateCw className="w-3.5 h-3.5" />
@@ -1390,7 +1390,7 @@ export const FinderApp: React.FC = () => {
                       <button
                         type="button"
                         onClick={nextTrack}
-                        title="Sonraki Parça"
+                        title="Next Track"
                         className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
                       >
                         <SkipForward className="w-4 h-4 fill-current" />
@@ -1402,15 +1402,15 @@ export const FinderApp: React.FC = () => {
                 {/* Description & Production Notes */}
                 <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
                   <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
-                    Beste & Ses Tasarımı Notları
+                    Composition & Sound Design Notes
                   </h4>
                   <p>{previewFile.track.description}</p>
                 </div>
 
                 {/* Info Note on Adding Personal Songs */}
                 <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-300">
-                  <span className="font-bold">📁 Kendi Şarkılarınızı Ekleyin: </span>
-                  Kendi şarkılarınızı <code className="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 font-mono">public/music/</code> klasörüne ekleyerek anında sitenizde dinletebilirsiniz. Dosya olmadığı durumlarda bile dahili Web Audio sentezleyicisi canlı çalar!
+                  <span className="font-bold">📁 Custom Audio Files: </span>
+                  You can drop your audio tracks into the <code className="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 font-mono">public/music/</code> directory to play them instantly. Even if files are missing, the built-in Web Audio synthesizer generates live procedural sound!
                 </div>
               </div>
             ) : (

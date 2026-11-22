@@ -40,7 +40,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Roland TB-303 (Analog Bassline)', 'U-he Diva (Analog Leads)', 'Serum (Vocal Chops)'],
     mixingChain: ['SSL G-Master Bus Compressor', 'FabFilter Pro-Q 3', 'Soundtoys Decapitator', 'Ozone 11 Maximizer'],
     concept:
-      'Kulüp dans pistine yönelik, "I Am A Lover" hipnotik vokal kancası etrafında inşa edilmiş dinamik Tech House prodüksiyonu. 126 BPM analog bas hattı ve zengin perküsyon poliritimleri.',
+      'High-energy dancefloor production built around the hypnotic "I Am A Lover" vocal hook. Features a driving 126 BPM analog TB-303 bassline and syncopated percussion polyrhythms.',
     tags: ['Club Master', 'Analog 303', 'Vocal Chop', 'Peak Time'],
   },
   'track-hoodtrap': {
@@ -48,7 +48,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Spire (Lead Synth)', '808 Studio Custom Bass', 'Nexus 4 (Arps)'],
     mixingChain: ['CamelCrusher (Sub Saturation)', 'iZotope Trash 2', 'FabFilter Pro-MB (Dynamic Control)'],
     concept:
-      'Yüksek tempolu ve sarsıcı bas enerjisi. 140 BPM poliritmik hi-hat yuvarlamaları ve hoparlörleri zorlayan 808 sub-bass salınımları ile club trap sound\'u.',
+      'Heavyweight 808 sub-bass pressure combined with 140 BPM polyrhythmic trap hi-hat rolls. Engineered for club subwoofers and fast-paced visual choreography.',
     tags: ['808 Bass', 'Hoodtrap', 'Aggressive Drums', '140 BPM'],
   },
   'track-dark-elektro': {
@@ -56,7 +56,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Moog Sub 37 (Hardware Bass)', 'Arturia Pigments', 'Korg MS-20 Mini'],
     mixingChain: ['Eventide Blackhole (Spatial Reverb)', 'Elysia mpressor', 'Pultec EQP-1A Emulation'],
     concept:
-      'Karanlık sinematik synthwave ve endüstriyel elektronik füzyonu. Modüler filtre süpürmeleri ve distorte edilmiş analog bas sesleri ile distopik gece atmosferi.',
+      'Cinematic synthwave fused with aggressive industrial electronics. Features modular filter sweeps, distorted analog low-end, and a dark dystopian aesthetic.',
     tags: ['Analog Moog', 'Industrial', 'Dark Wave', 'Cinematic'],
   },
   'track-ethnic-garage': {
@@ -64,7 +64,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Ney & Saz Organic Sampler', 'Native Instruments Kontakt', 'SubBoomBass 2'],
     mixingChain: ['Valhalla VintageVerb', 'Shadow Hills Mastering Compressor', 'Waves CLA-76'],
     concept:
-      'Orta Doğu ve Anadolu geleneksel yaylı/üflemeli akustik tınılarının modern 2-step UK Garage senkoplu ritim kalıplarıyla harmanlandığı kültürel füzyon parçası.',
+      'Harmonic synthesis of traditional Middle Eastern folk acoustics (ney, saz) with modern syncopated 2-step UK Garage grooves.',
     tags: ['UK Garage', 'Ethnic Fusion', '2-Step Swing', 'Organic Folk'],
   },
   'track-ethnic-psy': {
@@ -72,7 +72,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['LennarDigital Sylenth1', 'Infected Mushroom Manipulator', 'Serum'],
     mixingChain: ['Cytomic The Glue', 'Soundtoys Echoboy', 'FabFilter Saturn 2'],
     concept:
-      'Hipnotik tribal ritimler ve 138 BPM tempolu yuvarlanan bas hattı. Ziyaretçiyi zihinsel bir yolculuğa çıkaran psikedelik uzamsal ses kurgusu.',
+      'Tribal percussion sequences, 138 BPM rolling basslines, and hypnotic spatial reverberation designed for immersive psychological listening.',
     tags: ['Psytrance', 'Tribal Rhythms', '138 BPM', 'Hypnotic'],
   },
   'track-guitar-house': {
@@ -80,7 +80,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Fender American Stratocaster (Live Recording)', 'Spectrasonics Trilian (Bass)', 'Kontakt Grand Piano'],
     mixingChain: ['Universal Audio LA-2A (Optical Levelling)', 'Neve 1073 Preamp/EQ', 'Lexicon 224 Reverb'],
     concept:
-      'Canlı kaydedilmiş akustik ve elektro gitar akorları, günbatımı melankolisi ve dans pistine uygun ferah bir Deep House ritim temeli.',
+      'Recorded live Stratocaster chords and plucks drifting over a sunset Deep House groove with buoyant bass movement.',
     tags: ['Live Guitar', 'Deep House', 'Sunset Vibes', 'Organic Acoustic'],
   },
   'track-tech-house-club': {
@@ -88,7 +88,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Dave Smith Prophet Rev2', 'Roland Cloud Juno-60', 'Battery 4'],
     mixingChain: ['SSL Channel Strip', 'Universal Audio Pultec', 'Soothe2 (Resonance Suppression)'],
     concept:
-      'Minimalist ve ritmik açıdan kusursuz kulüp miksi. Derin groove, tıkır tıkır işleyen hi-hat katmanları ve güçlü analog sub frekanslar.',
+      'Minimalist and rhythmically tight club mix. Deep sub-bass pocket, crispy hi-hat layering, and analog Prophet filter sweeps.',
     tags: ['Minimal Tech', 'Groove Heavy', 'Prophet Synth', 'Dancefloor'],
   },
   'track-excalibur': {
@@ -96,7 +96,7 @@ const TRACK_PRODUCTION_DETAILS: Record<
     synths: ['Cinematic Brass & Taiko Percussion', 'Moog One', 'Custom Sound Design Risers'],
     mixingChain: ['Dangerous Music BAX EQ', 'Manley Variable Mu Compressor', 'Dolby Atmos Spatial Mastering'],
     concept:
-      'Casper Excalibur oyuncu ve performans serisi için bestelenmiş resmi ticari jingle ve ses logosu. Güç, hız ve teknolojik üstünlüğü simgeleyen vuruşlar.',
+      'Official commercial jingle and sound logo composed for the Casper Excalibur gaming campaign. High-impact cinematic sound design symbolizing speed, power, and technological edge.',
     tags: ['Commercial Campaign', 'Brand Jingle', 'Sound Identity', 'Casper Excalibur'],
   },
 };
@@ -149,7 +149,6 @@ export function StudioApp() {
     const updateMeters = () => {
       if (isPlaying) {
         phase += 0.2;
-        // Natural audio meter pulsation with music energy
         const base = Math.sin(phase) * 0.25 + 0.65;
         const jitterL = (Math.random() - 0.5) * 0.15;
         const jitterR = (Math.random() - 0.5) * 0.15;
@@ -407,7 +406,7 @@ export function StudioApp() {
           onClick={() => openFinderToSection('music')}
           className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-violet-300 transition-colors cursor-pointer"
         >
-          <span>Finder'da Gör</span>
+          <span>View in Finder ↗</span>
           <ExternalLink className="w-3 h-3" />
         </button>
       </div>
@@ -524,7 +523,7 @@ export function StudioApp() {
                       <span className="text-[11px] text-neutral-400">{activeTrack.year} Release</span>
                     </div>
                     <h2 className="text-lg font-bold text-white tracking-tight mt-0.5">{activeTrack.title}</h2>
-                    <span className="text-xs text-neutral-400">Prodüksiyon: {activeTrack.artist}</span>
+                    <span className="text-xs text-neutral-400">Production & Mix: {activeTrack.artist}</span>
                   </div>
                 </div>
 
@@ -538,7 +537,7 @@ export function StudioApp() {
                   }`}
                 >
                   {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                  <span className="text-xs">{isPlaying ? 'Durdur' : 'Parçayı Çal'}</span>
+                  <span className="text-xs">{isPlaying ? 'Pause' : 'Play Track'}</span>
                 </button>
               </div>
 
@@ -580,10 +579,9 @@ export function StudioApp() {
                     ))}
                   </div>
 
-                  {/* Pseudo Waveform Bars (Generated dynamically per track) */}
+                  {/* Pseudo Waveform Bars */}
                   <div className="flex items-center justify-between gap-[2px] w-full h-full px-2 z-10">
                     {Array.from({ length: 64 }).map((_, i) => {
-                      // Generate deterministic waveform contours using track id hash and position
                       const seed = activeTrack.title.charCodeAt(i % activeTrack.title.length);
                       const baseHeight = Math.abs(Math.sin((i / 64) * Math.PI * 3 + seed)) * 75 + 15;
                       const progress = currentTime / (duration || activeTrack.durationSeconds || 180);
@@ -622,9 +620,9 @@ export function StudioApp() {
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1">
-                  <span>💡 Dalga formu üzerinde herhangi bir yere tıklayarak parçada ileri/geri sarabilirsiniz.</span>
+                  <span>💡 Click anywhere along the waveform to scrub or seek through the track.</span>
                   <span className="font-mono text-emerald-400 text-xs">
-                    {isPlaying ? '● CANLI ÇALIYOR' : '○ DURAKLATILDI'}
+                    {isPlaying ? '● LIVE PLAYING' : '○ PAUSED'}
                   </span>
                 </div>
               </div>
@@ -664,7 +662,7 @@ export function StudioApp() {
               <div className="p-4 rounded-xl bg-violet-950/20 border border-violet-500/30 flex flex-col gap-2">
                 <span className="text-xs font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Kreatif Kurgu ve Prodüksiyon Felsefesi</span>
+                  <span>Creative Direction & Production Philosophy</span>
                 </span>
                 <p className="text-sm text-neutral-200 leading-relaxed">{activeDetails.concept}</p>
               </div>
@@ -675,7 +673,7 @@ export function StudioApp() {
                 <div className="p-4 rounded-xl bg-[#191924] border border-white/10 flex flex-col gap-2.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
                     <Music className="w-3.5 h-3.5" />
-                    <span>Kullanılan Synthesizer & Enstrümanlar</span>
+                    <span>Synthesizers & Instruments Used</span>
                   </div>
                   <ul className="space-y-1.5 text-xs text-neutral-300">
                     {activeDetails.synths.map((item, idx) => (
@@ -691,7 +689,7 @@ export function StudioApp() {
                 <div className="p-4 rounded-xl bg-[#191924] border border-white/10 flex flex-col gap-2.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-cyan-300">
                     <Sliders className="w-3.5 h-3.5" />
-                    <span>Miksaj & Mastering Donanım / Plugin Zinciri</span>
+                    <span>Mixing & Mastering Hardware / Plugin Chain</span>
                   </div>
                   <ul className="space-y-1.5 text-xs text-neutral-300">
                     {activeDetails.mixingChain.map((item, idx) => (
@@ -707,11 +705,11 @@ export function StudioApp() {
               {/* DAW and Format Info */}
               <div className="p-3.5 rounded-xl bg-[#15151F] border border-white/5 flex items-center justify-between text-xs text-neutral-300">
                 <div className="flex items-center gap-2">
-                  <span className="text-neutral-400">Kayıt & DAW Ortamı:</span>
+                  <span className="text-neutral-400">Recording & DAW Environment:</span>
                   <span className="font-semibold text-white">{activeDetails.daw}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-neutral-400">Mastering Çıkışı:</span>
+                  <span className="text-neutral-400">Mastering Delivery:</span>
                   <span className="font-mono text-emerald-400 font-bold">WAV 96kHz / 24-bit PCM</span>
                 </div>
               </div>

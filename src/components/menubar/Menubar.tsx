@@ -33,10 +33,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const [weatherData, setWeatherData] = useState({
     temp: 12,
     code: 2,
-    condition: 'Parçalı Bulutlu',
+    condition: 'Partly Cloudy',
     high: 16,
     low: 11,
-    city: 'İstanbul',
+    city: 'Istanbul',
   });
 
   // Fetch real-time weather for Istanbul with European standard (°C)
@@ -56,15 +56,15 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         const high = Math.round(data.daily?.temperature_2m_max?.[0] ?? currentTemp + 3);
         const low = Math.round(data.daily?.temperature_2m_min?.[0] ?? currentTemp - 3);
 
-        let condition = 'Parçalı Bulutlu';
-        if (code === 0) condition = 'Açık';
-        else if (code === 1) condition = 'Çoğunlukla Açık';
-        else if (code === 2) condition = 'Parçalı Bulutlu';
-        else if (code === 3) condition = 'Bulutlu';
-        else if (code === 45 || code === 48) condition = 'Sisli';
-        else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) condition = 'Yağmurlu';
-        else if ([71, 73, 75, 85, 86].includes(code)) condition = 'Karlı';
-        else if ([95, 96, 99].includes(code)) condition = 'Gök Gürültülü Sağanak';
+        let condition = 'Partly Cloudy';
+        if (code === 0) condition = 'Clear';
+        else if (code === 1) condition = 'Mostly Clear';
+        else if (code === 2) condition = 'Partly Cloudy';
+        else if (code === 3) condition = 'Overcast';
+        else if (code === 45 || code === 48) condition = 'Foggy';
+        else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) condition = 'Rainy';
+        else if ([71, 73, 75, 85, 86].includes(code)) condition = 'Snowy';
+        else if ([95, 96, 99].includes(code)) condition = 'Thunderstorm';
 
         setWeatherData({
           temp: currentTemp,
@@ -72,7 +72,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
           condition,
           high,
           low,
-          city: 'İstanbul',
+          city: 'Istanbul',
         });
       } catch {
         // Retain fallback initial state
@@ -530,7 +530,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </button>
           )}
 
-          {/* Weather Pill (İstanbul - Celsius / Avrupa Standartları) */}
+          {/* Weather Pill (Istanbul - Celsius / European Standards) */}
           <div
             className="hidden md:block relative"
             onMouseEnter={() => setWeatherHover(true)}
@@ -543,7 +543,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
             {weatherHover && (
               <div className="absolute top-full right-0 mt-1 px-2.5 py-1.5 rounded-lg backdrop-blur-xl bg-white/90 dark:bg-neutral-900/90 border border-black/10 dark:border-white/10 shadow-xl text-[11px] whitespace-nowrap z-50 text-slate-800 dark:text-slate-200">
-                <span className="font-semibold">{weatherData.city}</span> · {weatherData.condition} · Y: {weatherData.high}°C D: {weatherData.low}°C
+                <span className="font-semibold">{weatherData.city}</span> · {weatherData.condition} · H: {weatherData.high}°C L: {weatherData.low}°C
               </div>
             )}
           </div>

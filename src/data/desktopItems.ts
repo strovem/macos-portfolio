@@ -33,18 +33,18 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     metadata: {
       sender: 'Hüseyin Korumtaş',
       handle: 'Creative Producer & Audio Lead',
-      time: 'Şimdi',
+      time: 'Just now',
       bubbles: [
         {
-          text: 'Selam! Kreatif alanıma hoş geldiniz. 👋\nMüzik prodüksiyonu, reklam jingle\'ları veya yeni bir proje için buradan bana doğrudan yazabilirsiniz.',
+          text: 'Hey there! Welcome to my creative space. 👋\nFeel free to send a direct message for music production, commercial jingles, or new creative projects.',
           isSender: false,
         },
         {
-          text: 'Gönderdiğiniz tüm mesajlar korumtashuseyin@gmail.com adresime anında iletilir!',
+          text: 'All messages are instantly delivered directly to my inbox at korumtashuseyin@gmail.com!',
           isSender: false,
         },
       ],
-      callToAction: 'Messages\'ta Yanıtla ↗',
+      callToAction: 'Reply in Messages ↗',
     },
   },
   {
@@ -64,14 +64,14 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
   {
     id: 'cosmic-calendar-widget',
     type: 'numerology',
-    title: 'Numeroloji Takvimi',
-    subtitle: 'Kozmik Sayılar & Burçlar',
+    title: 'Numerology Calendar',
+    subtitle: 'Cosmic Numbers & Astrology',
     alignRight: true,
     rightOffset: 24,
     defaultPosition: { x: 0, y: 70 },
     rotation: 0,
     metadata: {
-      tag: 'TAKVİM',
+      tag: 'CALENDAR',
       version: 'v1.0',
     },
   },

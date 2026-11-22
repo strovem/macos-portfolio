@@ -376,7 +376,7 @@ export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps)
 
       {/* Subtext description */}
       <p className="text-[10px] text-slate-600 dark:text-neutral-400 mb-2 leading-relaxed">
-        Web Audio API ile gerçek zamanlı saf sinüs dalgası (sine wave) frekans sentezleyici. İstediğiniz Hz değerini girin ve saf tonu dinleyin.
+        Real-time pure sine wave frequency synthesizer powered by Web Audio API. Enter any Hz frequency and listen to the clean tone.
       </p>
 
       {/* Footer */}

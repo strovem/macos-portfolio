@@ -46,36 +46,36 @@ const INITIAL_THREADS: ChatThread[] = [
       {
         id: 'h1',
         sender: 'huseyin',
-        text: 'Merhaba! Kreatif çalışma alanıma ve portfolyoma hoş geldiniz. 👋',
+        text: 'Hey there! Welcome to my creative workspace. 👋',
         time: '10:30',
       },
       {
         id: 'h2',
         sender: 'huseyin',
-        text: 'Müzik prodüksiyonu, reklam jingle\'ları veya kreatif iş birlikleri için doğrudan buradan mesaj bırakabilirsiniz. Gönderdiğiniz mesaj doğrudan korumtashuseyin@gmail.com adresime ulaşır.',
+        text: 'Feel free to leave a direct message for music production, commercial jingles, or creative collaborations. Messages are sent straight to my inbox at korumtashuseyin@gmail.com.',
         time: '10:31',
       },
     ],
   },
   {
     id: 'collaboration',
-    name: 'Projeler & İş Birlikleri',
-    role: 'Ticari & Müzik Talepleri',
-    avatarText: 'CP',
+    name: 'Projects & Collaborations',
+    role: 'Commercial & Audio Inquiries',
+    avatarText: 'HK',
     avatarBg: 'bg-gradient-to-tr from-emerald-500 to-teal-600',
     unread: false,
     messages: [
       {
         id: 'r1',
         sender: 'huseyin',
-        text: 'Selamlar! Excalibur benzeri bir reklam jingle\'ı, kulüp prodüksiyonu veya özel bir ses tasarımı mı planlıyorsunuz?',
-        time: 'Dün',
+        text: 'Hello! Looking to produce an advertising jingle, club release, or bespoke sound identity?',
+        time: 'Yesterday',
       },
       {
         id: 'r2',
         sender: 'user',
-        text: 'Evet, görsel-işitsel ritim kurgusu ve ses kimliği üzerine yeni bir kampanya için görüşmek istiyorum.',
-        time: 'Dün',
+        text: 'Yes! Loved your audiovisual rhythm and sound design work and would like to discuss an upcoming campaign.',
+        time: 'Yesterday',
         status: 'delivered',
       },
     ],
@@ -115,18 +115,18 @@ export const MessagesApp: React.FC = () => {
 
     if (activeThread.id === 'huseyin') {
       if (!name.trim()) {
-        setFormError('Lütfen adınızı girin.');
+        setFormError('Please enter your name.');
         return;
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email.trim() || !emailRegex.test(email.trim())) {
-        setFormError('Lütfen geçerli bir e-posta adresi girin (örn: adiniz@alanadi.com).');
+        setFormError('Please provide a valid email address (e.g. name@domain.com).');
         return;
       }
     }
 
     const currentText = messageText.trim();
-    const senderName = name.trim() || 'Ziyaretçi';
+    const senderName = name.trim() || 'Visitor';
     const senderEmail = email.trim();
 
     // Optimistically append sent bubble
@@ -170,7 +170,7 @@ export const MessagesApp: React.FC = () => {
           const autoReply: ChatMessage = {
             id: 'reply-' + Date.now(),
             sender: 'huseyin',
-            text: `Mesajınızı ve notunuzu aldım ${senderName}! En kısa sürede ${senderEmail} üzerinden size dönüş yapacağım. İlginiz için çok teşekkürler! 👋 — Hüseyin Korumtaş`,
+            text: `Thanks for reaching out, ${senderName}! I've received your note and will get back to you shortly at ${senderEmail}. Best regards! 👋 — Hüseyin Korumtaş`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
 
@@ -209,7 +209,7 @@ export const MessagesApp: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Sohbetlerde ara..."
+                placeholder="Search conversations..."
                 className="w-full h-7 pl-8 pr-3 text-xs rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50"
               />
             </div>
@@ -273,7 +273,7 @@ export const MessagesApp: React.FC = () => {
         {/* Footer status */}
         <div className="p-3 border-t border-black/5 dark:border-white/5 text-[11px] text-center text-slate-400 dark:text-neutral-500 flex items-center justify-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-          <span>iMessage Aktif & Bağlı</span>
+          <span>iMessage Connected</span>
         </div>
       </div>
 
@@ -292,7 +292,7 @@ export const MessagesApp: React.FC = () => {
                 <span>{activeThread.name}</span>
                 {activeThread.id === 'huseyin' && (
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-normal">
-                    İletişime Açık
+                    Available for Projects
                   </span>
                 )}
               </div>
@@ -328,7 +328,7 @@ export const MessagesApp: React.FC = () => {
                       <span>•</span>
                       <span className="text-[#007AFF] font-medium flex items-center gap-0.5">
                         <CheckCheck className="w-3 h-3" />
-                        <span>İletildi</span>
+                        <span>Delivered</span>
                       </span>
                     </>
                   )}
@@ -367,14 +367,14 @@ export const MessagesApp: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <input
                 type="text"
-                placeholder="Adınız (Örn: Can Yılmaz / Alex)"
+                placeholder="Your Name (e.g. Alex Smith)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-7 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
               />
               <input
                 type="email"
-                placeholder="E-posta Adresiniz (Örn: can@sirket.com)"
+                placeholder="Your Email (e.g. alex@company.com)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-7 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
@@ -391,8 +391,8 @@ export const MessagesApp: React.FC = () => {
                 onChange={(e) => setMessageText(e.target.value)}
                 placeholder={
                   activeThread.id === 'huseyin'
-                    ? 'Mesajınızı veya proje teklifinizi yazın...'
-                    : `${activeThread.name} ile mesajlaş...`
+                    ? 'Write your message or project inquiry...'
+                    : `Message ${activeThread.name}...`
                 }
                 className="w-full h-8.5 pl-3 pr-8 rounded-full bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
               />
