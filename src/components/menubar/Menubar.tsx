@@ -325,114 +325,117 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             />
           </div>
 
-          {/* File Menu */}
-          <div className="relative">
-            <button
-              type="button"
-              data-menubar-trigger
-              onClick={() => handleMenuClick('file')}
-              onMouseEnter={() => handleMenuHover('file')}
-              className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
-                activeMenuId === 'file'
-                  ? 'bg-black/15 dark:bg-white/20'
-                  : 'hover:bg-black/10 dark:hover:bg-white/10'
-              }`}
-            >
-              File
-            </button>
-            <MenuDropdown
-              isOpen={activeMenuId === 'file'}
-              onClose={() => setActiveMenuId(null)}
-              items={fileMenuItems}
-            />
-          </div>
+          {/* Desktop Secondary Menus (Hidden on mobile < 768px) */}
+          <div className="hidden md:flex items-center space-x-1">
+            {/* File Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                data-menubar-trigger
+                onClick={() => handleMenuClick('file')}
+                onMouseEnter={() => handleMenuHover('file')}
+                className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
+                  activeMenuId === 'file'
+                    ? 'bg-black/15 dark:bg-white/20'
+                    : 'hover:bg-black/10 dark:hover:bg-white/10'
+                }`}
+              >
+                File
+              </button>
+              <MenuDropdown
+                isOpen={activeMenuId === 'file'}
+                onClose={() => setActiveMenuId(null)}
+                items={fileMenuItems}
+              />
+            </div>
 
-          {/* Edit Menu */}
-          <div className="relative">
-            <button
-              type="button"
-              data-menubar-trigger
-              onClick={() => handleMenuClick('edit')}
-              onMouseEnter={() => handleMenuHover('edit')}
-              className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
-                activeMenuId === 'edit'
-                  ? 'bg-black/15 dark:bg-white/20'
-                  : 'hover:bg-black/10 dark:hover:bg-white/10'
-              }`}
-            >
-              Edit
-            </button>
-            <MenuDropdown
-              isOpen={activeMenuId === 'edit'}
-              onClose={() => setActiveMenuId(null)}
-              items={editMenuItems}
-            />
-          </div>
+            {/* Edit Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                data-menubar-trigger
+                onClick={() => handleMenuClick('edit')}
+                onMouseEnter={() => handleMenuHover('edit')}
+                className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
+                  activeMenuId === 'edit'
+                    ? 'bg-black/15 dark:bg-white/20'
+                    : 'hover:bg-black/10 dark:hover:bg-white/10'
+                }`}
+              >
+                Edit
+              </button>
+              <MenuDropdown
+                isOpen={activeMenuId === 'edit'}
+                onClose={() => setActiveMenuId(null)}
+                items={editMenuItems}
+              />
+            </div>
 
-          {/* View Menu */}
-          <div className="relative">
-            <button
-              type="button"
-              data-menubar-trigger
-              onClick={() => handleMenuClick('view')}
-              onMouseEnter={() => handleMenuHover('view')}
-              className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
-                activeMenuId === 'view'
-                  ? 'bg-black/15 dark:bg-white/20'
-                  : 'hover:bg-black/10 dark:hover:bg-white/10'
-              }`}
-            >
-              View
-            </button>
-            <MenuDropdown
-              isOpen={activeMenuId === 'view'}
-              onClose={() => setActiveMenuId(null)}
-              items={viewMenuItems}
-            />
-          </div>
+            {/* View Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                data-menubar-trigger
+                onClick={() => handleMenuClick('view')}
+                onMouseEnter={() => handleMenuHover('view')}
+                className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
+                  activeMenuId === 'view'
+                    ? 'bg-black/15 dark:bg-white/20'
+                    : 'hover:bg-black/10 dark:hover:bg-white/10'
+                }`}
+              >
+                View
+              </button>
+              <MenuDropdown
+                isOpen={activeMenuId === 'view'}
+                onClose={() => setActiveMenuId(null)}
+                items={viewMenuItems}
+              />
+            </div>
 
-          {/* Window Menu */}
-          <div className="relative">
-            <button
-              type="button"
-              data-menubar-trigger
-              onClick={() => handleMenuClick('window')}
-              onMouseEnter={() => handleMenuHover('window')}
-              className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
-                activeMenuId === 'window'
-                  ? 'bg-black/15 dark:bg-white/20'
-                  : 'hover:bg-black/10 dark:hover:bg-white/10'
-              }`}
-            >
-              Window
-            </button>
-            <MenuDropdown
-              isOpen={activeMenuId === 'window'}
-              onClose={() => setActiveMenuId(null)}
-              items={windowMenuItems}
-            />
-          </div>
+            {/* Window Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                data-menubar-trigger
+                onClick={() => handleMenuClick('window')}
+                onMouseEnter={() => handleMenuHover('window')}
+                className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
+                  activeMenuId === 'window'
+                    ? 'bg-black/15 dark:bg-white/20'
+                    : 'hover:bg-black/10 dark:hover:bg-white/10'
+                }`}
+              >
+                Window
+              </button>
+              <MenuDropdown
+                isOpen={activeMenuId === 'window'}
+                onClose={() => setActiveMenuId(null)}
+                items={windowMenuItems}
+              />
+            </div>
 
-          {/* Help Menu */}
-          <div className="relative">
-            <button
-              type="button"
-              data-menubar-trigger
-              onClick={() => handleMenuClick('help')}
-              onMouseEnter={() => handleMenuHover('help')}
-              className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
-                activeMenuId === 'help'
-                  ? 'bg-black/15 dark:bg-white/20'
-                  : 'hover:bg-black/10 dark:hover:bg-white/10'
-              }`}
-            >
-              Help
-            </button>
-            <MenuDropdown
-              isOpen={activeMenuId === 'help'}
-              onClose={() => setActiveMenuId(null)}
-              items={helpMenuItems}
-            />
+            {/* Help Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                data-menubar-trigger
+                onClick={() => handleMenuClick('help')}
+                onMouseEnter={() => handleMenuHover('help')}
+                className={`px-2 py-0.5 rounded transition-colors focus:outline-none ${
+                  activeMenuId === 'help'
+                    ? 'bg-black/15 dark:bg-white/20'
+                    : 'hover:bg-black/10 dark:hover:bg-white/10'
+                }`}
+              >
+                Help
+              </button>
+              <MenuDropdown
+                isOpen={activeMenuId === 'help'}
+                onClose={() => setActiveMenuId(null)}
+                items={helpMenuItems}
+              />
+            </div>
           </div>
         </div>
 
@@ -440,7 +443,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         <div className="flex items-center space-x-1">
           {/* Weather Pill */}
           <div
-            className="relative"
+            className="hidden md:block relative"
             onMouseEnter={() => setWeatherHover(true)}
             onMouseLeave={() => setWeatherHover(false)}
           >
@@ -461,7 +464,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             type="button"
             onClick={toggleSound}
             title={soundEnabled ? `Sound: ${volume}%` : 'Muted'}
-            className="px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none flex items-center justify-center text-slate-700 dark:text-slate-300"
+            className="hidden sm:flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none items-center justify-center text-slate-700 dark:text-slate-300"
           >
             {soundEnabled && volume > 0 ? (
               <Volume2 className="w-3.5 h-3.5" />
@@ -473,7 +476,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
           {/* WiFi Indicator */}
           <div
             title="Wi-Fi: Connected (GucDuck-5G)"
-            className="px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default flex items-center justify-center text-slate-700 dark:text-slate-300"
+            className="hidden sm:flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default items-center justify-center text-slate-700 dark:text-slate-300"
           >
             <Wifi className="w-3.5 h-3.5" />
           </div>
@@ -481,7 +484,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
           {/* Battery Status */}
           <div
             title="Battery: 100% Charged"
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default text-[11px] font-medium text-slate-700 dark:text-slate-300"
+            className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default text-[11px] font-medium text-slate-700 dark:text-slate-300"
           >
             <span className="text-[10px]">100%</span>
             <Battery className="w-3.5 h-3.5 fill-current" />
@@ -492,7 +495,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             type="button"
             onClick={() => alert('Spotlight Search: Press ⌘Space to search apps, files, and portfolio projects.')}
             title="Spotlight Search (⌘Space)"
-            className="px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none text-slate-700 dark:text-slate-300"
+            className="hidden sm:flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none text-slate-700 dark:text-slate-300"
           >
             <Search className="w-3.5 h-3.5" />
           </button>

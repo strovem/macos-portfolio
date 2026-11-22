@@ -16,6 +16,7 @@ interface DesktopItemProps {
   zIndex?: number;
   onFocus?: () => void;
   dragConstraintsRef?: React.RefObject<Element>;
+  isMobile?: boolean;
 }
 
 export function DesktopItem({
@@ -23,6 +24,7 @@ export function DesktopItem({
   zIndex: propZIndex,
   onFocus,
   dragConstraintsRef,
+  isMobile = false,
 }: DesktopItemProps) {
   const openWindow = useWindowStore((state) => state.openWindow);
   const [isDragging, setIsDragging] = useState(false);
@@ -38,18 +40,21 @@ export function DesktopItem({
   };
 
   const handlePointerDown = () => {
+    if (isMobile) return;
     dragDistanceRef.current = 0;
     setLocalZIndex(25);
     onFocus?.();
   };
 
   const handleDragStart = () => {
+    if (isMobile) return;
     setIsDragging(true);
     setLocalZIndex(25);
     onFocus?.();
   };
 
   const handleDrag = (_: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
+    if (isMobile) return;
     dragDistanceRef.current = Math.hypot(info.offset.x, info.offset.y);
   };
 
@@ -58,8 +63,15 @@ export function DesktopItem({
   };
 
   const handleDoubleClick = () => {
-    // Only trigger if it wasn't a significant drag
-    if (dragDistanceRef.current < 6) {
+    // Only trigger if it wasn't a significant drag on desktop
+    if (!isMobile && dragDistanceRef.current < 6) {
+      handleOpenApp();
+    }
+  };
+
+  const handleClick = () => {
+    // Single tap to open on mobile
+    if (isMobile) {
       handleOpenApp();
     }
   };
@@ -85,7 +97,7 @@ export function DesktopItem({
 
   return (
     <motion.div
-      drag
+      drag={!isMobile}
       dragMomentum={false}
       dragElastic={0.08}
       dragConstraints={dragConstraintsRef}
@@ -94,34 +106,61 @@ export function DesktopItem({
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       onDoubleClick={handleDoubleClick}
-      initial={{
-        x: item.defaultPosition.x,
-        y: item.defaultPosition.y,
-        rotate: item.rotation || 0,
-        opacity: 0,
-        scale: 0.92,
-      }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        rotate: item.rotation || 0,
-      }}
-      whileHover={{
-        scale: 1.03,
-        rotate: 0,
-        transition: { type: 'spring', stiffness: 400, damping: 25 },
-      }}
+      onClick={handleClick}
+      initial={
+        isMobile
+          ? { opacity: 0, y: 15, scale: 0.98 }
+          : {
+              x: item.defaultPosition.x,
+              y: item.defaultPosition.y,
+              rotate: item.rotation || 0,
+              opacity: 0,
+              scale: 0.92,
+            }
+      }
+      animate={
+        isMobile
+          ? { opacity: 1, y: 0, scale: 1 }
+          : {
+              opacity: 1,
+              scale: 1,
+              rotate: item.rotation || 0,
+            }
+      }
+      whileHover={
+        isMobile
+          ? undefined
+          : {
+              scale: 1.03,
+              rotate: 0,
+              transition: { type: 'spring', stiffness: 400, damping: 25 },
+            }
+      }
       whileTap={{
-        scale: 0.98,
+        scale: 0.97,
       }}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        zIndex: effectiveZIndex,
-        touchAction: 'none',
-      }}
-      className="pointer-events-auto cursor-grab active:cursor-grabbing select-none"
+      style={
+        isMobile
+          ? {
+              position: 'relative',
+              touchAction: 'pan-y',
+              zIndex: effectiveZIndex,
+              display: 'flex',
+              justifyContent: 'center',
+            }
+          : {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: effectiveZIndex,
+              touchAction: 'none',
+            }
+      }
+      className={`pointer-events-auto select-none ${
+        isMobile
+          ? 'cursor-pointer w-full flex justify-center py-1 transition-transform active:scale-[0.98]'
+          : 'cursor-grab active:cursor-grabbing'
+      }`}
     >
       {renderWidgetContent()}
     </motion.div>

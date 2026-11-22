@@ -17,30 +17,36 @@ export interface DockItemProps {
   mouseX: MotionValue<number>;
   isOpen?: boolean;
   onClick?: (appId: AppId) => void;
+  isMobile?: boolean;
 }
 
-export function DockItem({ app, mouseX, isOpen = false, onClick }: DockItemProps) {
+export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = false }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isBouncing, setIsBouncing] = useState(false);
 
-  // Measure distance from mouseX to item horizontal center
+  // Measure distance from mouseX to item horizontal center (desktop only)
   const distance = useTransform(mouseX, (val) => {
+    if (isMobile) return Infinity;
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
   });
 
-  // Smooth magnification curve:
-  // Base size: 48px -> Max size: 74px (1.55x) within 140px distance
-  const widthSync = useTransform(distance, [-140, 0, 140], [48, 74, 48]);
-  const width = useSpring(widthSync, {
+  // Base size: 40px on mobile, 48px on desktop -> Max size: 74px on desktop within 140px distance
+  const baseSize = isMobile ? 40 : 48;
+  const maxSize = isMobile ? 40 : 74;
+
+  const widthSync = useTransform(distance, [-140, 0, 140], [baseSize, maxSize, baseSize]);
+  const springWidth = useSpring(widthSync, {
     mass: 0.1,
     stiffness: 220,
     damping: 14,
   });
 
+  const width = isMobile ? baseSize : springWidth;
+
   const handleClick = () => {
-    if (!isBouncing) {
+    if (!isBouncing && !isMobile) {
       setIsBouncing(true);
     }
     onClick?.(app.id);
@@ -50,13 +56,13 @@ export function DockItem({ app, mouseX, isOpen = false, onClick }: DockItemProps
     <motion.div
       ref={ref}
       style={{ width }}
-      className="relative flex flex-col items-center justify-end select-none"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="relative flex flex-col items-center justify-end select-none shrink-0"
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {/* Tooltip on hover */}
+      {/* Tooltip on hover (desktop only) */}
       <AnimatePresence>
-        {isHovered && (
+        {!isMobile && isHovered && (
           <motion.div
             initial={{ opacity: 0, y: 6, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -69,13 +75,14 @@ export function DockItem({ app, mouseX, isOpen = false, onClick }: DockItemProps
         )}
       </AnimatePresence>
 
-      {/* Bounce Wrapper and Icon Button */}
+      {/* Bounce Wrapper and Icon Button with Tactile Feedback */}
       <motion.button
         type="button"
         aria-label={app.title}
         onClick={handleClick}
+        whileTap={{ scale: 0.88 }}
         style={{ width, height: width }}
-        className="relative flex items-center justify-center rounded-2xl cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-blue-400"
+        className="relative flex items-center justify-center rounded-2xl cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-blue-400 active:opacity-90"
       >
         <motion.div
           animate={

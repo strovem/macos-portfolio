@@ -7,6 +7,7 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { WindowHeader } from './WindowHeader';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { AppMetadata } from '@/data/apps';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export interface WindowProps {
   id: AppId;
@@ -40,6 +41,7 @@ export function Window({
 
   const [isResizing, setIsResizing] = useState(false);
   const dragControls = useDragControls();
+  const isMobile = useIsMobile();
 
   const isMaximized = windowData?.isMaximized ?? false;
   const isActive = activeWindowId === id;
@@ -48,17 +50,20 @@ export function Window({
   const posX = useMotionValue(windowData?.position.x ?? 100);
   const posY = useMotionValue(windowData?.position.y ?? 60);
 
-  // Synchronize motion values when position changes in store or when maximized toggles
+  // Synchronize motion values when position changes in store or when maximized/mobile toggles
   useEffect(() => {
     if (!windowData) return;
-    if (isMaximized) {
+    if (isMobile) {
+      posX.set(0);
+      posY.set(0);
+    } else if (isMaximized) {
       posX.set(12);
       posY.set(32);
     } else {
       posX.set(windowData.position.x);
       posY.set(windowData.position.y);
     }
-  }, [isMaximized, windowData?.position.x, windowData?.position.y, posX, posY]);
+  }, [isMobile, isMaximized, windowData?.position.x, windowData?.position.y, posX, posY]);
 
   if (!windowData || !windowData.isOpen) {
     return null;
@@ -71,7 +76,7 @@ export function Window({
   };
 
   const handleDragEnd = () => {
-    if (isMaximized) return;
+    if (isMaximized || isMobile) return;
 
     const curX = posX.get();
     const curY = posY.get();
@@ -142,45 +147,79 @@ export function Window({
 
   return (
     <motion.div
-      drag={!isMaximized}
+      drag={!isMaximized && !isMobile}
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
       dragElastic={0}
       onDragEnd={handleDragEnd}
       onPointerDown={handlePointerDown}
-      style={{
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        x: posX,
-        y: posY,
-        width: isMaximized ? 'calc(100vw - 24px)' : windowData.size.width,
-        height: isMaximized ? 'calc(100vh - 116px)' : windowData.size.height,
-        zIndex: windowData.zIndex,
-      }}
+      style={
+        isMobile
+          ? {
+              position: 'fixed',
+              top: 32,
+              left: 0,
+              right: 0,
+              bottom: 64,
+              width: '100%',
+              height: 'calc(100vh - 96px)',
+              zIndex: windowData.zIndex,
+              x: 0,
+              y: 0,
+            }
+          : {
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              x: posX,
+              y: posY,
+              width: isMaximized ? 'calc(100vw - 24px)' : windowData.size.width,
+              height: isMaximized ? 'calc(100vh - 116px)' : windowData.size.height,
+              zIndex: windowData.zIndex,
+            }
+      }
       className={`select-none pointer-events-auto ${
         isResizing ? '' : 'transition-[width,height] duration-200 ease-out'
       }`}
     >
-      {/* Inner motion container providing authentic open/close/minimize scale & fade animation */}
+      {/* Inner motion container providing authentic open/close/minimize scale & fade animation or iOS sheet slide-up */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 15 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.85, opacity: 0, y: 35, transition: { duration: 0.18, ease: 'easeIn' } }}
-        transition={{ type: 'spring', stiffness: 360, damping: 26 }}
-        className={`w-full h-full flex flex-col rounded-xl overflow-hidden glass-panel backdrop-blur-2xl border transition-shadow duration-200 ${
+        initial={
+          isMobile
+            ? { y: '100%', opacity: 0 }
+            : { scale: 0.9, opacity: 0, y: 15 }
+        }
+        animate={
+          isMobile
+            ? { y: 0, opacity: 1 }
+            : { scale: 1, opacity: 1, y: 0 }
+        }
+        exit={
+          isMobile
+            ? { y: '100%', opacity: 0, transition: { duration: 0.22, ease: 'easeIn' } }
+            : { scale: 0.85, opacity: 0, y: 35, transition: { duration: 0.18, ease: 'easeIn' } }
+        }
+        transition={
+          isMobile
+            ? { type: 'spring', damping: 28, stiffness: 300 }
+            : { type: 'spring', stiffness: 360, damping: 26 }
+        }
+        className={`w-full h-full flex flex-col ${
+          isMobile ? 'rounded-t-2xl rounded-b-none border-t border-x' : 'rounded-xl border'
+        } overflow-hidden glass-panel backdrop-blur-2xl transition-shadow duration-200 ${
           isActive
             ? 'shadow-window dark:shadow-2xl border-black/15 dark:border-white/15'
             : 'shadow-lg opacity-[0.98] border-black/10 dark:border-white/10'
         } ${className}`}
       >
-        {/* Title Bar Header with Drag Controls & Traffic Lights */}
+        {/* Title Bar Header with Drag Controls & Traffic Lights / Mobile Done */}
         <WindowHeader
           title={title || windowData.title}
           icon={icon || windowData.icon}
           isActive={isActive}
           isMaximized={isMaximized}
+          isMobile={isMobile}
           dragControls={dragControls}
           onClose={() => closeWindow(id)}
           onMinimize={() => minimizeWindow(id)}
@@ -207,8 +246,8 @@ export function Window({
           )}
         </div>
 
-        {/* Bottom-right Corner Resize Handle */}
-        {!isMaximized && (
+        {/* Bottom-right Corner Resize Handle (Desktop only) */}
+        {!isMaximized && !isMobile && (
           <div
             onPointerDown={handleResizePointerDown}
             className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 select-none z-30 group"

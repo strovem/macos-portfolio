@@ -20,11 +20,13 @@ import { NotesApp } from '@/components/apps/NotesApp';
 import { MessagesApp } from '@/components/apps/MessagesApp';
 import { PhotosApp } from '@/components/apps/PhotosApp';
 import { SettingsApp } from '@/components/apps/SettingsApp';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function Home() {
   const brightness = useSettingsStore((state) => state.brightness);
   const windows = useWindowStore((state) => state.windows);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
+  const isMobile = useIsMobile();
 
   // Desktop items z-index management for tactile elevation
   const [itemZIndices, setItemZIndices] = React.useState<Record<string, number>>({});
@@ -101,17 +103,32 @@ export default function Home() {
       {/* Menubar (top-0 fixed z-50) */}
       <Menubar activeAppName={activeAppName} />
 
-      {/* Draggable Desktop Canvas Playground (gucduck-style cards & tactile stickers) */}
-      <div className="absolute inset-0 pt-7 pb-20 pointer-events-none z-[15] overflow-hidden">
-        {DESKTOP_ITEMS.map((item) => (
-          <DesktopItem
-            key={item.id}
-            item={item}
-            zIndex={itemZIndices[item.id] || 1}
-            onFocus={() => bringItemToFront(item.id)}
-          />
-        ))}
-      </div>
+      {/* Draggable Desktop Canvas Playground (Responsive vertical stack on mobile, free-canvas on desktop) */}
+      {isMobile ? (
+        <div className="absolute inset-0 pt-10 pb-24 px-4 overflow-y-auto no-scrollbar z-[15] pointer-events-auto flex flex-col items-center gap-4">
+          {DESKTOP_ITEMS.map((item) => (
+            <DesktopItem
+              key={item.id}
+              item={item}
+              isMobile={true}
+              zIndex={itemZIndices[item.id] || 1}
+              onFocus={() => bringItemToFront(item.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="absolute inset-0 pt-7 pb-20 pointer-events-none z-[15] overflow-hidden">
+          {DESKTOP_ITEMS.map((item) => (
+            <DesktopItem
+              key={item.id}
+              item={item}
+              isMobile={false}
+              zIndex={itemZIndices[item.id] || 1}
+              onFocus={() => bringItemToFront(item.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Desktop Canvas Root */}
       <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-20">

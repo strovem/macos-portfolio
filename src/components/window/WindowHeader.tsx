@@ -11,6 +11,7 @@ export interface WindowHeaderProps {
   icon?: string;
   isActive?: boolean;
   isMaximized?: boolean;
+  isMobile?: boolean;
   dragControls?: DragControls;
   onClose?: () => void;
   onMinimize?: () => void;
@@ -25,6 +26,7 @@ export function WindowHeader({
   icon,
   isActive = true,
   isMaximized = false,
+  isMobile = false,
   dragControls,
   onClose,
   onMinimize,
@@ -34,6 +36,7 @@ export function WindowHeader({
   children,
 }: WindowHeaderProps) {
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isMobile) return;
     // Don't start drag if clicking on interactive controls (traffic lights or custom buttons)
     if ((e.target as HTMLElement).closest('button, input, select, textarea, a')) {
       return;
@@ -46,6 +49,7 @@ export function WindowHeader({
     <div
       onPointerDown={handlePointerDown}
       onDoubleClick={(e) => {
+        if (isMobile) return;
         // Only toggle maximize if double clicked on the header bar itself, not buttons
         if (!(e.target as HTMLElement).closest('button, a, input')) {
           onMaximize?.();
@@ -69,7 +73,7 @@ export function WindowHeader({
       </div>
 
       {/* Center: Window Title and optional icon */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-20">
+      <div className={`absolute inset-0 flex items-center justify-center pointer-events-none ${isMobile ? 'px-20' : 'px-20'}`}>
         <div className="flex items-center gap-1.5 truncate max-w-full">
           {icon && (
             <div className="w-4 h-4 shrink-0">
@@ -77,7 +81,7 @@ export function WindowHeader({
             </div>
           )}
           <span
-            className={`text-xs font-medium tracking-tight truncate transition-colors ${
+            className={`text-xs font-semibold tracking-tight truncate transition-colors ${
               isActive
                 ? 'text-slate-800 dark:text-neutral-100'
                 : 'text-slate-400 dark:text-neutral-500'
@@ -88,9 +92,23 @@ export function WindowHeader({
         </div>
       </div>
 
-      {/* Right: Optional custom controls or balanced spacer */}
-      <div className="flex items-center justify-end min-w-[60px] z-10">
+      {/* Right: Close/Done button on mobile or custom controls */}
+      <div className="flex items-center justify-end gap-2 min-w-[60px] z-10">
         {children}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose?.();
+            }}
+            aria-label="Close window"
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/10 dark:bg-white/15 hover:bg-black/20 dark:hover:bg-white/25 active:scale-95 transition-all text-xs font-medium text-slate-800 dark:text-neutral-100 cursor-pointer pointer-events-auto"
+          >
+            <span>✕</span>
+            <span>Done</span>
+          </button>
+        )}
       </div>
     </div>
   );

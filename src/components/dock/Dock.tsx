@@ -6,6 +6,7 @@ import { APPS } from '@/data/apps';
 import { AppId } from '@/types/os';
 import { DockItem } from './DockItem';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export interface DockProps {
   openAppIds?: AppId[];
@@ -19,6 +20,7 @@ export function Dock({
   className = '',
 }: DockProps) {
   const mouseX = useMotionValue(Infinity);
+  const isMobile = useIsMobile();
 
   const windows = useWindowStore((state) => state.windows);
   const toggleWindow = useWindowStore((state) => state.toggleWindow);
@@ -47,14 +49,24 @@ export function Dock({
 
   return (
     <footer
-      className={`fixed bottom-3 left-1/2 -translate-x-1/2 z-40 pointer-events-auto ${className}`}
+      className={`fixed ${
+        isMobile ? 'bottom-2 max-w-[calc(100vw-1rem)]' : 'bottom-3'
+      } left-1/2 -translate-x-1/2 z-40 pointer-events-auto ${className}`}
       role="region"
       aria-label="Application Dock"
     >
       <motion.nav
-        onMouseMove={(e) => mouseX.set(e.pageX)}
-        onMouseLeave={() => mouseX.set(Infinity)}
-        className="backdrop-blur-2xl bg-white/30 dark:bg-black/40 border border-white/25 dark:border-white/10 rounded-2xl shadow-2xl p-2 px-3 flex items-end gap-2.5"
+        onMouseMove={(e) => {
+          if (!isMobile) mouseX.set(e.pageX);
+        }}
+        onMouseLeave={() => {
+          if (!isMobile) mouseX.set(Infinity);
+        }}
+        className={`backdrop-blur-2xl bg-white/30 dark:bg-black/40 border border-white/25 dark:border-white/10 rounded-2xl shadow-2xl flex items-end ${
+          isMobile
+            ? 'p-1.5 px-2 gap-1.5 overflow-x-auto no-scrollbar max-w-full'
+            : 'p-2 px-3 gap-2.5'
+        }`}
       >
         {standardApps.map((app) => (
           <DockItem
@@ -63,6 +75,7 @@ export function Dock({
             mouseX={mouseX}
             isOpen={effectiveOpenAppIds.includes(app.id)}
             onClick={handleAppClick}
+            isMobile={isMobile}
           />
         ))}
 
@@ -70,7 +83,9 @@ export function Dock({
         <div
           role="separator"
           aria-orientation="vertical"
-          className="w-[1px] h-8 bg-slate-400/30 dark:bg-white/20 mx-0.5 mb-2.5 self-center rounded-full shrink-0"
+          className={`w-[1px] ${
+            isMobile ? 'h-6' : 'h-8'
+          } bg-slate-400/30 dark:bg-white/20 mx-0.5 mb-2 self-center rounded-full shrink-0`}
         />
 
         {systemApps.map((app) => (
@@ -80,6 +95,7 @@ export function Dock({
             mouseX={mouseX}
             isOpen={effectiveOpenAppIds.includes(app.id)}
             onClick={handleAppClick}
+            isMobile={isMobile}
           />
         ))}
       </motion.nav>
