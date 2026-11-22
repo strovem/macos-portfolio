@@ -5,6 +5,7 @@ import { motion, useMotionValue } from 'framer-motion';
 import { APPS } from '@/data/apps';
 import { AppId } from '@/types/os';
 import { DockItem } from './DockItem';
+import { useWindowStore } from '@/stores/useWindowStore';
 
 export interface DockProps {
   openAppIds?: AppId[];
@@ -13,11 +14,29 @@ export interface DockProps {
 }
 
 export function Dock({
-  openAppIds = ['finder'],
+  openAppIds,
   onAppClick,
   className = '',
 }: DockProps) {
   const mouseX = useMotionValue(Infinity);
+
+  const windows = useWindowStore((state) => state.windows);
+  const toggleWindow = useWindowStore((state) => state.toggleWindow);
+
+  // Active indicator dots in Dock match isOpen && !isMinimized from store or props
+  const effectiveOpenAppIds =
+    openAppIds ??
+    Object.values(windows)
+      .filter((w) => w.isOpen && !w.isMinimized)
+      .map((w) => w.id);
+
+  const handleAppClick = (appId: AppId) => {
+    if (onAppClick) {
+      onAppClick(appId);
+    } else {
+      toggleWindow(appId);
+    }
+  };
 
   const standardApps = APPS.filter(
     (app) => app.id !== 'settings' && app.id !== 'trash'
@@ -42,8 +61,8 @@ export function Dock({
             key={app.id}
             app={app}
             mouseX={mouseX}
-            isOpen={openAppIds.includes(app.id)}
-            onClick={onAppClick}
+            isOpen={effectiveOpenAppIds.includes(app.id)}
+            onClick={handleAppClick}
           />
         ))}
 
@@ -59,8 +78,8 @@ export function Dock({
             key={app.id}
             app={app}
             mouseX={mouseX}
-            isOpen={openAppIds.includes(app.id)}
-            onClick={onAppClick}
+            isOpen={effectiveOpenAppIds.includes(app.id)}
+            onClick={handleAppClick}
           />
         ))}
       </motion.nav>
