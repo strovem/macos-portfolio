@@ -16,7 +16,7 @@ import {
 
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'chris';
+  sender: 'user' | 'huseyin';
   text: string;
   time: string;
 }
@@ -33,74 +33,46 @@ interface ChatThread {
 
 const INITIAL_THREADS: ChatThread[] = [
   {
-    id: 'chris',
-    name: 'Chris Gu',
-    role: 'Lead Frontend & Design Engineer',
-    avatarText: 'CG',
+    id: 'huseyin',
+    name: 'Hüseyin Korumtaş',
+    role: 'Creative Producer',
+    avatarText: 'HK',
     avatarBg: 'bg-gradient-to-tr from-blue-500 to-indigo-600',
     unread: false,
     messages: [
       {
-        id: 'c1',
-        sender: 'chris',
-        text: 'Hey there! Welcome to my macOS Web OS playground. 👋',
+        id: 'h1',
+        sender: 'huseyin',
+        text: 'Hey there! Welcome to my interactive space. 👋',
         time: '10:30 AM',
       },
       {
-        id: 'c2',
-        sender: 'chris',
-        text: 'Feel free to leave a direct inquiry, discuss open roles, or say hi! Fill in your details below and hit send.',
+        id: 'h2',
+        sender: 'huseyin',
+        text: 'Feel free to leave a direct message, discuss collaborations, or pitch an idea. Fill in your details below and hit send.',
         time: '10:31 AM',
       },
     ],
   },
   {
-    id: 'recruiter',
-    name: 'Recruiter / Talent Partner',
-    role: 'Hiring Team',
-    avatarText: 'RP',
+    id: 'collaboration',
+    name: 'Collaborations & Projects',
+    role: 'Production Inquiries',
+    avatarText: 'CP',
     avatarBg: 'bg-gradient-to-tr from-emerald-500 to-teal-600',
     unread: false,
     messages: [
       {
         id: 'r1',
-        sender: 'chris',
-        text: 'Hi Chris! Are you open to Lead Frontend / Staff Design Engineer roles for 2026?',
+        sender: 'huseyin',
+        text: 'Hello! Looking to produce an experience or explore creative direction?',
         time: 'Yesterday',
       },
       {
         id: 'r2',
         sender: 'user',
-        text: 'Yes! Particularly excited about spatial interfaces, design systems, and high-performance WebGL/React platforms.',
+        text: 'Yes! Loved your motto "Ideas into experiences" and want to discuss an upcoming production.',
         time: 'Yesterday',
-      },
-    ],
-  },
-  {
-    id: 'sarah',
-    name: 'Sarah Jenkins',
-    role: 'Design Lead',
-    avatarText: 'SJ',
-    avatarBg: 'bg-gradient-to-tr from-purple-500 to-pink-600',
-    unread: false,
-    messages: [
-      {
-        id: 's1',
-        sender: 'chris',
-        text: 'Hey! Loved the tactile desktop release 🔥 The physics & stickers feel super organic.',
-        time: 'Tuesday',
-      },
-      {
-        id: 's2',
-        sender: 'user',
-        text: 'Thanks Sarah! Tuning the spring damping curves on the dock was a ton of fun.',
-        time: 'Tuesday',
-      },
-      {
-        id: 's3',
-        sender: 'chris',
-        text: 'Can we collaborate on the next spatial canvas?',
-        time: 'Tuesday',
       },
     ],
   },
@@ -108,7 +80,7 @@ const INITIAL_THREADS: ChatThread[] = [
 
 export const MessagesApp: React.FC = () => {
   const [threads, setThreads] = useState<ChatThread[]>(INITIAL_THREADS);
-  const [activeThreadId, setActiveThreadId] = useState<string>('chris');
+  const [activeThreadId, setActiveThreadId] = useState<string>('huseyin');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Contact form fields
@@ -137,7 +109,7 @@ export const MessagesApp: React.FC = () => {
       return;
     }
 
-    if (activeThread.id === 'chris') {
+    if (activeThread.id === 'huseyin') {
       if (!name.trim()) {
         setFormError('Please enter your name.');
         return;
@@ -173,7 +145,7 @@ export const MessagesApp: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (activeThread.id === 'chris') {
+      if (activeThread.id === 'huseyin') {
         // Send to real contact API route
         await fetch('/api/contact', {
           method: 'POST',
@@ -192,14 +164,14 @@ export const MessagesApp: React.FC = () => {
           setIsTyping(false);
           const autoReply: ChatMessage = {
             id: 'reply-' + Date.now(),
-            sender: 'chris',
-            text: `Thanks for reaching out, ${senderName}! I've received your note and will get back to you shortly at ${senderEmail}. Feel free to test the other apps! 🦆`,
+            sender: 'huseyin',
+            text: `Thanks for reaching out, ${senderName}! I've received your note and will get back to you shortly at ${senderEmail}. — Hüseyin Korumtaş`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
 
           setThreads((prev) =>
             prev.map((t) =>
-              t.id === 'chris'
+              t.id === 'huseyin'
                 ? { ...t, messages: [...t.messages, autoReply] }
                 : t
             )
@@ -313,7 +285,7 @@ export const MessagesApp: React.FC = () => {
             <div>
               <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{activeThread.name}</span>
-                {activeThread.id === 'chris' && (
+                {activeThread.id === 'huseyin' && (
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-normal">
                     Available
                   </span>
@@ -376,8 +348,8 @@ export const MessagesApp: React.FC = () => {
           onSubmit={handleSendMessage}
           className="p-3 border-t border-black/5 dark:border-white/5 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md flex flex-col gap-2 shrink-0"
         >
-          {/* Visitor Name & Email Row (when contacting Chris) */}
-          {activeThread.id === 'chris' && (
+          {/* Visitor Name & Email Row (when contacting Hüseyin) */}
+          {activeThread.id === 'huseyin' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <input
                 type="text"
@@ -404,7 +376,7 @@ export const MessagesApp: React.FC = () => {
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 placeholder={
-                  activeThread.id === 'chris'
+                  activeThread.id === 'huseyin'
                     ? 'Write your message or inquiry...'
                     : `Message ${activeThread.name}...`
                 }

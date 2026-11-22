@@ -475,7 +475,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
           {/* WiFi Indicator */}
           <div
-            title="Wi-Fi: Connected (GucDuck-5G)"
+            title="Wi-Fi: Connected (Studio-5G)"
             className="hidden sm:flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default items-center justify-center text-slate-700 dark:text-slate-300"
           >
             <Wifi className="w-3.5 h-3.5" />
@@ -545,28 +545,28 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </div>
 
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              macOS Web OS Portfolio
+              Hüseyin Korumtaş Portfolio
             </h2>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 mb-4">
-              Version 15.1 Sonoma / Sequoia Architecture
+            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mb-4 italic">
+              &ldquo;Ideas into experiences.&rdquo;
             </p>
 
             <div className="w-full bg-black/5 dark:bg-white/5 rounded-xl p-3 text-left text-xs flex flex-col gap-1.5 mb-4 border border-black/5 dark:border-white/5">
               <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-neutral-400">Producer</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">Hüseyin Korumtaş</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-neutral-400">Role</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">Creative Producer</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-neutral-400">Email</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">korumtashuseyin@gmail.com</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-neutral-400">Architecture</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">Apple Silicon M3 Max</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-neutral-400">Framework</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">Next.js 14 App Router</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-neutral-400">UI / Motion</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">Tailwind & Framer Motion</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-neutral-400">Developer</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">GucDuck Studio</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">macOS Web OS • Next.js 14</span>
               </div>
             </div>
 

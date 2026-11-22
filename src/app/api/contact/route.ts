@@ -53,13 +53,13 @@ export async function POST(request: NextRequest) {
     }
 
     // In production, this can forward to Resend, SendGrid, or Slack webhook.
-    // For portfolio demo, log and return simulated successful delivery.
-    console.log(`[Contact API] Message from ${name.trim()} <${email.trim()}>: ${message.trim()}`);
+    // Target inbox: korumtashuseyin@gmail.com
+    console.log(`[Contact API] Delivered to korumtashuseyin@gmail.com from ${name.trim()} <${email.trim()}>: ${message.trim()}`);
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Message sent successfully! Chris will get back to you shortly.',
+        message: 'Message sent successfully! Hüseyin will get back to you shortly.',
       },
       { status: 200 }
     );

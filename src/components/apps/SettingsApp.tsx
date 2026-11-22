@@ -442,7 +442,7 @@ export const SettingsApp: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-slate-400 dark:text-neutral-500 max-w-sm">
-              Hand-crafted with Next.js 14, Tailwind CSS, Framer Motion, and Zustand by Chris Gu (GucDuck).
+              Creative Production & Direction by Hüseyin Korumtaş. &ldquo;Ideas into experiences.&rdquo;
             </p>
           </div>
         )}

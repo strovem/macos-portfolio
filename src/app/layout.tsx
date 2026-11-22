@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "gucduck by Portfolio | Web OS",
-  description: "Interactive macOS Web OS Personal Portfolio featuring interactive apps, draggable windows, and desktop cards.",
+  title: "Hüseyin Korumtaş | Creative Producer",
+  description: "Ideas into experiences. Interactive macOS portfolio of Hüseyin Korumtaş.",
   icons: {
     icon: "/favicon.ico",
   },

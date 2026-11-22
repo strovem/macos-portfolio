@@ -108,14 +108,14 @@ export const TerminalApp: React.FC = () => {
           type: 'output',
           elements: (
             <div className="my-1.5 p-2 rounded bg-black/30 border border-white/5 text-slate-200">
-              <div className="text-cyan-400 font-bold text-sm">Chris Gu (GucDuck)</div>
-              <div className="text-slate-400 text-xs mb-1">Lead Frontend & Design Engineer • San Francisco, CA</div>
+              <div className="text-cyan-400 font-bold text-sm">Hüseyin Korumtaş</div>
+              <div className="text-amber-400 text-xs font-semibold mb-1">Creative Producer • &ldquo;Ideas into experiences.&rdquo;</div>
               <div className="text-xs leading-relaxed">
-                6+ years building tactile web environments, spatial interfaces, and robust multi-window operating systems.
-                Obsessed with sub-16ms 60 FPS animation, physical spring damping, and joyful digital craft.
+                Transforming bold concepts into resonant, unforgettable experiences.
+                Bridging creative direction, sound, multidisciplinary media, and spatial digital design.
               </div>
               <div className="mt-2 text-emerald-400 text-xs">
-                Tip: Run <span className="underline">open notes</span> to read the complete narrative bio.
+                Tip: Run <span className="underline cursor-pointer" onClick={() => openWindow('notes')}>open notes</span> to read full vision and philosophy.
               </div>
             </div>
           ),
@@ -152,21 +152,24 @@ export const TerminalApp: React.FC = () => {
           type: 'output',
           elements: (
             <div className="my-1 text-slate-200 flex flex-col gap-1.5">
-              <div className="text-amber-400 font-bold">Portfolio Projects ({PROJECTS.length}):</div>
-              {PROJECTS.map((proj, idx) => (
-                <div key={proj.id} className="text-xs flex items-center justify-between border-b border-white/5 pb-1">
-                  <div>
-                    <span className="text-cyan-400 font-bold">[{idx + 1}] {proj.title}</span>
-                    <span className="text-slate-400 text-[11px] ml-2">({proj.category})</span>
-                  </div>
-                  <div className="text-emerald-400 text-[11px]">
-                    {proj.tags.slice(0, 3).join(', ')}
-                  </div>
+              <div className="text-amber-400 font-bold">Portfolio Projects:</div>
+              {PROJECTS.length === 0 ? (
+                <div className="text-xs text-slate-400 italic">
+                  Projects are currently being curated. Run <span className="text-cyan-300">open finder</span> to view the project directory.
                 </div>
-              ))}
-              <div className="text-slate-400 text-[11px] mt-1">
-                Tip: Run <span className="text-cyan-300">open finder</span> to browse interactive visual cards and launch live demos.
-              </div>
+              ) : (
+                PROJECTS.map((proj, idx) => (
+                  <div key={proj.id} className="text-xs flex items-center justify-between border-b border-white/5 pb-1">
+                    <div>
+                      <span className="text-cyan-400 font-bold">[{idx + 1}] {proj.title}</span>
+                      <span className="text-slate-400 text-[11px] ml-2">({proj.category})</span>
+                    </div>
+                    <div className="text-emerald-400 text-[11px]">
+                      {proj.tags.slice(0, 3).join(', ')}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           ),
         });
@@ -223,11 +226,11 @@ export const TerminalApp: React.FC = () => {
           type: 'output',
           elements: (
             <div className="my-1 text-slate-200 flex flex-col gap-1">
-              <div className="text-emerald-400 font-bold">Contact Channels:</div>
-              <div>• Email: <a href="mailto:hello@gucduck.dev" className="text-cyan-400 underline">hello@gucduck.dev</a></div>
-              <div>• GitHub: <a href="https://github.com/gucduck" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">github.com/gucduck</a></div>
-              <div>• LinkedIn: <a href="https://linkedin.com/in/gucduck" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">linkedin.com/in/gucduck</a></div>
-              <div className="text-amber-300 text-xs mt-1">✓ Launched Messages.app for instant direct chat.</div>
+              <div className="text-emerald-400 font-bold">Contact Hüseyin Korumtaş:</div>
+              <div>• Email: <a href="mailto:korumtashuseyin@gmail.com" className="text-cyan-400 underline">korumtashuseyin@gmail.com</a></div>
+              <div>• LinkedIn: <a href="https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">linkedin.com/in/hüseyin-korumtaş</a></div>
+              <div>• Instagram: <a href="https://www.instagram.com/korumtashuseyin/" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">instagram.com/korumtashuseyin</a></div>
+              <div className="text-amber-300 text-xs mt-1">✓ Launched Messages.app for direct message composition.</div>
             </div>
           ),
         });

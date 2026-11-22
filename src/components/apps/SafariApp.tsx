@@ -41,24 +41,24 @@ const BOOKMARKS: WebBookmark[] = [
     description: 'Enterprise multi-brand design tokens & accessible primitives.',
   },
   {
-    title: 'GucDuck GitHub',
-    url: 'https://github.com/gucduck',
-    icon: 'Github',
-    category: 'Open Source',
-    description: 'Explore 40+ repositories, stars, and open source contributions.',
+    title: 'Hüseyin Korumtaş LinkedIn',
+    url: 'https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/',
+    icon: 'Linkedin',
+    category: 'Professional',
+    description: 'Connect on LinkedIn for creative production and collaborations.',
   },
   {
-    title: 'Awwwards Honors',
-    url: 'https://awwwards.com/sites/macos-web-os',
-    icon: 'Award',
-    category: 'Recognition',
-    description: 'Site of the Day showcase for high-precision tactile motion design.',
+    title: 'Hüseyin Korumtaş Instagram',
+    url: 'https://www.instagram.com/korumtashuseyin/',
+    icon: 'Instagram',
+    category: 'Social',
+    description: 'Visual moments, creative productions, and lifestyle updates.',
   },
 ];
 
 export const SafariApp: React.FC = () => {
-  const [currentUrl, setCurrentUrl] = useState('https://github.com/gucduck');
-  const [inputUrl, setInputUrl] = useState('https://github.com/gucduck');
+  const [currentUrl, setCurrentUrl] = useState('https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/');
+  const [inputUrl, setInputUrl] = useState('https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'bookmarks' | 'preview'>('bookmarks');
   const [selectedBookmark, setSelectedBookmark] = useState<WebBookmark>(BOOKMARKS[0]);

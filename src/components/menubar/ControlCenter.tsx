@@ -117,7 +117,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                     Wi-Fi
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
-                    {wifiConnected ? 'GucDuck-5G' : 'Disconnected'}
+                    {wifiConnected ? 'Studio-5G' : 'Disconnected'}
                   </span>
                 </div>
               </button>
@@ -392,7 +392,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                   Portfolio Ambient Beats
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
-                  GucDuck · macOS Web OS
+                  Hüseyin Korumtaş · Ideas into experiences
                 </span>
               </div>
             </div>

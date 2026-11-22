@@ -37,39 +37,23 @@ const NOTES: NoteItem[] = [
     title: '👋 Introduction & Bio',
     category: 'Personal',
     date: 'Nov 22, 2026',
-    snippet: 'Senior Software & Design Engineer crafting tactile web experiences...',
+    snippet: 'Hüseyin Korumtaş — Creative Producer. Ideas into experiences...',
     icon: <Sparkles className="w-4 h-4 text-amber-500" />,
   },
   {
     id: 'skills',
-    title: '🛠 Technical Skills Matrix',
-    category: 'Engineering',
+    title: '🛠 Creative Production & Skills',
+    category: 'Competencies',
     date: 'Nov 20, 2026',
-    snippet: 'Proficiencies across Frontend Engineering, Architecture, Motion & Cloud...',
+    snippet: 'Creative Direction, Multidisciplinary Production, Sound & Digital Media...',
     icon: <Code2 className="w-4 h-4 text-blue-500" />,
   },
   {
-    id: 'experience',
-    title: '💼 Work History & Leadership',
-    category: 'Career',
-    date: 'Nov 18, 2026',
-    snippet: 'Track record leading frontend systems, collaborative canvases, and teams...',
-    icon: <Briefcase className="w-4 h-4 text-emerald-500" />,
-  },
-  {
-    id: 'education',
-    title: '🎓 Education & Certifications',
-    category: 'Credentials',
-    date: 'Nov 15, 2026',
-    snippet: 'UC Berkeley CS & HCI, Awwwards Site of the Day, Global Hackathon Winner...',
-    icon: <GraduationCap className="w-4 h-4 text-purple-500" />,
-  },
-  {
     id: 'philosophy',
-    title: '🦆 Engineering Philosophy & Craft',
+    title: '💡 Vision & Production Philosophy',
     category: 'Thinking',
-    date: 'Nov 10, 2026',
-    snippet: 'Tactile interaction, sub-pixel perfection, joyful software & zero bloat...',
+    date: 'Nov 18, 2026',
+    snippet: 'Ideas into experiences: bringing concepts into real, tangible life...',
     icon: <Heart className="w-4 h-4 text-rose-500" />,
   },
 ];
@@ -93,13 +77,13 @@ export const NotesApp: React.FC = () => {
   const handleCopyNote = () => {
     let textToCopy = `${selectedNote.title}\n\n`;
     if (selectedNote.id === 'bio') {
-      textToCopy += `Chris Gu — Lead Frontend & Design Engineer\nSan Francisco, CA\nSpecializing in high-performance web applications, spatial window systems, and tactile motion design.`;
+      textToCopy += `Hüseyin Korumtaş — Creative Producer\n"Ideas into experiences."\nEmail: korumtashuseyin@gmail.com\nLinkedIn: https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/\nInstagram: https://www.instagram.com/korumtashuseyin/`;
     } else if (selectedNote.id === 'skills') {
       textToCopy += SKILL_CATEGORIES.map(
         (c) => `${c.name}:\n` + c.skills.map((s) => `  - ${s.name} (${s.level}%)`).join('\n')
       ).join('\n\n');
-    } else if (selectedNote.id === 'experience') {
-      textToCopy += EXPERIENCE.map((e) => `${e.role} at ${e.company} (${e.period})\n${e.description}`).join('\n\n');
+    } else {
+      textToCopy += `Ideas into experiences. Merging creative vision, multidisciplinary media, and flawless execution.`;
     }
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
@@ -200,14 +184,13 @@ export const NotesApp: React.FC = () => {
             <div className="max-w-2xl mx-auto flex flex-col gap-6">
               <div>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wider">
-                  Profile & Overview
+                  Creative Producer
                 </span>
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-                  Chris Gu (GucDuck)
+                  Hüseyin Korumtaş
                 </h1>
-                <p className="text-sm font-medium text-slate-500 dark:text-neutral-400 mt-1 flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                  <span>San Francisco, California • Open for High-Impact Roles</span>
+                <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mt-1 italic">
+                  &ldquo;Ideas into experiences.&rdquo;
                 </p>
               </div>
 
@@ -219,27 +202,27 @@ export const NotesApp: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                   <div>
                     <span className="text-slate-400 block text-[11px]">Role</span>
-                    <strong className="text-slate-800 dark:text-white">Lead Design Engineer</strong>
+                    <strong className="text-slate-800 dark:text-white">Creative Producer</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Core Stack</span>
-                    <strong className="text-slate-800 dark:text-white">React, Next.js, TS</strong>
+                    <span className="text-slate-400 block text-[11px]">Motto</span>
+                    <strong className="text-slate-800 dark:text-white">Ideas into experiences</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Experience</span>
-                    <strong className="text-slate-800 dark:text-white">6+ Years Crafting UI</strong>
+                    <span className="text-slate-400 block text-[11px]">Email</span>
+                    <strong className="text-slate-800 dark:text-white truncate block">korumtashuseyin@gmail.com</strong>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[11px]">Specialty</span>
-                    <strong className="text-slate-800 dark:text-white">Spatial & Web OS</strong>
+                    <strong className="text-slate-800 dark:text-white">Creative Direction & Audio</strong>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[11px]">Status</span>
-                    <strong className="text-emerald-500">Available Q1 2026</strong>
+                    <strong className="text-emerald-500">Available for Collaborations</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Philosophy</span>
-                    <strong className="text-amber-500">Tactile & Playful</strong>
+                    <span className="text-slate-400 block text-[11px]">Channels</span>
+                    <strong className="text-amber-500">LinkedIn • Instagram</strong>
                   </div>
                 </div>
               </div>
@@ -247,34 +230,44 @@ export const NotesApp: React.FC = () => {
               {/* Detailed Narrative */}
               <div className="prose dark:prose-invert text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-neutral-300 flex flex-col gap-4">
                 <p>
-                  I am a product-focused frontend engineer and design technologist dedicated to building web applications that feel alive. Rather than treating web software as static rectangular boxes, I approach interfaces as physical, reactive environments with mass, friction, spring dynamics, and spatial depth.
+                  I am a Creative Producer dedicated to transforming visionary concepts into resonant, unforgettable experiences. Rather than settling for conventional formats, I bridge imaginative storytelling, multidisciplinary media, and spatial interaction into unified creative productions.
                 </p>
                 <p>
-                  Over the past 6+ years, I’ve led development on multi-tenant infinite whiteboards, high-frequency biometric analytics engines, and enterprise design systems. I bridge the gap between design vision in Figma and rigorous engineering in TypeScript, ensuring sub-16ms frame budgets and zero accessibility regressions.
+                  From sound design and audio engineering to interactive digital spaces, I lead productions from early conceptual ideation through every phase of execution. My core driver is simple: <em>&ldquo;Ideas into experiences.&rdquo;</em>
                 </p>
                 <p>
-                  When I am not tuning spring damping curves or building custom WebGL shaders, you can find me trail running the high mountain passes around Mont Blanc or assembling tactile mechanical keyboards.
+                  Whether crafting experiential brand identities, sonic environments, or immersive web installations, I combine artistic intuition with rigorous production craft to make ideas touchable and memorable.
                 </p>
               </div>
 
-              {/* Call to Actions */}
+              {/* Call to Actions & Direct Links */}
               <div className="pt-4 border-t border-black/5 dark:border-white/5 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() => openWindow('messages')}
                   className="px-4 py-2 rounded-lg bg-[#007AFF] hover:bg-[#007AFF]/90 text-white font-medium text-xs flex items-center gap-2 shadow-sm transition-colors"
                 >
-                  <span>Chat in Messages</span>
+                  <span>Direct Message</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => openWindow('finder')}
+                <a
+                  href="https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-4 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-slate-800 dark:text-white font-medium text-xs flex items-center gap-2 transition-colors"
                 >
-                  <span>Explore Projects in Finder</span>
+                  <span>LinkedIn</span>
                   <ExternalLink className="w-3.5 h-3.5" />
-                </button>
+                </a>
+                <a
+                  href="https://www.instagram.com/korumtashuseyin/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-slate-800 dark:text-white font-medium text-xs flex items-center gap-2 transition-colors"
+                >
+                  <span>Instagram</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
           )}
@@ -344,177 +337,59 @@ export const NotesApp: React.FC = () => {
             </div>
           )}
 
-          {/* Note 3: Work History & Leadership */}
-          {selectedNote.id === 'experience' && (
-            <div className="max-w-2xl mx-auto flex flex-col gap-6">
-              <div>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
-                  Career Milestones
-                </span>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-                  Work History & Impact
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
-                  6+ years driving architectural quality and shipping product experiences.
-                </p>
-              </div>
-
-              <div className="relative pl-6 border-l-2 border-black/10 dark:border-white/10 flex flex-col gap-8">
-                {EXPERIENCE.filter((e) => e.type === 'work').map((exp) => (
-                  <div key={exp.id} className="relative">
-                    {/* Timeline Node Dot */}
-                    <div className="absolute -left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-[#007AFF] border-2 border-white dark:border-neutral-900 ring-2 ring-[#007AFF]/20" />
-
-                    <div>
-                      <div className="flex items-center justify-between text-xs flex-wrap gap-1">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
-                          {exp.role}
-                        </span>
-                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 font-mono text-slate-600 dark:text-neutral-400">
-                          {exp.period}
-                        </span>
-                      </div>
-                      <div className="text-xs font-semibold text-[#007AFF] mt-0.5">
-                        {exp.company} • {exp.location}
-                      </div>
-
-                      <p className="text-xs text-slate-600 dark:text-neutral-300 mt-2 leading-relaxed">
-                        {exp.description}
-                      </p>
-
-                      <ul className="mt-2.5 flex flex-col gap-1.5 text-xs text-slate-600 dark:text-neutral-300">
-                        {exp.achievements.map((ach, i) => (
-                          <li key={i} className="flex items-start gap-1.5">
-                            <span className="text-emerald-500 font-bold">•</span>
-                            <span>{ach}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {exp.technologies.map((t) => (
-                          <span
-                            key={t}
-                            className="text-[10px] px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-neutral-400 font-medium"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Note 4: Education & Certifications */}
-          {selectedNote.id === 'education' && (
-            <div className="max-w-2xl mx-auto flex flex-col gap-6">
-              <div>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-wider">
-                  Accreditation & Honors
-                </span>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-                  Education & Awards
-                </h1>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {EXPERIENCE.filter((e) => e.type === 'education' || e.type === 'award').map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-2"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        {item.type === 'award' ? (
-                          <Award className="w-4 h-4 text-amber-500" />
-                        ) : (
-                          <GraduationCap className="w-4 h-4 text-purple-500" />
-                        )}
-                        <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                          {item.role}
-                        </h3>
-                      </div>
-                      <span className="text-[11px] font-mono text-slate-400">{item.period}</span>
-                    </div>
-
-                    <div className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-                      {item.company} • {item.location}
-                    </div>
-
-                    <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
-                      {item.description}
-                    </p>
-
-                    <ul className="flex flex-col gap-1 text-xs text-slate-600 dark:text-neutral-300">
-                      {item.achievements.map((ach, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-purple-500 font-bold">•</span>
-                          <span>{ach}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Note 5: Engineering Philosophy */}
+          {/* Note 3: Creative Production Philosophy */}
           {selectedNote.id === 'philosophy' && (
             <div className="max-w-2xl mx-auto flex flex-col gap-6">
               <div>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 uppercase tracking-wider">
-                  Mindset & Craft
+                  Mindset & Vision
                 </span>
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-                  Engineering Philosophy
+                  Ideas into Experiences
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
-                  The principles governing how I build digital experiences and lead technical teams.
+                  The principles governing how I direct creative productions and bring ideas to life.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-2">
-                  <div className="text-rose-500 font-bold text-base">01. Tactile Skeuomorphism</div>
+                  <div className="text-rose-500 font-bold text-base">01. Emotion First</div>
                   <h3 className="font-semibold text-xs text-slate-900 dark:text-white">
-                    Interfaces should have weight
+                    Memories beat mechanics
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
-                    Software shouldn’t feel like flat, cold glass. Adding spring damping, responsive shadows, and subtle audio cues makes interaction intuitive, delightful, and memorable.
+                    Great experiences are felt before they are understood. Whether through sonic texture, visual rhythm, or spatial design, evocative emotion is the true measure of creative work.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-2">
-                  <div className="text-blue-500 font-bold text-base">02. 60 FPS As A Contract</div>
+                  <div className="text-blue-500 font-bold text-base">02. Ideas Into Experiences</div>
                   <h3 className="font-semibold text-xs text-slate-900 dark:text-white">
-                    Performance is user empathy
+                    Execution is the bridge
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
-                    A beautiful animation that stutters or drops frames ruins trust. We offload intensive math to Web Workers, utilize GPU compositing layers, and avoid layout thrash at all costs.
+                    An idea in a slide deck is just a wish. True production is the rigorous craft of pulling an abstract thought into the physical and digital world where people can touch and experience it.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-2">
-                  <div className="text-emerald-500 font-bold text-base">03. Strict Type Safety</div>
+                  <div className="text-emerald-500 font-bold text-base">03. Sonic & Spatial Depth</div>
                   <h3 className="font-semibold text-xs text-slate-900 dark:text-white">
-                    Speed through certainty
+                    The invisible layer
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
-                    TypeScript isn't bureaucracy—it is our safety net and cognitive offloader. Thorough types and automated contracts allow fearless refactoring and continuous shipping.
+                    Sound, timing, and tactile feedback transform ordinary media into unforgettable moments. We treat audio and spatial immersion as core storytelling tools, never afterthoughts.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-2">
-                  <div className="text-amber-500 font-bold text-base">04. Joyful Software</div>
+                  <div className="text-amber-500 font-bold text-base">04. Joyful Craft</div>
                   <h3 className="font-semibold text-xs text-slate-900 dark:text-white">
-                    Never forget the duck 🦆
+                    Playfulness breeds originality
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-neutral-300 leading-relaxed">
-                    Software built without enthusiasm feels like a tax form. We embed easter eggs, playful stickers, and delightful micro-interactions that make people smile while getting work done.
+                    The most groundbreaking creative work stems from a spirit of play, relentless curiosity, and fearlessness in testing unconventional formats.
                   </p>
                 </div>
               </div>

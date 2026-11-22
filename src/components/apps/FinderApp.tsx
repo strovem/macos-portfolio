@@ -34,7 +34,7 @@ export const FinderApp: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(PROJECTS[0].id);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(PROJECTS[0]?.id || null);
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
 
   const openWindow = useWindowStore((state) => state.openWindow);
@@ -338,11 +338,13 @@ export const FinderApp: React.FC = () => {
         {/* Content Area: Grid or List */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {filteredProjects.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-              <Folder className="w-12 h-12 mb-2 stroke-1 opacity-40" />
-              <p className="text-sm font-medium">No projects found</p>
-              <p className="text-xs text-slate-400 max-w-xs mt-1">
-                Try adjusting your search query or switching categories in the sidebar.
+            <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400">
+              <div className="w-16 h-16 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center mb-3 text-slate-400">
+                <Folder className="w-8 h-8 stroke-1 opacity-60" />
+              </div>
+              <p className="text-sm font-semibold text-slate-700 dark:text-neutral-200">Projects Coming Soon</p>
+              <p className="text-xs text-slate-400 dark:text-neutral-400 max-w-sm mt-1.5 leading-relaxed">
+                Hüseyin is currently curating select creative productions and project highlights. Check back soon or reach out directly via Messages.
               </p>
             </div>
           ) : viewMode === 'grid' ? (
