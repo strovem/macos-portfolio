@@ -273,10 +273,10 @@ const DESKTOP_FILES: FinderFileItem[] = [
 
 const MUSIC_FILES: FinderFileItem[] = ORIGINAL_TRACKS.map((t) => ({
   id: t.id,
-  name: `${t.title}.wav`,
-  dateModified: 'Nov 22, 2026, 6:00 PM',
-  size: t.durationSeconds > 200 ? '42.1 MB' : '34.8 MB',
-  kind: 'WAV audio',
+  name: t.src ? t.src.replace('/music/', '') : `${t.title}.wav`,
+  dateModified: 'Nov 22, 2026, 8:15 PM',
+  size: t.durationSeconds > 200 ? '42.1 MB' : t.durationSeconds > 100 ? '6.6 MB' : '2.6 MB',
+  kind: t.src?.endsWith('.mp3') ? 'MP3 audio' : 'WAV audio',
   category: t.genre,
   tags: [`${t.bpm} BPM`, t.genre, t.year],
   content: `${t.title} — Beste & Yapım: Hüseyin Korumtaş\nAlbüm: ${t.album} (${t.year}) | Tempo: ${t.bpm} BPM | Tür: ${t.genre}\n\n${t.description}`,
@@ -1027,7 +1027,7 @@ export const FinderApp: React.FC = () => {
             {/* Top Bar of Quick Look */}
             <div className="h-10 px-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-neutral-100/70 dark:bg-neutral-800/70">
               <div className="flex items-center gap-2 min-w-0">
-                {previewFile.track && previewFile.kind === 'WAV audio' ? (
+                {previewFile.track && previewFile.kind.includes('audio') ? (
                   <Music2 className="w-3.5 h-3.5 text-indigo-500" />
                 ) : (
                   <RedDocIcon />
@@ -1045,7 +1045,7 @@ export const FinderApp: React.FC = () => {
               </button>
             </div>
 
-            {previewFile.track && previewFile.kind === 'WAV audio' ? (
+            {previewFile.track && previewFile.kind.includes('audio') ? (
               /* INTERACTIVE MUSIC TRACK PLAYER VIEW */
               <div className="p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex flex-col sm:flex-row items-center gap-6">

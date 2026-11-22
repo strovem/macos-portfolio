@@ -52,6 +52,9 @@ function playProceduralTrack(track: MusicTrack, volume: number) {
       stopCurrentSynth();
       const audio = new Audio(track.src);
       audio.volume = Math.max(0, Math.min(1, volume));
+      audio.onended = () => {
+        useAudioStore.getState().nextTrack();
+      };
       audio.play().then(() => {
         currentHtmlAudio = audio;
       }).catch(() => {
@@ -161,6 +164,9 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
 
   setVolume: (val: number) => {
     set({ volume: val });
+    if (currentHtmlAudio) {
+      currentHtmlAudio.volume = Math.max(0, Math.min(1, val));
+    }
     if (masterGainNode && globalAudioCtx) {
       masterGainNode.gain.setValueAtTime(val * 0.15, globalAudioCtx.currentTime);
     }
