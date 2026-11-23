@@ -7,6 +7,7 @@ import { AppId } from '@/types/os';
 import { DockItem } from './DockItem';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { playDockClickSound } from '@/utils/soundEffects';
 
 export interface DockProps {
   openAppIds?: AppId[];
@@ -33,6 +34,7 @@ export function Dock({
       .map((w) => w.id);
 
   const handleAppClick = (appId: AppId) => {
+    playDockClickSound();
     if (appId === 'instagram') {
       window.open('https://www.instagram.com/korumtashuseyin/', '_blank', 'noopener,noreferrer');
       return;

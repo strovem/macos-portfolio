@@ -30,6 +30,7 @@ import {
   Folder,
   ArrowUpRight,
   AudioWaveform,
+  Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
@@ -39,6 +40,8 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { AppId } from '@/types/os';
 import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
+import { FinderQuickLookModal } from './FinderQuickLookModal';
+import { playDockClickSound, playTrashSound } from '@/utils/soundEffects';
 
 type SidebarSection =
   | 'recents'
@@ -470,6 +473,25 @@ export const FinderApp: React.FC = () => {
     });
   }, [sectionFiles, searchQuery, sortAsc]);
 
+  const [isQuickLookOpen, setIsQuickLookOpen] = useState(false);
+
+  const selectedFile = useMemo(() => {
+    return displayedFiles.find((f) => f.id === selectedFileId) || null;
+  }, [displayedFiles, selectedFileId]);
+
+  // Space bar listener for Quick Look
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space' && selectedFile) {
+        e.preventDefault();
+        setIsQuickLookOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedFile]);
+
   // Capitalized section title
   const currentTitle = useMemo(() => {
     switch (activeSection) {
@@ -762,6 +784,26 @@ export const FinderApp: React.FC = () => {
               <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
             </button>
 
+            {/* Quick Look Preview Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedFile) {
+                  setIsQuickLookOpen(true);
+                }
+              }}
+              disabled={!selectedFile}
+              className={`p-1.5 px-2 rounded-lg border transition-all flex items-center gap-1.5 ${
+                selectedFile
+                  ? 'bg-neutral-100 dark:bg-neutral-800/80 border-black/[0.04] dark:border-white/[0.06] text-slate-700 dark:text-neutral-200 hover:bg-neutral-200/80 dark:hover:bg-neutral-700 cursor-pointer shadow-2xs'
+                  : 'opacity-40 cursor-not-allowed text-slate-400 border-transparent'
+              }`}
+              title="Quick Look (Space)"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-medium hidden sm:inline">Preview</span>
+            </button>
+
             {/* Search Button / Input */}
             <div className="relative flex items-center">
               {isSearchOpen ? (
@@ -802,7 +844,21 @@ export const FinderApp: React.FC = () => {
 
         {/* Content Table / Grid */}
         <div className="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar">
-          {/* Informative Music Studio Banner when in Music section */}
+          {/* Trash Section Action Bar */}
+          {activeSection === 'trash' && (
+            <div className="mb-3.5 p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/60 border border-black/5 dark:border-white/5 flex items-center justify-between text-xs">
+              <span className="text-slate-500 dark:text-neutral-400">Trash: {TRASH_FILES.length} items</span>
+              <button
+                type="button"
+                onClick={() => {
+                  playTrashSound();
+                }}
+                className="px-3 py-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-rose-500 hover:text-white transition-colors text-xs font-medium cursor-pointer shadow-2xs"
+              >
+                Empty Trash
+              </button>
+            </div>
+          )}
           {activeSection === 'music' && (
             <div className="mb-3.5 p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-purple-500/10 border border-indigo-500/20 flex items-start gap-3 text-xs">
               <div className="p-2 rounded-lg bg-indigo-500 text-white shadow-sm mt-0.5 shrink-0">
@@ -1492,6 +1548,12 @@ export const FinderApp: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Quick Look macOS Preview Modal */}
+      <FinderQuickLookModal
+        file={selectedFile}
+        isOpen={isQuickLookOpen}
+        onClose={() => setIsQuickLookOpen(false)}
+      />
     </div>
   );
 };

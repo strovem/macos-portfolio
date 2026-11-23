@@ -227,7 +227,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-[11px] leading-tight">Ambient Audio</span>
+                  <span className="font-semibold text-[11px] leading-tight">System Audio</span>
                   <span
                     className={`text-[10px] ${
                       soundEnabled ? 'text-white/80' : 'text-slate-500 dark:text-neutral-400'

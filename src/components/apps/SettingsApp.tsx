@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { playToggleSound } from '@/utils/soundEffects';
 
 type SettingsSection = 'appearance' | 'wallpaper' | 'atmosphere' | 'displays' | 'about';
 
@@ -407,7 +408,10 @@ export const SettingsApp: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={toggleSound}
+                  onClick={() => {
+                    toggleSound();
+                    playToggleSound();
+                  }}
                   className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
                     soundEnabled ? 'bg-[#007AFF]' : 'bg-slate-300 dark:bg-neutral-700'
                   }`}
