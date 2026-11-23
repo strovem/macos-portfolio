@@ -53,6 +53,7 @@ export function Dock({
 
   return (
     <footer
+      data-dock="true"
       className={`fixed ${
         isMobile ? 'bottom-2 max-w-[calc(100vw-1rem)]' : 'bottom-3'
       } left-1/2 -translate-x-1/2 z-40 pointer-events-auto ${className}`}

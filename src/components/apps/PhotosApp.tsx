@@ -11,125 +11,140 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
-  Tag,
-  Camera,
+  Sliders,
+  Play,
+  Pause,
+  Music,
+  Headphones,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAudioStore } from '@/stores/useAudioStore';
+import { ORIGINAL_TRACKS } from '@/data/music';
 
 interface PhotoItem {
   id: string;
   title: string;
-  category: 'ui' | '3d' | 'milestones';
+  category: 'campaign' | 'gear' | 'sessions' | 'club';
   date: string;
   description: string;
   renderTool: string;
   gradient: string;
   accentColor: string;
-  iconName: string;
+  relatedTrackId?: string;
+  gearList: string[];
 }
 
 const PHOTOS: PhotoItem[] = [
   {
-    id: 'photo-macos',
-    title: 'macOS Web OS Architecture',
-    category: 'ui',
-    date: 'Oct 2026',
+    id: 'photo-excalibur',
+    title: 'Casper Excalibur — Official Campaign Jingle',
+    category: 'campaign',
+    date: 'Ekim 2026',
     description:
-      'Complete desktop interface running inside browser canvas with tactile draggable stickers and spring physics dock.',
-    renderTool: 'Figma • Next.js 14 • Framer Motion',
-    gradient: 'from-blue-600 via-indigo-700 to-slate-900',
-    accentColor: '#007AFF',
-    iconName: 'Monitor',
+      'Casper Excalibur televizyon ve dijital lansman kampanyası için bestelenen sinematik 3 saniyelik sonic logo ve ana fragman tema müziği. Yüksek transient netliği, patlayıcı analog sub-bass ve fütüristik ses tasarımı.',
+    renderTool: 'Ableton Live 12 • Moog Sub 37 • FabFilter Pro',
+    gradient: 'from-amber-600 via-yellow-600 to-neutral-950',
+    accentColor: '#F59E0B',
+    relatedTrackId: 'track-excalibur',
+    gearList: ['Moog Sub 37 (Lead Bass)', 'Spire Synth', 'FabFilter Saturn 2', 'SSL G-Master Bus'],
   },
   {
-    id: 'photo-canvas',
-    title: 'Spatial Canvas Multiplayer Nodes',
-    category: 'ui',
-    date: 'Jul 2025',
+    id: 'photo-analog-racks',
+    title: 'Analog Hardware Synthesizers & Summing',
+    category: 'gear',
+    date: 'Ağustos 2026',
     description:
-      'Infinite vector whiteboard capable of rendering 10,000+ simultaneous canvas nodes with real-time peer sync.',
-    renderTool: 'React • Three.js • Yjs CRDTs',
-    gradient: 'from-purple-600 via-pink-700 to-indigo-950',
+      'Stüdyodaki analog donanım zinciri: Moog Sub 37 bas synthesizer, Roland TB-303 analog bas hattı ve sıcak analog harmonikler üreten tüplü kompresör ve ekolayzır devreleri.',
+    renderTool: 'Studio Rack • Universal Audio Apollo x8',
+    gradient: 'from-purple-700 via-indigo-800 to-slate-950',
     accentColor: '#8B5CF6',
-    iconName: 'Layers',
+    relatedTrackId: 'track-dark-elektro',
+    gearList: ['Roland TB-303', 'Moog Sub 37', 'UAD Manley Massive Passive', 'Neve 1073 Preamp'],
   },
   {
-    id: 'photo-switch',
-    title: 'Mechanical Switch Acoustics',
-    category: '3d',
-    date: 'May 2024',
+    id: 'photo-tech-house',
+    title: 'Club Masters — "I AM A LOVER" Session',
+    category: 'sessions',
+    date: 'Temmuz 2026',
     description:
-      'Physical tactile soundboard simulating mechanical stem displacement, spring resonance, and acoustic wave propagation.',
-    renderTool: 'Web Audio API • Canvas 2D',
-    gradient: 'from-cyan-600 via-teal-700 to-slate-950',
+      '126 BPM kulüp dans pisti için hazırlanan parça aranjmanı. Hipnotik vokal kesitleri, analog TB-303 asit yürüyüşü ve dans pistinde subwoofurları titreten faz hizalı vuruş dinamiği.',
+    renderTool: 'Logic Pro 11 • Analog 303 Summing',
+    gradient: 'from-cyan-600 via-blue-700 to-slate-950',
     accentColor: '#06B6D4',
-    iconName: 'Volume2',
+    relatedTrackId: 'track-tech-house-lover',
+    gearList: ['Roland TB-303', 'Serum Vocal Slices', 'Soundtoys Decapitator', 'Ozone 11 Maximizer'],
   },
   {
-    id: 'photo-aura',
-    title: 'Aura Token Architecture',
-    category: 'ui',
-    date: 'Dec 2025',
+    id: 'photo-ethnic-garage',
+    title: 'Ethnic Garage & Tribal UK 2-Step',
+    category: 'sessions',
+    date: 'Mayıs 2026',
     description:
-      'Multi-brand design system token hierarchy supporting high contrast, dark mode, and sub-pixel typography scales.',
-    renderTool: 'Radix UI • Tailwind CSS',
-    gradient: 'from-emerald-600 via-teal-800 to-slate-900',
+      'Geleneksel Orta Doğu enstrümanlarının (ney, saz) modern İngiliz 2-step garaj ritimleri ve 132 BPM senkoplu ritim salınımlarıyla harmanlandığı kültürel sentez aranjman oturumu.',
+    renderTool: 'Ableton Live 12 • Organic Ney Recording',
+    gradient: 'from-emerald-600 via-teal-800 to-stone-950',
     accentColor: '#10B981',
-    iconName: 'Palette',
+    relatedTrackId: 'track-ethnic-garage',
+    gearList: ['Canlı Ney & Bağlama Kaydı', 'Shadow Hills Mastering Compressor', 'Valhalla VintageVerb'],
   },
   {
-    id: 'photo-studio',
-    title: 'Late Night Studio Shipping',
-    category: 'milestones',
-    date: 'Oct 2026',
+    id: 'photo-ethnic-psy',
+    title: 'Tribal Psytrance & Hypnotic Modulation',
+    category: 'sessions',
+    date: 'Nisan 2026',
     description:
-      'Studio workspace setup at 02:40 AM putting final touches on spring damping dock physics and sound synthesis.',
-    renderTool: 'Studio Photography • 35mm f/1.4',
-    gradient: 'from-amber-600 via-orange-800 to-neutral-950',
-    accentColor: '#F59E0B',
-    iconName: 'Coffee',
+      '138 BPM psikedelik trance aranjmanı. Çeyrek ton doğu dizileri, filtrelenmiş asit arpejleri ve 3D binaural derinlik hissi veren uzamsal reverb alanları.',
+    renderTool: 'Modular Synth • FabFilter Pro-MB',
+    gradient: 'from-fuchsia-600 via-purple-800 to-indigo-950',
+    accentColor: '#D946EF',
+    relatedTrackId: 'track-ethnic-psy',
+    gearList: ['Arturia Pigments', 'Infected Mushroom Pusher', 'Eventide Blackhole Spatial Reverb'],
   },
   {
-    id: 'photo-tmb',
-    title: 'Tour du Mont Blanc Alpine Run',
-    category: 'milestones',
-    date: 'Aug 2025',
+    id: 'photo-guitar-house',
+    title: 'Sunset Deep House — Organic Stratocaster',
+    category: 'sessions',
+    date: 'Mart 2026',
     description:
-      '165km alpine trail circuit across France, Italy, and Switzerland with 10,200m elevation gain in 7 days.',
-    renderTool: 'Garmin GPS • Trailhead Snapshot',
-    gradient: 'from-rose-600 via-red-800 to-slate-950',
-    accentColor: '#EF4444',
-    iconName: 'Mountain',
+      'Canlı Fender Stratocaster gitar akorları ve organik akustik tınıların 122 BPM gün batımı house ritimleriyle buluştuğu sıcak kulüp kaydı.',
+    renderTool: 'Fender Stratocaster • Universal Audio Amp',
+    gradient: 'from-rose-600 via-pink-700 to-purple-950',
+    accentColor: '#F43F5E',
+    relatedTrackId: 'track-guitar-house',
+    gearList: ['Fender American Pro Stratocaster', 'UAD Fender 55 Tweed', 'FabFilter Pro-C 2'],
   },
   {
-    id: 'photo-sotd',
-    title: 'Awwwards Site of the Day Trophy',
-    category: 'milestones',
-    date: 'Jan 2026',
+    id: 'photo-club-night',
+    title: 'Peak Time Electronic Club Set & Live Booth',
+    category: 'club',
+    date: 'Şubat 2026',
     description:
-      'Honored with Site of the Day and Developer Award for outstanding micro-interactions and tactile spatial design.',
-    renderTool: 'Awwwards Jury Certificate',
-    gradient: 'from-amber-500 via-yellow-600 to-stone-900',
-    accentColor: '#F59E0B',
-    iconName: 'Award',
-  },
-  {
-    id: 'photo-glass',
-    title: 'Liquid Glass Shader Refraction',
-    category: '3d',
-    date: 'Mar 2025',
-    description:
-      'Interactive normal map refraction shader simulating surface tension and chromatic dispersion in WebGL.',
-    renderTool: 'GLSL • Three.js • GSAP',
-    gradient: 'from-blue-500 via-cyan-600 to-indigo-950',
+      'Elektronik dans pisti performansı. Seyircinin enerjisini yönlendiren miks geçişleri, analog davul loopları ve geceyi zirveye taşıyan peak-time ses dinamikleri.',
+    renderTool: 'Pioneer DJ CDJ-3000 • Allen & Heath Xone:96',
+    gradient: 'from-blue-600 via-indigo-800 to-neutral-950',
     accentColor: '#3B82F6',
-    iconName: 'Droplets',
+    relatedTrackId: 'track-tech-house-club',
+    gearList: ['Allen & Heath Xone:96 Analog Mixer', 'Pioneer CDJ-3000', 'Custom Club Audio Rig'],
+  },
+  {
+    id: 'photo-mastering-lab',
+    title: 'Acoustic Room & Club Mastering Chain',
+    category: 'gear',
+    date: 'Ocak 2026',
+    description:
+      'Akustik olarak optimize edilmiş mastering kontrol odası. Subwoofer faz eşitlemesi, analog stereo genişletme ve kulüp ses sistemleri standartlarında -7 LUFS entegre ses şiddeti kalibrasyonu.',
+    renderTool: 'Studio Acoustics • Genelec SAM Monitors',
+    gradient: 'from-slate-700 via-zinc-800 to-black',
+    accentColor: '#64748B',
+    gearList: ['Genelec 8351B Smart Active Monitors', 'Universal Audio Apollo x8', 'Sonarworks Reference 4'],
   },
 ];
 
 export const PhotosApp: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'ui' | '3d' | 'milestones'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'campaign' | 'gear' | 'sessions' | 'club'>('all');
   const [lightboxPhoto, setLightboxPhoto] = useState<PhotoItem | null>(null);
+
+  const { currentTrack, isPlaying, playTrack, togglePlay } = useAudioStore();
 
   const filteredPhotos = PHOTOS.filter((p) => {
     if (selectedCategory === 'all') return true;
@@ -152,13 +167,30 @@ export const PhotosApp: React.FC = () => {
     setLightboxPhoto(filteredPhotos[prevIndex]);
   };
 
+  const matchedTrack = lightboxPhoto?.relatedTrackId
+    ? ORIGINAL_TRACKS.find((t) => t.id === lightboxPhoto.relatedTrackId)
+    : null;
+
+  const isCurrentTrackPlaying = Boolean(
+    matchedTrack && currentTrack?.id === matchedTrack.id && isPlaying
+  );
+
+  const handlePlayRelatedTrack = () => {
+    if (!matchedTrack) return;
+    if (currentTrack?.id === matchedTrack.id) {
+      togglePlay();
+    } else {
+      playTrack(matchedTrack);
+    }
+  };
+
   return (
     <div className="flex h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
       {/* 1. Left Sidebar: Albums */}
-      <div className="w-52 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 p-3 flex flex-col justify-between backdrop-blur-md">
+      <div className="w-56 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 p-3 flex flex-col justify-between backdrop-blur-md">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 px-2">
-            Photos Library
+            Studio & Production
           </span>
 
           <div className="mt-2 flex flex-col gap-0.5">
@@ -173,7 +205,7 @@ export const PhotosApp: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <ImageIcon className="w-3.5 h-3.5" />
-                <span>All Photos</span>
+                <span>Tüm Kareler</span>
               </div>
               <span className={`text-[10px] ${selectedCategory === 'all' ? 'text-white/80' : 'text-slate-400'}`}>
                 {PHOTOS.length}
@@ -182,63 +214,82 @@ export const PhotosApp: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => setSelectedCategory('ui')}
+              onClick={() => setSelectedCategory('campaign')}
               className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'ui'
-                  ? 'bg-[#007AFF] text-white shadow-sm'
-                  : 'text-slate-600 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Layers className="w-3.5 h-3.5" />
-                <span>UI & Systems</span>
-              </div>
-              <span className={`text-[10px] ${selectedCategory === 'ui' ? 'text-white/80' : 'text-slate-400'}`}>
-                {PHOTOS.filter((p) => p.category === 'ui').length}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedCategory('3d')}
-              className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === '3d'
+                selectedCategory === 'campaign'
                   ? 'bg-[#007AFF] text-white shadow-sm'
                   : 'text-slate-600 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/5'
               }`}
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>3D & Shaders</span>
+                <span>Casper Excalibur</span>
               </div>
-              <span className={`text-[10px] ${selectedCategory === '3d' ? 'text-white/80' : 'text-slate-400'}`}>
-                {PHOTOS.filter((p) => p.category === '3d').length}
+              <span className={`text-[10px] ${selectedCategory === 'campaign' ? 'text-white/80' : 'text-slate-400'}`}>
+                {PHOTOS.filter((p) => p.category === 'campaign').length}
               </span>
             </button>
 
             <button
               type="button"
-              onClick={() => setSelectedCategory('milestones')}
+              onClick={() => setSelectedCategory('gear')}
               className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'milestones'
+                selectedCategory === 'gear'
+                  ? 'bg-[#007AFF] text-white shadow-sm'
+                  : 'text-slate-600 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Analog Synths & Donanım</span>
+              </div>
+              <span className={`text-[10px] ${selectedCategory === 'gear' ? 'text-white/80' : 'text-slate-400'}`}>
+                {PHOTOS.filter((p) => p.category === 'gear').length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('sessions')}
+              className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                selectedCategory === 'sessions'
+                  ? 'bg-[#007AFF] text-white shadow-sm'
+                  : 'text-slate-600 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5" />
+                <span>DAW & Aranjman</span>
+              </div>
+              <span className={`text-[10px] ${selectedCategory === 'sessions' ? 'text-white/80' : 'text-slate-400'}`}>
+                {PHOTOS.filter((p) => p.category === 'sessions').length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('club')}
+              className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                selectedCategory === 'club'
                   ? 'bg-[#007AFF] text-white shadow-sm'
                   : 'text-slate-600 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/5'
               }`}
             >
               <div className="flex items-center gap-2">
                 <Heart className="w-3.5 h-3.5" />
-                <span>Milestones</span>
+                <span>Kulüp & Sahne</span>
               </div>
-              <span className={`text-[10px] ${selectedCategory === 'milestones' ? 'text-white/80' : 'text-slate-400'}`}>
-                {PHOTOS.filter((p) => p.category === 'milestones').length}
+              <span className={`text-[10px] ${selectedCategory === 'club' ? 'text-white/80' : 'text-slate-400'}`}>
+                {PHOTOS.filter((p) => p.category === 'club').length}
               </span>
             </button>
           </div>
         </div>
 
         {/* Footer info */}
-        <div className="pt-3 border-t border-black/5 dark:border-white/5 text-[11px] text-slate-400 dark:text-neutral-500 px-2">
-          {filteredPhotos.length} Items • Visual Archive
+        <div className="pt-3 border-t border-black/5 dark:border-white/5 text-[11px] text-slate-400 dark:text-neutral-500 px-2 flex flex-col gap-0.5">
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Hüseyin Korumtaş Studio</span>
+          <span>{filteredPhotos.length} Kare • Görsel & Ses Arşivi</span>
         </div>
       </div>
 
@@ -259,18 +310,25 @@ export const PhotosApp: React.FC = () => {
                 className={`w-full h-full bg-gradient-to-tr ${photo.gradient} p-3 flex flex-col justify-between text-white transition-transform group-hover:scale-105 duration-300`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-black/30 backdrop-blur-xs">
+                  <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-black/40 backdrop-blur-xs">
                     {photo.category}
                   </span>
-                  <Maximize2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex items-center gap-1">
+                    {photo.relatedTrackId && (
+                      <span className="w-5 h-5 rounded-full bg-black/30 flex items-center justify-center">
+                        <Music className="w-2.5 h-2.5 text-white/90" />
+                      </span>
+                    )}
+                    <Maximize2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
 
                 <div>
                   <h3 className="font-bold text-xs line-clamp-1 drop-shadow-sm">
                     {photo.title}
                   </h3>
-                  <div className="text-[10px] opacity-75 mt-0.5 line-clamp-1">
-                    {photo.date}
+                  <div className="text-[10px] opacity-80 mt-0.5 line-clamp-1">
+                    {photo.date} • {photo.renderTool.split('•')[0]}
                   </div>
                 </div>
               </div>
@@ -294,11 +352,11 @@ export const PhotosApp: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.92, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-2xl w-full bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col"
+              className="relative max-w-2xl w-full bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col max-h-[90vh] overflow-y-auto"
             >
               {/* Lightbox Banner / Image */}
               <div
-                className={`w-full h-64 bg-gradient-to-tr ${lightboxPhoto.gradient} p-6 flex flex-col justify-between text-white relative`}
+                className={`w-full h-56 sm:h-64 bg-gradient-to-tr ${lightboxPhoto.gradient} p-6 flex flex-col justify-between text-white relative flex-shrink-0`}
               >
                 {/* Close Button */}
                 <button
@@ -329,10 +387,13 @@ export const PhotosApp: React.FC = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-md">
                     {lightboxPhoto.category}
                   </span>
+                  <span className="text-[10px] opacity-80 backdrop-blur-md px-2 py-0.5 rounded-full bg-black/30">
+                    Hüseyin Korumtaş Archive
+                  </span>
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight drop-shadow-md">
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight drop-shadow-md">
                     {lightboxPhoto.title}
                   </h2>
                 </div>
@@ -340,13 +401,54 @@ export const PhotosApp: React.FC = () => {
 
               {/* Lightbox Details */}
               <div className="p-6 flex flex-col gap-4 text-xs">
+                {/* Action Row: Play production track if available */}
+                {matchedTrack && (
+                  <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                        {isCurrentTrackPlaying ? (
+                          <Music className="w-4 h-4 animate-bounce" />
+                        ) : (
+                          <Headphones className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-semibold text-xs text-indigo-950 dark:text-indigo-200 truncate">
+                          {matchedTrack.title}
+                        </span>
+                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400">
+                          {matchedTrack.bpm} BPM • {matchedTrack.genre}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handlePlayRelatedTrack}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-all shrink-0 hover:scale-105 active:scale-95"
+                    >
+                      {isCurrentTrackPlaying ? (
+                        <>
+                          <Pause className="w-3.5 h-3.5 fill-current" />
+                          <span>Duraklat</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Bu Eseri Dinle</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-3">
                   <div className="flex items-center gap-2 text-slate-500 dark:text-neutral-400">
                     <Calendar className="w-3.5 h-3.5" />
                     <span>{lightboxPhoto.date}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-neutral-400 font-mono">
-                    <Camera className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-neutral-400 font-mono text-[11px]">
+                    <Sliders className="w-3.5 h-3.5" />
                     <span>{lightboxPhoto.renderTool}</span>
                   </div>
                 </div>
@@ -354,6 +456,25 @@ export const PhotosApp: React.FC = () => {
                 <p className="text-slate-700 dark:text-neutral-300 text-sm leading-relaxed">
                   {lightboxPhoto.description}
                 </p>
+
+                {/* Used Equipment & VSTs */}
+                {lightboxPhoto.gearList && lightboxPhoto.gearList.length > 0 && (
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <span className="font-semibold text-[11px] text-slate-800 dark:text-slate-200">
+                      Kullanılan Enstrüman & Prodüksiyon Donanımları:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {lightboxPhoto.gearList.map((gear, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 text-[10px] border border-black/5 dark:border-white/5"
+                        >
+                          {gear}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

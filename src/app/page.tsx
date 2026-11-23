@@ -22,6 +22,7 @@ import { PhotosApp } from '@/components/apps/PhotosApp';
 import { SettingsApp } from '@/components/apps/SettingsApp';
 import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
 import { StudioApp } from '@/components/apps/StudioApp';
+import { DesktopContextMenu } from '@/components/desktop/DesktopContextMenu';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function Home() {
@@ -29,6 +30,51 @@ export default function Home() {
   const windows = useWindowStore((state) => state.windows);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
   const isMobile = useIsMobile();
+
+  // Desktop right-click context menu state
+  const [contextMenu, setContextMenu] = React.useState<{ isOpen: boolean; x: number; y: number }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+  });
+  const touchTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('[data-window]') ||
+      target.closest('[data-dock]') ||
+      target.closest('[data-desktop-item]') ||
+      target.closest('header')
+    ) {
+      return;
+    }
+    e.preventDefault();
+    setContextMenu({ isOpen: true, x: e.clientX, y: e.clientY });
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('[data-window]') ||
+      target.closest('[data-dock]') ||
+      target.closest('[data-desktop-item]') ||
+      target.closest('header')
+    ) {
+      return;
+    }
+    const touch = e.touches[0];
+    touchTimerRef.current = setTimeout(() => {
+      setContextMenu({ isOpen: true, x: touch.clientX, y: touch.clientY });
+    }, 520);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
 
   // Desktop items z-index management for tactile elevation
   const [itemZIndices, setItemZIndices] = React.useState<Record<string, number>>({});
@@ -88,7 +134,13 @@ export default function Home() {
   };
 
   return (
-    <main className="relative w-full h-full overflow-hidden select-none">
+    <main
+      onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchEnd}
+      className="relative w-full h-full overflow-hidden select-none"
+    >
       {/* Dynamic Wallpaper Canvas */}
       <Wallpaper />
 
@@ -152,6 +204,14 @@ export default function Home() {
 
       {/* Spring-Magnified macOS Dock (bottom-3 fixed z-40) */}
       <Dock />
+
+      {/* Desktop macOS Right-Click Context Menu */}
+      <DesktopContextMenu
+        isOpen={contextMenu.isOpen}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        onClose={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+      />
     </main>
   );
 }

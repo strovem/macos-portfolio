@@ -188,6 +188,7 @@ export function DesktopItem({
               touchAction: 'none',
             }
       }
+      data-desktop-item="true"
       className={`pointer-events-auto select-none ${
         isMobile
           ? 'cursor-pointer w-full flex justify-center py-1 transition-transform active:scale-[0.98]'

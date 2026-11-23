@@ -218,6 +218,7 @@ export function Window({
       className={`select-none pointer-events-auto ${
         isResizing ? '' : 'transition-[width,height] duration-200 ease-out'
       }`}
+      data-window="true"
     >
       {/* Inner motion container providing authentic open/close/minimize scale & fade animation or iOS sheet slide-up */}
       <motion.div
