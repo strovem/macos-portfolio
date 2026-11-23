@@ -43,14 +43,6 @@ const TRACK_PRODUCTION_DETAILS: Record<
       'High-energy dancefloor production built around the hypnotic "I Am A Lover" vocal hook. Features a driving 126 BPM analog TB-303 bassline and syncopated percussion polyrhythms.',
     tags: ['Club Master', 'Analog 303', 'Vocal Chop', 'Peak Time'],
   },
-  'track-hoodtrap': {
-    daw: 'FL Studio & Ableton Live',
-    synths: ['Spire (Lead Synth)', '808 Studio Custom Bass', 'Nexus 4 (Arps)'],
-    mixingChain: ['CamelCrusher (Sub Saturation)', 'iZotope Trash 2', 'FabFilter Pro-MB (Dynamic Control)'],
-    concept:
-      'Heavyweight 808 sub-bass pressure combined with 140 BPM polyrhythmic trap hi-hat rolls. Engineered for club subwoofers and fast-paced visual choreography.',
-    tags: ['808 Bass', 'Hoodtrap', 'Aggressive Drums', '140 BPM'],
-  },
   'track-dark-elektro': {
     daw: 'Logic Pro 11',
     synths: ['Moog Sub 37 (Hardware Bass)', 'Arturia Pigments', 'Korg MS-20 Mini'],

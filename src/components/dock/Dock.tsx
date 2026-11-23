@@ -33,6 +33,10 @@ export function Dock({
       .map((w) => w.id);
 
   const handleAppClick = (appId: AppId) => {
+    if (appId === 'instagram') {
+      window.open('https://www.instagram.com/korumtashuseyin/', '_blank', 'noopener,noreferrer');
+      return;
+    }
     if (onAppClick) {
       onAppClick(appId);
     } else {

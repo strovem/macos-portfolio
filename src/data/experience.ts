@@ -11,7 +11,7 @@ export const EXPERIENCE: ExperienceItem[] = [
       'Directing end-to-end creative production, commercial advertising jingles, electronic club releases, and multi-sensory interactive experiences.',
     achievements: [
       'Composed the official cinematic jingle and sound branding for the Casper Excalibur performance computing campaign.',
-      'Directed arrangement, mixing, and analog mastering for high-energy dancefloor records including Tech House ("I AM A LOVER") and Hoodtrap ("Bangır Bangır").',
+      'Directed arrangement, mixing, and analog mastering for high-energy dancefloor records including Tech House ("I AM A LOVER") and Dark Electro.',
       'Architected the tactile macOS portfolio web operating system merging creative direction with modern browser audio technology.',
     ],
     technologies: ['Ableton Live 12', 'Logic Pro 11', 'Analog Synths', 'Sound Branding', 'Creative Direction'],
@@ -82,15 +82,15 @@ export const EXPERIENCE: ExperienceItem[] = [
   {
     id: 'award-club-selection',
     role: 'Electronic Club Master & Dancefloor Hit',
-    company: 'Club Masters & Bass Lab Sessions',
+    company: 'Club Masters & Underground Electronic',
     period: '2026',
     location: 'Global',
     description:
-      'Featured dancefloor selection for "I AM A LOVER" (Tech House) and "Bangır Bangır" (Hoodtrap) across electronic music venues.',
+      'Featured dancefloor selection for "I AM A LOVER" (Tech House) and "Dark Elektro" across electronic music venues.',
     achievements: [
       'Engineered for maximum dancefloor energy, sub-bass articulation, and peak-time momentum.',
     ],
-    technologies: ['Tech House', 'Hoodtrap', 'Club Mastering'],
+    technologies: ['Tech House', 'Dark Electro', 'Club Mastering'],
     type: 'award',
   },
 ];

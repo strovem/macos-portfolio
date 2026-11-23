@@ -8,7 +8,7 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
       { name: 'Analog Sound Synthesis', level: 95, years: '5+ yrs', highlight: 'Moog Sub 37, Roland TB-303, Dave Smith, Serum, Diva' },
       { name: 'Commercial Jingles & Sonic Branding', level: 96, years: '4+ yrs', highlight: 'Bespoke mnemonic logos & campaign scores (Excalibur)' },
       { name: 'Mixing & Mastering Chain', level: 94, years: '5+ yrs', highlight: 'FabFilter Pro, SSL G-Master Bus, UAD, Ozone 11' },
-      { name: 'Beatmaking & 808 Bass Design', level: 97, years: '6+ yrs', highlight: 'Hoodtrap, Club Trap, harmonic distortion shaping' },
+      { name: 'Beatmaking & 808 Bass Design', level: 97, years: '6+ yrs', highlight: 'Heavy 808 sub-bass, Club Trap, harmonic distortion shaping' },
       { name: 'Tech House & Club Grooves', level: 96, years: '5+ yrs', highlight: 'Floor-focused basslines, vocal chops, and groove timing' },
     ],
   },

@@ -65,6 +65,18 @@ const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
     size: { width: 640, height: 520 },
     defaultSize: { width: 640, height: 520 },
   },
+  instagram: {
+    id: 'instagram',
+    title: 'Instagram',
+    icon: 'instagram',
+    isOpen: false,
+    isMinimized: false,
+    isMaximized: false,
+    zIndex: 1,
+    position: { x: 175, y: 110 },
+    size: { width: 480, height: 600 },
+    defaultSize: { width: 480, height: 600 },
+  },
   notes: {
     id: 'notes',
     title: 'Notes',

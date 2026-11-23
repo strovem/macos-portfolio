@@ -382,7 +382,7 @@ export const TerminalApp: React.FC = () => {
                   ))}
                 </div>
                 <div className="text-neutral-400 text-[11px] mt-2 italic">
-                  Example: <code className="text-emerald-400">play hoodtrap</code> or <code className="text-emerald-400">play lover</code>
+                  Example: <code className="text-emerald-400">play lover</code> or <code className="text-emerald-400">play dark-elektro</code>
                 </div>
               </div>
             ),

@@ -36,23 +36,6 @@ export const PROJECTS: ProjectItem[] = [
     ],
   },
   {
-    id: 'case-hoodtrap',
-    title: 'Hoodtrap "Bangır Bangır" — Heavy 808 & Rhythmic Edit',
-    description:
-      'Earth-shattering 808 sub-bass waves, aggressive 140 BPM trap hi-hat rolls, and explosive club trap arrangement.',
-    category: 'mobile',
-    tags: ['Hoodtrap', '808 Bass', 'Club Trap', 'Sound Design'],
-    role: 'Music Producer & Beatmaker',
-    date: '2026',
-    featured: true,
-    color: '#EF4444',
-    highlights: [
-      'Rich harmonic saturation engineered to push subwoofer limits with zero digital clipping',
-      'Syncopated percussion choreography designed for fast-paced video edits',
-      'Millisecond-precise dynamic dropouts and risers',
-    ],
-  },
-  {
     id: 'case-ethnic-garage',
     title: 'Ethnic Garage & Tribal Psy — Cultural Fusion',
     description:
