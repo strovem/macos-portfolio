@@ -11,6 +11,7 @@ import {
 import { AppMetadata } from '@/data/apps';
 import { AppId } from '@/types/os';
 import { AppIcon } from './AppIcon';
+import { playDockClickSound } from '@/utils/soundEffects';
 
 export interface DockItemProps {
   app: AppMetadata;
@@ -46,6 +47,7 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
   const width = isMobile ? baseSize : springWidth;
 
   const handleClick = () => {
+    playDockClickSound();
     if (!isBouncing && !isMobile) {
       setIsBouncing(true);
     }

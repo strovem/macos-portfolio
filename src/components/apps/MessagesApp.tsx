@@ -15,6 +15,7 @@ import {
   Mail,
   ExternalLink,
 } from 'lucide-react';
+import { playMessageSentSound } from '@/utils/soundEffects';
 
 interface ChatMessage {
   id: string;
@@ -130,6 +131,7 @@ export const MessagesApp: React.FC = () => {
     const senderEmail = email.trim();
 
     // Optimistically append sent bubble
+    playMessageSentSound();
     const userMsgId = 'msg-' + Date.now();
     const newMsg: ChatMessage = {
       id: userMsgId,

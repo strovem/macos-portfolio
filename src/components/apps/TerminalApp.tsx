@@ -5,6 +5,8 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { PROJECTS } from '@/data/projects';
 import { SKILL_CATEGORIES } from '@/data/skills';
+import { ORIGINAL_TRACKS } from '@/data/music';
+import { useAudioStore } from '@/stores/useAudioStore';
 import { AppId } from '@/types/os';
 
 interface OutputLine {
@@ -32,9 +34,54 @@ export const TerminalApp: React.FC = () => {
   const [inputVal, setInputVal] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [isMatrixMode, setIsMatrixMode] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const matrixCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Matrix digital rain animation
+  useEffect(() => {
+    if (!isMatrixMode) return;
+    const canvas = matrixCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = canvas.parentElement?.clientWidth || 640;
+    canvas.height = canvas.parentElement?.clientHeight || 420;
+
+    const chars = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ';
+    const fontSize = 14;
+    const columns = Math.max(1, Math.floor(canvas.width / fontSize));
+    const drops = Array(columns).fill(1);
+
+    const interval = setInterval(() => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#00FF41';
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }, 33);
+
+    const handleExit = () => setIsMatrixMode(false);
+    window.addEventListener('keydown', handleExit);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('keydown', handleExit);
+    };
+  }, [isMatrixMode]);
 
   const openWindow = useWindowStore((state) => state.openWindow);
   const closeWindow = useWindowStore((state) => state.closeWindow);
@@ -93,6 +140,8 @@ export const TerminalApp: React.FC = () => {
                 <div><span className="text-emerald-400 font-bold">contact</span> — Get contact info or open Messages</div>
                 <div><span className="text-emerald-400 font-bold">whoami</span> — Display session & visitor profile</div>
                 <div><span className="text-emerald-400 font-bold">neofetch</span> — Print macOS Sonoma system banner</div>
+                <div><span className="text-emerald-400 font-bold">play &lt;track&gt;</span> — Stream original track live</div>
+                <div><span className="text-emerald-400 font-bold">matrix</span> — Launch Matrix digital rain effect</div>
                 <div><span className="text-emerald-400 font-bold">clear</span> — Clear terminal output buffer</div>
                 <div><span className="text-emerald-400 font-bold">date</span> — Display current date & time</div>
                 <div><span className="text-emerald-400 font-bold">echo &lt;text&gt;</span> — Print argument text</div>
@@ -316,6 +365,73 @@ export const TerminalApp: React.FC = () => {
         });
         break;
 
+      case 'play':
+        const trackQuery = args.join(' ').toLowerCase().trim();
+        if (!trackQuery) {
+          newLines.push({
+            id: Math.random().toString(),
+            type: 'output',
+            elements: (
+              <div className="my-1.5 p-2 rounded bg-black/40 border border-white/5 text-slate-300">
+                <div className="text-amber-400 font-bold mb-1">Available Audio Tracks:</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
+                  {ORIGINAL_TRACKS.map((t) => (
+                    <div key={t.id} className="text-slate-300">
+                      <span className="text-cyan-400 font-bold">play {t.id}</span> — {t.title} <span className="text-emerald-400">({t.bpm} BPM)</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-neutral-400 text-[11px] mt-2 italic">
+                  Example: <code className="text-emerald-400">play hoodtrap</code> or <code className="text-emerald-400">play lover</code>
+                </div>
+              </div>
+            ),
+          });
+        } else {
+          const matched = ORIGINAL_TRACKS.find(
+            (t) =>
+              t.id.toLowerCase().includes(trackQuery) ||
+              t.title.toLowerCase().includes(trackQuery) ||
+              t.genre.toLowerCase().includes(trackQuery)
+          );
+
+          if (matched) {
+            useAudioStore.getState().playTrack(matched);
+            newLines.push({
+              id: Math.random().toString(),
+              type: 'output',
+              elements: (
+                <div className="my-2 p-3 rounded-xl bg-black/50 border border-emerald-500/30 text-slate-200">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs mb-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Now Streaming via Web Audio: {matched.title}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    Genre: {matched.genre} • BPM: {matched.bpm} • Duration: {matched.duration}
+                  </div>
+                  <div className="font-mono text-cyan-400 text-xs mt-2 select-none tracking-wider leading-none">
+                     ▂▃▅▆▇█▇▆▅▃▂ ▂▃▅▆▇█▇▆▅▃▂ ▂▃▅▆▇█▇▆▅▃▂ [LIVE AUDIO SPECTRUM]
+                  </div>
+                  <div className="text-[10px] text-neutral-500 mt-1 italic">
+                    Audio is streaming live through the desktop player and Menubar.
+                  </div>
+                </div>
+              ),
+            });
+          } else {
+            newLines.push({
+              id: Math.random().toString(),
+              type: 'error',
+              text: `play: Track matching "${trackQuery}" not found. Type "play" with no arguments to list all tracks.`,
+            });
+          }
+        }
+        break;
+
+      case 'matrix':
+        setIsMatrixMode(true);
+        return;
+
       case 'clear':
         setHistory([]);
         return;
@@ -380,8 +496,21 @@ export const TerminalApp: React.FC = () => {
   return (
     <div
       onClick={handleTerminalClick}
-      className="h-full w-full bg-[#18181b] text-neutral-200 font-mono text-xs p-4 flex flex-col select-text cursor-text overflow-hidden"
+      className="relative h-full w-full bg-[#18181b] text-neutral-200 font-mono text-xs p-4 flex flex-col select-text cursor-text overflow-hidden"
     >
+      {/* Matrix Mode Full Canvas Overlay */}
+      {isMatrixMode && (
+        <div
+          onClick={() => setIsMatrixMode(false)}
+          className="absolute inset-0 bg-black z-30 flex flex-col items-center justify-center cursor-pointer"
+        >
+          <canvas ref={matrixCanvasRef} className="absolute inset-0 w-full h-full" />
+          <div className="absolute top-3 px-3 py-1 rounded-full bg-black/80 border border-emerald-500/50 text-emerald-400 text-[11px] font-mono tracking-wider shadow-lg animate-pulse z-40 select-none">
+            [ MATRIX RAIN ACTIVATED — PRESS ANY KEY OR CLICK TO EXIT ]
+          </div>
+        </div>
+      )}
+
       {/* Scrollable output container */}
       <div ref={containerRef} className="flex-1 overflow-y-auto flex flex-col gap-1.5 custom-scrollbar pr-1">
         {history.map((line) => {
