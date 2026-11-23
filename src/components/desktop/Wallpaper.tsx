@@ -67,6 +67,7 @@ const DEFAULT_AURA: TrackAuraConfig = {
 
 export const Wallpaper: React.FC = () => {
   const activeWallpaperId = useSettingsStore((state) => state.activeWallpaperId);
+  const auraIntensity = useSettingsStore((state) => state.auraIntensity);
   const { currentTrack, isPlaying } = useAudioStore();
 
   const currentWallpaper: WallpaperOption =
@@ -76,6 +77,14 @@ export const Wallpaper: React.FC = () => {
   const currentAura: TrackAuraConfig = currentTrack
     ? TRACK_AURAS[currentTrack.id] || DEFAULT_AURA
     : DEFAULT_AURA;
+
+  // Scale and opacity multiplier based on user settings
+  const intensityMap = {
+    subtle: { scaleMax: 1.02, opacityMin: 0.6, opacityMax: 0.78 },
+    vibrant: { scaleMax: 1.05, opacityMin: 0.82, opacityMax: 1.0 },
+    max: { scaleMax: 1.09, opacityMin: 0.92, opacityMax: 1.15 },
+  };
+  const activeIntensity = intensityMap[auraIntensity] || intensityMap.vibrant;
 
   // Calculate 2-beat rhythmic pulse period in seconds based on current BPM
   const bpm = currentTrack?.bpm || 126;
@@ -143,11 +152,11 @@ export const Wallpaper: React.FC = () => {
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{ backgroundColor: currentAura.deep }}
           >
-            {/* Rhythmic Ambient Glow Pulses with Track BPM */}
+            {/* Rhythmic Ambient Glow Pulses with Track BPM & User Intensity */}
             <motion.div
               animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.82, 1, 0.82],
+                scale: [1, activeIntensity.scaleMax, 1],
+                opacity: [activeIntensity.opacityMin, activeIntensity.opacityMax, activeIntensity.opacityMin],
               }}
               transition={{
                 duration: pulseDuration,

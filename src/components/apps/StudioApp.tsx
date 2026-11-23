@@ -19,10 +19,12 @@ import {
   Info,
   Clock,
   Music,
+  Radio,
 } from 'lucide-react';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { StudioBeatPad } from './StudioBeatPad';
 
 // Extended production credits and hardware chain per track
 const TRACK_PRODUCTION_DETAILS: Record<
@@ -111,7 +113,7 @@ export function StudioApp() {
 
   const openFinderToSection = useWindowStore((state) => state.openFinderToSection);
 
-  const [activeTab, setActiveTab] = useState<'arrangement' | 'mixer' | 'credits'>('arrangement');
+  const [activeTab, setActiveTab] = useState<'arrangement' | 'mixer' | 'credits' | 'beatpad'>('arrangement');
   const [isLooping, setIsLooping] = useState<boolean>(true);
   const [mutedTracks, setMutedTracks] = useState<Record<string, boolean>>({});
   const [soloTrackId, setSoloTrackId] = useState<string | null>(null);
@@ -391,6 +393,19 @@ export function StudioApp() {
             <Info className="w-3.5 h-3.5 text-cyan-400" />
             <span>Production Notes & Stems</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('beatpad')}
+            className={`px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'beatpad'
+                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.6)] font-bold'
+                : 'text-neutral-400 hover:text-neutral-200'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 text-pink-400" />
+            <span>🥁 Beat Pad & Sampler</span>
+          </button>
         </div>
 
         <button
@@ -403,8 +418,13 @@ export function StudioApp() {
         </button>
       </div>
 
-      {/* 3. MAIN WORKSPACE (Arrangement or Credits) */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* 3. MAIN WORKSPACE (Arrangement or Credits or Beat Pad) */}
+      {activeTab === 'beatpad' ? (
+        <div className="flex-1 flex overflow-hidden">
+          <StudioBeatPad />
+        </div>
+      ) : (
+        <div className="flex-1 flex overflow-hidden">
         {/* Left: Tracklist (8 Tracks with Mute/Solo and Details) */}
         <div className="w-72 sm:w-80 bg-[#17171F] border-r border-white/10 flex flex-col shrink-0">
           <div className="p-2.5 px-3 bg-[#13131A] border-b border-white/5 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
@@ -709,6 +729,7 @@ export function StudioApp() {
           )}
         </div>
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 }

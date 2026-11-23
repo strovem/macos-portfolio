@@ -1,0 +1,25 @@
+{
+  "name": "Hüseyin Korumtaş — macOS Portfolio & Studio",
+  "short_name": "Korumtaş OS",
+  "description": "Tactile macOS Web Operating System, Music Production, and Audio Showcase of Hüseyin Korumtaş.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B132B",
+  "theme_color": "#007AFF",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/macos/app_finder.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/macos/app_apps.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "portfolio", "productivity"]
+}

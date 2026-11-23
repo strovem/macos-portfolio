@@ -36,6 +36,10 @@ export const SettingsApp: React.FC = () => {
     setBrightness,
     volume,
     setVolume,
+    auraIntensity,
+    setAuraIntensity,
+    tapeWarmth,
+    toggleTapeWarmth,
   } = useSettingsStore();
 
   return (
@@ -293,6 +297,79 @@ export const SettingsApp: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-3">
+              {/* Audio-Reactive Aura Intensity */}
+              <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-2.5">
+                <div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white">
+                    Reaktif Duvar Kağıdı Işıma Yoğunluğu
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                    Müzik çalarken arka plan aurasının parıldama ve BPM nabız vuruş şiddetini seçin.
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAuraIntensity('subtle')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                      auraIntensity === 'subtle'
+                        ? 'bg-[#007AFF] text-white border-blue-400/40 shadow-sm'
+                        : 'bg-white dark:bg-neutral-800 border-black/5 dark:border-white/10 hover:bg-neutral-200/50'
+                    }`}
+                  >
+                    Zarif (%60)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAuraIntensity('vibrant')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                      auraIntensity === 'vibrant'
+                        ? 'bg-[#007AFF] text-white border-blue-400/40 shadow-sm'
+                        : 'bg-white dark:bg-neutral-800 border-black/5 dark:border-white/10 hover:bg-neutral-200/50'
+                    }`}
+                  >
+                    Canlı (Önerilen)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAuraIntensity('max')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                      auraIntensity === 'max'
+                        ? 'bg-[#007AFF] text-white border-blue-400/40 shadow-sm'
+                        : 'bg-white dark:bg-neutral-800 border-black/5 dark:border-white/10 hover:bg-neutral-200/50'
+                    }`}
+                  >
+                    Maksimum (%115)
+                  </button>
+                </div>
+              </div>
+
+              {/* Analog Tape Warmth */}
+              <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white">
+                    Analog Bant Sıcaklığı (Tape Saturation)
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                    Stüdyo ses çıkışına vintage analog manyetik bant karakteri ekler.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleTapeWarmth}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                    tapeWarmth ? 'bg-[#007AFF]' : 'bg-slate-300 dark:bg-neutral-700'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      tapeWarmth ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
               {/* Floating Bubbles Toggle */}
               <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex items-center justify-between">
                 <div>

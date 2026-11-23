@@ -32,6 +32,28 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
   const [showAboutMac, setShowAboutMac] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // Listen for PWA installation prompt
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallPWA = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        setDeferredPrompt(null);
+      });
+    } else {
+      alert('macOS / Mobil Kurulum: Tarayıcınızın Paylaş (Share) veya Adres çubuğu menüsünden "Uygulama Olarak Yükle" ya da "Ana Ekrana Ekle"yi seçebilirsiniz.');
+    }
+  };
   const [weatherHover, setWeatherHover] = useState(false);
   const [weatherData, setWeatherData] = useState({
     temp: 12,
@@ -127,6 +149,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
   // Apple Menu Items
   const appleMenuItems: MenuItem[] = [
+    {
+      label: 'Portfolyoyu Uygulama Olarak Yükle ',
+      action: handleInstallPWA,
+    },
+    { isDivider: true },
     {
       label: 'About This Mac',
       action: () => setShowAboutMac(true),
