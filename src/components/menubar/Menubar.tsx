@@ -18,6 +18,7 @@ import {
 import { Clock } from './Clock';
 import { MenuDropdown, MenuItem } from './MenuDropdown';
 import { ControlCenter } from './ControlCenter';
+import { NowPlayingPopover } from './NowPlayingPopover';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 
@@ -29,6 +30,7 @@ interface MenubarProps {
 export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
+  const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
   const [showAboutMac, setShowAboutMac] = useState(false);
   const [weatherHover, setWeatherHover] = useState(false);
   const [weatherData, setWeatherData] = useState({
@@ -106,6 +108,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       if (e.key === 'Escape') {
         setActiveMenuId(null);
         setIsControlCenterOpen(false);
+        setIsNowPlayingOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -541,22 +544,40 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </span>
           </button>
 
-          {/* Active Music Playing Wave Indicator */}
-          {isAudioPlaying && currentTrack && (
-            <button
-              type="button"
-              onClick={() => setIsControlCenterOpen(true)}
-              title={`Now Playing: ${currentTrack.title} — Hüseyin Korumtaş (Click to open Control Center)`}
-              className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-400/15 border border-indigo-500/20 text-[#007AFF] dark:text-[#38BDF8] text-[10px] font-medium transition-all hover:bg-indigo-500/20"
-            >
+          {/* Active Music Playing / Now Playing Popover Trigger */}
+          <button
+            type="button"
+            data-now-playing-trigger
+            onClick={() => {
+              setIsNowPlayingOpen(!isNowPlayingOpen);
+              if (!isNowPlayingOpen) setIsControlCenterOpen(false);
+            }}
+            title={
+              currentTrack
+                ? `Now Playing: ${currentTrack.title} — Hüseyin Korumtaş (Click for Player)`
+                : 'Now Playing MiniPlayer (Hüseyin Korumtaş)'
+            }
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full transition-all focus:outline-none ${
+              isNowPlayingOpen
+                ? 'bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 border border-indigo-500/40 shadow-sm'
+                : isAudioPlaying
+                ? 'bg-indigo-500/10 dark:bg-indigo-400/15 border border-indigo-500/20 text-[#007AFF] dark:text-[#38BDF8] hover:bg-indigo-500/20'
+                : 'hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            {isAudioPlaying ? (
               <div className="flex items-end gap-0.5 h-2.5">
                 <span className="w-0.5 h-2 bg-current rounded-full animate-bounce" style={{ animationDuration: '0.6s' }} />
                 <span className="w-0.5 h-2.5 bg-current rounded-full animate-bounce" style={{ animationDuration: '0.4s', animationDelay: '0.15s' }} />
                 <span className="w-0.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDuration: '0.7s', animationDelay: '0.3s' }} />
               </div>
-              <span className="truncate max-w-[110px]">{currentTrack.title}</span>
-            </button>
-          )}
+            ) : (
+              <Music2 className="w-3.5 h-3.5" />
+            )}
+            <span className="hidden lg:inline-block truncate max-w-[120px] text-[10px] font-medium">
+              {currentTrack?.title || 'Now Playing'}
+            </span>
+          </button>
 
           {/* Weather Pill (Istanbul - Celsius / European Standards) */}
           <div
@@ -621,7 +642,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
           <button
             type="button"
             data-control-center-trigger
-            onClick={() => setIsControlCenterOpen(!isControlCenterOpen)}
+            onClick={() => {
+              setIsControlCenterOpen(!isControlCenterOpen);
+              if (!isControlCenterOpen) setIsNowPlayingOpen(false);
+            }}
             title="Control Center"
             aria-label="Control Center"
             className={`px-1.5 py-0.5 rounded transition-colors focus:outline-none flex items-center justify-center ${
@@ -648,6 +672,12 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       <ControlCenter
         isOpen={isControlCenterOpen}
         onClose={() => setIsControlCenterOpen(false)}
+      />
+
+      {/* Now Playing MiniPlayer Popover */}
+      <NowPlayingPopover
+        isOpen={isNowPlayingOpen}
+        onClose={() => setIsNowPlayingOpen(false)}
       />
 
       {/* "About This Mac" Modal */}
