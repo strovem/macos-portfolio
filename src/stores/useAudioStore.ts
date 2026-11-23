@@ -7,6 +7,9 @@ interface AudioStoreState {
   volume: number; // 0 to 1
   currentTime: number; // in seconds
   duration: number; // in seconds
+  isAmbientPlaying: boolean;
+  ambientVolume: number; // 0 to 1
+  toggleAmbient: () => void;
   playTrack: (track: MusicTrack) => void;
   togglePlay: () => void;
   pause: () => void;
@@ -24,6 +27,76 @@ let currentOscillators: OscillatorNode[] = [];
 let masterGainNode: GainNode | null = null;
 let currentHtmlAudio: HTMLAudioElement | null = null;
 let proceduralTimer: NodeJS.Timeout | null = null;
+
+// Ambient soundscape nodes
+let ambientOscillators: OscillatorNode[] = [];
+let ambientGainNode: GainNode | null = null;
+let ambientFilterNode: BiquadFilterNode | null = null;
+
+function startAmbientSound(vol: number, isMusicActive: boolean) {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!globalAudioCtx) {
+      globalAudioCtx = new AudioCtx();
+    }
+    if (globalAudioCtx.state === 'suspended') {
+      globalAudioCtx.resume();
+    }
+    stopAmbientSound();
+
+    ambientFilterNode = globalAudioCtx.createBiquadFilter();
+    ambientFilterNode.type = 'lowpass';
+    ambientFilterNode.frequency.setValueAtTime(420, globalAudioCtx.currentTime);
+
+    ambientGainNode = globalAudioCtx.createGain();
+    const effectiveVol = isMusicActive ? 0.005 : vol * 0.08;
+    ambientGainNode.gain.setValueAtTime(effectiveVol, globalAudioCtx.currentTime);
+
+    ambientFilterNode.connect(ambientGainNode);
+    ambientGainNode.connect(globalAudioCtx.destination);
+
+    // Warm, lush spatial drone chord: A2 (110Hz), E3 (164.8Hz), A3 (220Hz), C#4 (277.2Hz), E4 (329.6Hz)
+    const chord = [110, 164.81, 220, 277.18, 329.63];
+    chord.forEach((freq, idx) => {
+      if (!globalAudioCtx || !ambientFilterNode) return;
+      const osc = globalAudioCtx.createOscillator();
+      osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(freq, globalAudioCtx.currentTime);
+      osc.detune.setValueAtTime((idx - 2) * 5, globalAudioCtx.currentTime);
+      osc.connect(ambientFilterNode);
+      osc.start();
+      ambientOscillators.push(osc);
+    });
+  } catch {
+    // ignore
+  }
+}
+
+function stopAmbientSound() {
+  ambientOscillators.forEach((osc) => {
+    try {
+      osc.stop();
+      osc.disconnect();
+    } catch {
+      // already stopped
+    }
+  });
+  ambientOscillators = [];
+}
+
+function updateAmbientDucking(isMusicActive: boolean) {
+  if (!ambientGainNode || !globalAudioCtx) return;
+  const { isAmbientPlaying, ambientVolume } = useAudioStore.getState();
+  if (!isAmbientPlaying) return;
+
+  const targetGain = isMusicActive ? 0.005 : ambientVolume * 0.08;
+  ambientGainNode.gain.cancelScheduledValues(globalAudioCtx.currentTime);
+  ambientGainNode.gain.linearRampToValueAtTime(targetGain, globalAudioCtx.currentTime + 0.6);
+}
 
 function stopCurrentSynthOnly() {
   if (proceduralTimer) {
@@ -158,6 +231,19 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
   volume: 0.75,
   currentTime: 0,
   duration: ORIGINAL_TRACKS[0]?.durationSeconds || 180,
+  isAmbientPlaying: false,
+  ambientVolume: 0.8,
+
+  toggleAmbient: () => {
+    const { isAmbientPlaying, ambientVolume, isPlaying } = get();
+    if (isAmbientPlaying) {
+      stopAmbientSound();
+      set({ isAmbientPlaying: false });
+    } else {
+      set({ isAmbientPlaying: true });
+      startAmbientSound(ambientVolume, isPlaying);
+    }
+  },
 
   playTrack: (track: MusicTrack) => {
     const { volume } = get();
@@ -167,6 +253,7 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
       currentTime: 0,
       duration: track.durationSeconds || 180,
     });
+    updateAmbientDucking(true);
     playProceduralTrack(track, volume);
   },
 
@@ -178,7 +265,9 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
       }
       stopCurrentSynthOnly();
       set({ isPlaying: false });
+      updateAmbientDucking(false);
     } else {
+      updateAmbientDucking(true);
       if (currentHtmlAudio && currentTrack) {
         currentHtmlAudio.play().then(() => {
           set({ isPlaying: true });
@@ -199,6 +288,7 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
     }
     stopCurrentSynthOnly();
     set({ isPlaying: false });
+    updateAmbientDucking(false);
   },
 
   seek: (seconds: number) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { Sparkles, Calendar as CalendarIcon, User, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
@@ -124,11 +124,27 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
   const [currentMonth, setCurrentMonth] = useState<number>(11); // 1-12
   const [selectedDay, setSelectedDay] = useState<number>(22); // Day 22 selected
 
-  // Birthdate Reading State (Empty by default as requested: Day / Month / Year)
+  // Birthdate Reading State (Empty by default unless saved in localStorage: Day / Month / Year)
   const [birthDay, setBirthDay] = useState<string>('');
   const [birthMonth, setBirthMonth] = useState<string>('');
   const [birthYear, setBirthYear] = useState<string>('');
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [clearedSuccess, setClearedSuccess] = useState<boolean>(false);
+
+  // Load saved birthdate from localStorage on client mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('macos_reading_birthdate');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.day) setBirthDay(parsed.day);
+        if (parsed.month) setBirthMonth(parsed.month);
+        if (parsed.year) setBirthYear(parsed.year);
+      }
+    } catch {
+      // ignore SSR or storage exceptions
+    }
+  }, []);
 
   const monthInputRef = useRef<HTMLInputElement>(null);
   const yearInputRef = useRef<HTMLInputElement>(null);
@@ -251,6 +267,14 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
   };
 
   const handleSave = () => {
+    try {
+      localStorage.setItem(
+        'macos_reading_birthdate',
+        JSON.stringify({ day: birthDay, month: birthMonth, year: birthYear })
+      );
+    } catch {
+      // ignore
+    }
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 1500);
   };
@@ -259,6 +283,13 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     setBirthDay('');
     setBirthMonth('');
     setBirthYear('');
+    try {
+      localStorage.removeItem('macos_reading_birthdate');
+    } catch {
+      // ignore
+    }
+    setClearedSuccess(true);
+    setTimeout(() => setClearedSuccess(false), 1500);
   };
 
   const monthNames = [
@@ -447,8 +478,14 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 }}
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer flex items-center gap-0.5"
               >
-                {savedSuccess ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : null}
-                <span>Save</span>
+                {savedSuccess ? (
+                  <>
+                    <Check className="w-2.5 h-2.5 text-emerald-600" />
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">Saved!</span>
+                  </>
+                ) : (
+                  <span>Save</span>
+                )}
               </button>
               <button
                 type="button"
@@ -458,7 +495,11 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 }}
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer"
               >
-                Clear
+                {clearedSuccess ? (
+                  <span className="text-amber-700 dark:text-amber-400 font-bold">Cleared</span>
+                ) : (
+                  <span>Clear</span>
+                )}
               </button>
             </div>
           </div>

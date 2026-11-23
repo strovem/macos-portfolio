@@ -38,6 +38,10 @@ export function DesktopItem({
   const effectiveZIndex = propZIndex !== undefined ? propZIndex : (isDragging ? 25 : localZIndex);
 
   const handleOpenApp = () => {
+    if (item.type === 'numerology') {
+      // Interactive standalone widget — do not open an external window
+      return;
+    }
     if (item.type === 'music' || item.type === 'folder') {
       openFinderToSection('music');
     } else if (item.targetAppId) {

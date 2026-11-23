@@ -13,6 +13,7 @@ import {
   CloudRain,
   CloudSnow,
   Music2,
+  Headphones,
 } from 'lucide-react';
 import { Clock } from './Clock';
 import { MenuDropdown, MenuItem } from './MenuDropdown';
@@ -97,7 +98,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   };
 
   const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode } = useSettingsStore();
-  const { isPlaying: isAudioPlaying, currentTrack } = useAudioStore();
+  const { isPlaying: isAudioPlaying, currentTrack, isAmbientPlaying, toggleAmbient } = useAudioStore();
 
   // Close menus when Escape key is pressed
   useEffect(() => {
@@ -513,6 +514,33 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
         {/* Right Side: Status Widgets & Control Center */}
         <div className="flex items-center space-x-1">
+          {/* Ambient Soundscape Toggle with Smart Ducking */}
+          <button
+            type="button"
+            onClick={toggleAmbient}
+            title={
+              isAmbientPlaying
+                ? isAudioPlaying
+                  ? 'Ambient Soundscape: Ducked for active music (Click to turn off)'
+                  : 'Ambient Soundscape: Active (Click to turn off)'
+                : 'Ambient Soundscape: Off (Click to activate spatial background hum)'
+            }
+            className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer ${
+              isAmbientPlaying
+                ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-black/10 dark:hover:bg-white/10'
+            }`}
+          >
+            <Headphones
+              className={`w-3 h-3 ${
+                isAmbientPlaying && !isAudioPlaying ? 'animate-pulse text-amber-500' : ''
+              }`}
+            />
+            <span className="hidden sm:inline">
+              {isAmbientPlaying ? (isAudioPlaying ? 'Ducked' : 'Ambient') : 'Ambient'}
+            </span>
+          </button>
+
           {/* Active Music Playing Wave Indicator */}
           {isAudioPlaying && currentTrack && (
             <button
