@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { motion, useDragControls, useMotionValue } from 'framer-motion';
 import { AppId, WindowState, TilePosition } from '@/types/os';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { WindowHeader } from './WindowHeader';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { AppMetadata } from '@/data/apps';
@@ -58,6 +59,10 @@ export function Window({
   const tileWindow = useWindowStore((state) => state.tileWindow);
   const unsnapWindow = useWindowStore((state) => state.unsnapWindow);
   const setSnapPreviewZone = useWindowStore((state) => state.setSnapPreviewZone);
+  const stageWindowIds = useWindowStore((state) => state.stageWindowIds);
+  const isDesktopPeeked = useWindowStore((state) => state.isDesktopPeeked);
+  const setDesktopPeeked = useWindowStore((state) => state.setDesktopPeeked);
+  const stageManagerEnabled = useSettingsStore((state) => state.stageManagerEnabled);
 
   const windowData = propWindow || storeWindow;
 
@@ -65,6 +70,8 @@ export function Window({
   const resizeCleanupRef = useRef<(() => void) | null>(null);
   const dragControls = useDragControls();
   const isMobile = useIsMobile();
+
+  const isWindowInStage = !stageManagerEnabled || isMobile || stageWindowIds.includes(id);
 
   // Safely clean up any active resize listeners when window unmounts
   useEffect(() => {
@@ -308,7 +315,7 @@ export function Window({
               zIndex: windowData.zIndex,
             }
       }
-      className={`select-none pointer-events-auto ${
+      className={`select-none ${!isWindowInStage ? 'pointer-events-none' : 'pointer-events-auto'} ${
         isResizing ? '' : 'transition-[width,height] duration-200 ease-out'
       }`}
       data-window="true"
@@ -323,7 +330,11 @@ export function Window({
         animate={
           isMobile
             ? { y: 0, opacity: 1 }
-            : { scale: 1, opacity: 1, y: 0 }
+            : isWindowInStage
+            ? isDesktopPeeked
+              ? { x: 220, scale: 0.96, opacity: 0.38, y: 0 }
+              : { x: 0, scale: 1, opacity: 1, y: 0 }
+            : { x: -260, scale: 0.75, opacity: 0, y: 0 }
         }
         exit={
           isMobile
@@ -333,8 +344,13 @@ export function Window({
         transition={
           isMobile
             ? { type: 'spring', damping: 28, stiffness: 300 }
-            : { type: 'spring', stiffness: 360, damping: 26 }
+            : { type: 'spring', stiffness: 360, damping: 28 }
         }
+        onClick={() => {
+          if (stageManagerEnabled && isDesktopPeeked) {
+            setDesktopPeeked(false);
+          }
+        }}
         className={`w-full h-full flex flex-col ${
           isMobile ? 'rounded-t-2xl rounded-b-none border-t border-x' : 'rounded-xl border'
         } overflow-hidden glass-panel backdrop-blur-2xl transition-all duration-200 ${

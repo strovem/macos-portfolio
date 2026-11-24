@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AppId, WindowState } from '@/types/os';
 import { playWindowOpenSound, playWindowCloseSound, playMinimizeSound } from '@/utils/soundEffects';
+import { useSettingsStore } from './useSettingsStore';
 
 export type FinderSection =
   | 'recents'
@@ -16,6 +17,14 @@ export interface WindowStoreState {
   activeWindowId: AppId | null;
   maxZIndex: number;
   finderSection: FinderSection;
+  stageWindowIds: AppId[];
+  isDesktopPeeked: boolean;
+  setStageWindows: (ids: AppId[]) => void;
+  addWindowToStage: (id: AppId) => void;
+  removeWindowFromStage: (id: AppId) => void;
+  switchStageTo: (id: AppId) => void;
+  setDesktopPeeked: (val: boolean) => void;
+  toggleDesktopPeek: () => void;
   setFinderSection: (section: FinderSection) => void;
   openFinderToSection: (section: FinderSection) => void;
   openWindow: (id: AppId) => void;
@@ -196,6 +205,8 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
   activeWindowId: 'finder',
   maxZIndex: 20,
   finderSection: 'documents',
+  stageWindowIds: ['finder'],
+  isDesktopPeeked: false,
 
   setFinderSection: (section: FinderSection) => set({ finderSection: section }),
 
@@ -204,6 +215,35 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     get().focusWindow('finder');
     set({ finderSection: section });
   },
+
+  setStageWindows: (ids: AppId[]) => set({ stageWindowIds: ids, isDesktopPeeked: false }),
+
+  addWindowToStage: (id: AppId) => {
+    const { stageWindowIds, openWindow } = get();
+    openWindow(id);
+    if (!stageWindowIds.includes(id)) {
+      set({ stageWindowIds: [...stageWindowIds, id], isDesktopPeeked: false });
+    }
+  },
+
+  removeWindowFromStage: (id: AppId) =>
+    set((state) => ({
+      stageWindowIds: state.stageWindowIds.filter((wId) => wId !== id),
+    })),
+
+  switchStageTo: (id: AppId) => {
+    const { windows, openWindow, focusWindow } = get();
+    const target = windows[id];
+    set({ stageWindowIds: [id], isDesktopPeeked: false });
+    if (!target?.isOpen || target?.isMinimized) {
+      openWindow(id);
+    } else {
+      focusWindow(id);
+    }
+  },
+
+  setDesktopPeeked: (val: boolean) => set({ isDesktopPeeked: val }),
+  toggleDesktopPeek: () => set((state) => ({ isDesktopPeeked: !state.isDesktopPeeked })),
 
   openWindow: (id: AppId) => {
     const { windows, maxZIndex } = get();
@@ -214,6 +254,7 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       playWindowOpenSound();
     }
 
+    const stageManagerEnabled = useSettingsStore.getState().stageManagerEnabled;
     const newMaxZ = maxZIndex + 1;
     set({
       windows: {
@@ -227,11 +268,12 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       },
       activeWindowId: id,
       maxZIndex: newMaxZ,
+      ...(stageManagerEnabled ? { stageWindowIds: [id], isDesktopPeeked: false } : {}),
     });
   },
 
   closeWindow: (id: AppId) => {
-    const { windows, activeWindowId } = get();
+    const { windows, activeWindowId, stageWindowIds } = get();
     const target = windows[id];
     if (!target) return;
 
@@ -254,14 +296,20 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       nextActiveId = getNextActiveWindowId(updatedWindows, id);
     }
 
+    let nextStageIds = stageWindowIds.filter((wId) => wId !== id);
+    if (nextStageIds.length === 0 && nextActiveId) {
+      nextStageIds = [nextActiveId];
+    }
+
     set({
       windows: updatedWindows,
       activeWindowId: nextActiveId,
+      stageWindowIds: nextStageIds,
     });
   },
 
   minimizeWindow: (id: AppId) => {
-    const { windows, activeWindowId } = get();
+    const { windows, activeWindowId, stageWindowIds } = get();
     const target = windows[id];
     if (!target) return;
 
@@ -280,9 +328,15 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       nextActiveId = getNextActiveWindowId(updatedWindows, id);
     }
 
+    let nextStageIds = stageWindowIds.filter((wId) => wId !== id);
+    if (nextStageIds.length === 0 && nextActiveId) {
+      nextStageIds = [nextActiveId];
+    }
+
     set({
       windows: updatedWindows,
       activeWindowId: nextActiveId,
+      stageWindowIds: nextStageIds,
     });
   },
 
@@ -309,12 +363,20 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
   },
 
   focusWindow: (id: AppId) => {
-    const { windows, activeWindowId, maxZIndex } = get();
+    const { windows, activeWindowId, maxZIndex, stageWindowIds } = get();
     const target = windows[id];
     if (!target) return;
 
-    // If already active and at highest z-index, avoid unnecessary state update
-    if (activeWindowId === id && target.zIndex === maxZIndex) {
+    const stageManagerEnabled = useSettingsStore.getState().stageManagerEnabled;
+    const nextStageIds =
+      stageManagerEnabled && !stageWindowIds.includes(id) ? [id] : stageWindowIds;
+
+    // If already active and at highest z-index, avoid unnecessary state update unless stageWindowIds needs updating
+    if (
+      activeWindowId === id &&
+      target.zIndex === maxZIndex &&
+      (!stageManagerEnabled || stageWindowIds.includes(id))
+    ) {
       return;
     }
 
@@ -329,6 +391,8 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       },
       activeWindowId: id,
       maxZIndex: newMaxZ,
+      stageWindowIds: nextStageIds,
+      isDesktopPeeked: false,
     });
   },
 
@@ -550,6 +614,11 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     const availableHeight = winHeight - menubarHeight - dockMargin - 10;
     const targetY = menubarHeight + 6;
 
+    const stageManagerEnabled = useSettingsStore.getState().stageManagerEnabled;
+    const STAGE_STRIP_WIDTH = 164;
+    const leftOffset = stageManagerEnabled ? STAGE_STRIP_WIDTH + 8 : 8;
+    const usableWidth = stageManagerEnabled ? winWidth - STAGE_STRIP_WIDTH : winWidth;
+
     set((state) => {
       const win = state.windows[id];
       if (!win) return state;
@@ -582,7 +651,7 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       }
 
       if (tile === 'center') {
-        const newX = Math.max(16, Math.round((winWidth - win.size.width) / 2));
+        const newX = Math.max(leftOffset, Math.round(leftOffset + (usableWidth - win.size.width) / 2));
         const newY = Math.max(menubarHeight + 6, Math.round((winHeight - win.size.height - dockMargin + menubarHeight) / 2));
         return {
           windows: {
@@ -601,13 +670,13 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       }
 
       if (tile === 'left') {
-        const halfWidth = Math.floor((winWidth - 24) / 2);
+        const halfWidth = Math.floor((usableWidth - 24) / 2);
         return {
           windows: {
             ...state.windows,
             [id]: {
               ...win,
-              position: { x: 8, y: targetY },
+              position: { x: leftOffset, y: targetY },
               size: { width: halfWidth, height: availableHeight },
               isMaximized: false,
               tilePosition: 'left',
@@ -621,8 +690,8 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       }
 
       if (tile === 'right') {
-        const halfWidth = Math.floor((winWidth - 24) / 2);
-        const targetX = Math.floor(winWidth / 2) + 4;
+        const halfWidth = Math.floor((usableWidth - 24) / 2);
+        const targetX = leftOffset + halfWidth + 8;
         return {
           windows: {
             ...state.windows,
@@ -642,13 +711,13 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       }
 
       if (tile === 'full') {
-        const fullWidth = winWidth - 16;
+        const fullWidth = usableWidth - 16;
         return {
           windows: {
             ...state.windows,
             [id]: {
               ...win,
-              position: { x: 8, y: targetY },
+              position: { x: leftOffset, y: targetY },
               size: { width: fullWidth, height: availableHeight },
               isMaximized: false,
               tilePosition: 'full',

@@ -17,6 +17,7 @@ import {
   SkipBack,
   Music2,
   Check,
+  AppWindow,
 } from 'lucide-react';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
@@ -43,6 +44,8 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
     setBrightness,
     volume,
     setVolume,
+    stageManagerEnabled,
+    toggleStageManager,
   } = useSettingsStore();
 
   const {
@@ -205,6 +208,35 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                     }`}
                   >
                     {isDarkMode ? 'On' : 'Off'}
+                  </span>
+                </div>
+              </button>
+
+              {/* Stage Manager Toggle Tile */}
+              <button
+                type="button"
+                onClick={toggleStageManager}
+                className={`p-2 rounded-xl border flex items-center gap-2.5 transition-all text-left shadow-sm focus:outline-none ${
+                  stageManagerEnabled
+                    ? 'bg-[#007AFF] text-white border-blue-400/30'
+                    : 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/10'
+                }`}
+              >
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                    stageManagerEnabled ? 'bg-white/20 text-white' : 'bg-black/10 text-slate-700 dark:text-slate-200'
+                  }`}
+                >
+                  <AppWindow className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-[11px] leading-tight">Stage Manager</span>
+                  <span
+                    className={`text-[10px] ${
+                      stageManagerEnabled ? 'text-white/80' : 'text-slate-500 dark:text-neutral-400'
+                    }`}
+                  >
+                    {stageManagerEnabled ? 'On' : 'Off'}
                   </span>
                 </div>
               </button>

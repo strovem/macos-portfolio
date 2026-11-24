@@ -5,6 +5,12 @@ import { persist } from 'zustand/middleware';
 export type AuraIntensity = 'subtle' | 'vibrant' | 'max';
 export type AtmospherePreviewMode = 'auto' | 'dawn' | 'day' | 'sunset' | 'night' | 'rain' | 'snow';
 
+export interface NotchHudMessage {
+  icon: 'volume' | 'sun' | 'globe' | 'check' | 'lock';
+  text: string;
+  value?: number;
+}
+
 export interface SettingsState {
   _hasHydrated: boolean;
   language: 'tr' | 'en';
@@ -20,6 +26,9 @@ export interface SettingsState {
   dynamicAtmosphereEnabled: boolean;
   weatherCityId: string;
   atmospherePreview: AtmospherePreviewMode;
+  dynamicNotchEnabled: boolean;
+  stageManagerEnabled: boolean;
+  notchHudMessage: NotchHudMessage | null;
   setHasHydrated: (val: boolean) => void;
   setLanguage: (lang: 'tr' | 'en') => void;
   toggleLanguage: () => void;
@@ -33,6 +42,11 @@ export interface SettingsState {
   setDynamicAtmosphere: (val: boolean) => void;
   setWeatherCityId: (id: string) => void;
   setAtmospherePreview: (mode: AtmospherePreviewMode) => void;
+  toggleDynamicNotch: () => void;
+  setDynamicNotch: (val: boolean) => void;
+  toggleStageManager: () => void;
+  setStageManager: (val: boolean) => void;
+  setNotchHudMessage: (msg: NotchHudMessage | null) => void;
   setBrightness: (val: number) => void;
   setVolume: (val: number) => void;
   setAuraIntensity: (val: AuraIntensity) => void;
@@ -56,9 +70,23 @@ export const useSettingsStore = create<SettingsState>()(
       dynamicAtmosphereEnabled: true,
       weatherCityId: 'eskisehir',
       atmospherePreview: 'auto',
+      dynamicNotchEnabled: true,
+      stageManagerEnabled: false,
+      notchHudMessage: null,
       setHasHydrated: (val: boolean) => set({ _hasHydrated: val }),
-      setLanguage: (lang: 'tr' | 'en') => set({ language: lang }),
-      toggleLanguage: () => set((state) => ({ language: state.language === 'tr' ? 'en' : 'tr' })),
+      setLanguage: (lang: 'tr' | 'en') =>
+        set({
+          language: lang,
+          notchHudMessage: { icon: 'globe', text: lang === 'tr' ? 'Türkçe' : 'English' },
+        }),
+      toggleLanguage: () =>
+        set((state) => {
+          const next = state.language === 'tr' ? 'en' : 'tr';
+          return {
+            language: next,
+            notchHudMessage: { icon: 'globe', text: next === 'tr' ? 'Türkçe' : 'English' },
+          };
+        }),
       setWallpaper: (id: string) => set({ activeWallpaperId: id }),
       toggleDarkMode: () =>
         set((state) => {
@@ -76,13 +104,31 @@ export const useSettingsStore = create<SettingsState>()(
       setDynamicAtmosphere: (val: boolean) => set({ dynamicAtmosphereEnabled: val }),
       setWeatherCityId: (id: string) => set({ weatherCityId: id }),
       setAtmospherePreview: (mode: AtmospherePreviewMode) => set({ atmospherePreview: mode }),
-      setBrightness: (val: number) => set({ brightness: val }),
-      setVolume: (val: number) => set({ volume: val }),
+      toggleDynamicNotch: () => set((state) => ({ dynamicNotchEnabled: !state.dynamicNotchEnabled })),
+      setDynamicNotch: (val: boolean) => set({ dynamicNotchEnabled: val }),
+      toggleStageManager: () => set((state) => ({ stageManagerEnabled: !state.stageManagerEnabled })),
+      setStageManager: (val: boolean) => set({ stageManagerEnabled: val }),
+      setNotchHudMessage: (msg: NotchHudMessage | null) => set({ notchHudMessage: msg }),
+      setBrightness: (val: number) =>
+        set({
+          brightness: val,
+          notchHudMessage: { icon: 'sun', text: `${val}%`, value: val },
+        }),
+      setVolume: (val: number) =>
+        set({
+          volume: val,
+          notchHudMessage: { icon: 'volume', text: `${val}%`, value: val },
+        }),
       setAuraIntensity: (val: AuraIntensity) => set({ auraIntensity: val }),
       toggleTapeWarmth: () => set((state) => ({ tapeWarmth: !state.tapeWarmth })),
     }),
     {
       name: 'korumtas-os-settings',
+      partialize: (state) => {
+        // Exclude transient HUD message and hydration flag from localStorage
+        const { notchHudMessage, _hasHydrated, ...persisted } = state;
+        return persisted;
+      },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
         if (state && typeof document !== 'undefined') {

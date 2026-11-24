@@ -22,6 +22,7 @@ import {
   MessageCircle,
   HelpCircle,
   ArrowRight,
+  AppWindow,
 } from 'lucide-react';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useWindowStore } from '@/stores/useWindowStore';
@@ -63,7 +64,18 @@ export const SpotlightModal: React.FC = () => {
   const { t } = useTranslation();
   const { isOpen, closeSpotlight } = useSpotlightStore();
   const { openWindow, minimizeAllWindows, resetWindows, openFinderToSection } = useWindowStore();
-  const { isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper, soundEnabled, toggleSound } = useSettingsStore();
+  const {
+    isDarkMode,
+    toggleDarkMode,
+    activeWallpaperId,
+    setWallpaper,
+    soundEnabled,
+    toggleSound,
+    stageManagerEnabled,
+    toggleStageManager,
+    dynamicNotchEnabled,
+    toggleDynamicNotch,
+  } = useSettingsStore();
   const { playTrack } = useAudioStore();
 
   const [query, setQuery] = useState('');
@@ -186,6 +198,26 @@ export const SpotlightModal: React.FC = () => {
     });
 
     list.push({
+      id: 'cmd-stage-manager',
+      title: stageManagerEnabled ? 'Stage Manager: Kapat' : 'Stage Manager: Aç',
+      subtitle: 'Masaüstü pencerelerini sol şeritte organize et (Alt+S)',
+      category: 'Sistem Komutları',
+      icon: <AppWindow className="w-4 h-4 text-blue-400" />,
+      action: toggleStageManager,
+      keywords: ['stage manager', 'sahne', 'pencere seridi', 'yonetici', 'coklu gorev', 'multitasking'],
+    });
+
+    list.push({
+      id: 'cmd-dynamic-notch',
+      title: dynamicNotchEnabled ? 'Dinamik Çentik: Kapat' : 'Dinamik Çentik: Aç',
+      subtitle: 'MacBook dinamik ada ve medya kontrollerini aç/kapat',
+      category: 'Sistem Komutları',
+      icon: <Sparkles className="w-4 h-4 text-purple-400" />,
+      action: toggleDynamicNotch,
+      keywords: ['centik', 'notch', 'dynamic notch', 'ada', 'island', 'kamera'],
+    });
+
+    list.push({
       id: 'cmd-sound',
       title: soundEnabled ? 'Sistem Seslerini Kapat (Sessiz)' : 'Sistem Seslerini Aç',
       subtitle: soundEnabled ? 'UI tıklama ve pencere ses efektlerini sustur' : 'UI ses efektlerini etkinleştir',
@@ -226,6 +258,10 @@ export const SpotlightModal: React.FC = () => {
     setWallpaper,
     soundEnabled,
     toggleSound,
+    stageManagerEnabled,
+    toggleStageManager,
+    dynamicNotchEnabled,
+    toggleDynamicNotch,
     minimizeAllWindows,
     resetWindows,
   ]);

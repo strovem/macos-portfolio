@@ -151,7 +151,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     }
   };
 
-  const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper } = useSettingsStore();
+  const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper, stageManagerEnabled, toggleStageManager } = useSettingsStore();
   const { isPlaying: isAudioPlaying, currentTrack } = useAudioStore();
 
   const openWindow = useWindowStore((state) => state.openWindow);
@@ -467,6 +467,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       },
     },
     { isDivider: true },
+    {
+      label: stageManagerEnabled ? t('disableStageManager') : t('enableStageManager'),
+      shortcut: '⌥S',
+      action: toggleStageManager,
+    },
     {
       label: 'Mission Control',
       shortcut: 'F3',

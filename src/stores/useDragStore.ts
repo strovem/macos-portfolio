@@ -13,11 +13,11 @@ interface DragStoreState {
   isDragging: boolean;
   dragItem: DragItem | null;
   cursorPosition: { x: number; y: number };
-  hoverTarget: 'studio' | 'trash' | null;
+  hoverTarget: 'studio' | 'trash' | 'notch' | null;
 
   startDrag: (item: DragItem, pos: { x: number; y: number }) => void;
   updateCursor: (pos: { x: number; y: number }) => void;
-  setHoverTarget: (target: 'studio' | 'trash' | null) => void;
+  setHoverTarget: (target: 'studio' | 'trash' | 'notch' | null) => void;
   endDrag: () => void;
 }
 

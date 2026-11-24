@@ -26,6 +26,8 @@ import { AppSwitcherHUD } from '@/components/os/AppSwitcherHUD';
 import { NotificationStack } from '@/components/os/NotificationStack';
 import { NotificationCenter } from '@/components/os/NotificationCenter';
 import { DragPillOverlay } from '@/components/os/DragPillOverlay';
+import { DynamicNotch } from '@/components/os/DynamicNotch';
+import { StageManagerStrip } from '@/components/os/StageManagerStrip';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useUrlDeepLink } from '@/hooks/useUrlDeepLink';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -82,8 +84,10 @@ const LockScreen = dynamic(() => import('@/components/os/LockScreen').then((m) =
 
 export default function Home() {
   const brightness = useSettingsStore((state) => state.brightness);
+  const stageManagerEnabled = useSettingsStore((state) => state.stageManagerEnabled);
   const windows = useWindowStore((state) => state.windows);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
+  const toggleDesktopPeek = useWindowStore((state) => state.toggleDesktopPeek);
   const isMobile = useIsMobile();
 
   // Global keyboard shortcuts (Cmd+K, Alt+W, Alt+M, Alt+Tab, Esc)
@@ -159,11 +163,15 @@ export default function Home() {
       target.closest('[data-desktop-item]') ||
       target.closest('header') ||
       target.closest('[data-context-menu]') ||
-      target.closest('[data-modal]')
+      target.closest('[data-modal]') ||
+      target.closest('aside')
     ) {
       return;
     }
     unfocusAllWindows();
+    if (stageManagerEnabled && !isMobile) {
+      toggleDesktopPeek();
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -409,6 +417,12 @@ export default function Home() {
 
       {/* Spring-Magnified macOS Dock (bottom-3 fixed z-40) */}
       <Dock />
+
+      {/* Dynamic MacBook Notch (Top-Center Island on >=1024px) */}
+      <DynamicNotch />
+
+      {/* macOS Stage Manager Vertical 3D Perspective Strip (Left Side on >=1024px) */}
+      <StageManagerStrip />
 
       {/* Dynamic macOS Liquid Glass Overlays & Input Layer */}
       <ContextMenu />

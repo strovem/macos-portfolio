@@ -47,6 +47,10 @@ export const SettingsApp: React.FC = () => {
     toggleAudioReactiveAmbience,
     dynamicAtmosphereEnabled,
     toggleDynamicAtmosphere,
+    dynamicNotchEnabled,
+    toggleDynamicNotch,
+    stageManagerEnabled,
+    toggleStageManager,
   } = useSettingsStore();
 
   return (
@@ -320,6 +324,73 @@ export const SettingsApp: React.FC = () => {
                 >
                   <span className="text-xs">{t('english')}</span>
                   {language === 'en' && <Check className="w-3.5 h-3.5 stroke-3" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Window Management & Notch */}
+            <div className="flex flex-col gap-3 pt-2 border-t border-black/5 dark:border-white/10">
+              <span className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider text-[10px]">
+                {language === 'tr' ? 'Masaüstü & Çoklu Görev' : 'Desktop & Multitasking'}
+              </span>
+
+              {/* Stage Manager Toggle */}
+              <div className="p-3.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white">
+                    macOS Stage Manager
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                    {language === 'tr'
+                      ? 'Pencereleri sol şeritte 3D perspektifle organize eder (Kısayol: Alt+S).'
+                      : 'Organize open desktop windows into a 3D perspective left strip (Shortcut: Alt+S).'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playToggleSound();
+                    toggleStageManager();
+                  }}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                    stageManagerEnabled ? 'bg-[#007AFF]' : 'bg-slate-300 dark:bg-neutral-700'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      stageManagerEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Dynamic Notch Toggle */}
+              <div className="p-3.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white">
+                    {language === 'tr' ? 'Dinamik MacBook Çentiği (Live Notch)' : 'Dynamic MacBook Notch (Live Island)'}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                    {language === 'tr'
+                      ? 'Üst ortada kamera çentiği, canlı FFT spektrum ekolayzırı ve sistem kısayollarını sunar.'
+                      : 'Presents the camera notch, live FFT spectrum equalizer, and quick system shortcuts.'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playToggleSound();
+                    toggleDynamicNotch();
+                  }}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                    dynamicNotchEnabled ? 'bg-[#007AFF]' : 'bg-slate-300 dark:bg-neutral-700'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      dynamicNotchEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
                 </button>
               </div>
             </div>

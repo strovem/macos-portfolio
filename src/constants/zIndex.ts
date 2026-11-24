@@ -13,9 +13,11 @@ export const Z_INDEX = {
 
   // Hardware & Shell
   BRIGHTNESS_OVERLAY: 40,
+  STAGE_MANAGER_STRIP: 42,
   DOCK: 45,
   MENUBAR: 50,
-  MENUBAR_POPOVER: 55, // Dropdowns, ControlCenter, NowPlayingPopover
+  DYNAMIC_NOTCH: 52,
+  MENUBAR_POPOVER: 55, // Dropdowns, ControlCenter, NowPlayingPopover, WeatherPopover
 
   // System Overlays
   MISSION_CONTROL: 60,

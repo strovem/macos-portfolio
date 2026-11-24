@@ -8,6 +8,7 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { useMissionControlStore } from '@/stores/useMissionControlStore';
 import { useLockStore } from '@/stores/useLockStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { AppId } from '@/types/os';
 
 export function useKeyboardShortcuts() {
@@ -94,6 +95,13 @@ export function useKeyboardShortcuts() {
       if ((e.altKey && (e.key === 'l' || e.key === 'L')) || (e.ctrlKey && e.metaKey && (e.key === 'q' || e.key === 'Q'))) {
         e.preventDefault();
         lock();
+        return;
+      }
+
+      // 3.1 Stage Manager Toggle: Alt + S
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        useSettingsStore.getState().toggleStageManager();
         return;
       }
 
