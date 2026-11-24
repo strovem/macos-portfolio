@@ -502,23 +502,23 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             </div>
           </div>
 
-          {/* Selected Date Summary in Day / Month / Year format */}
-          <div className="p-2 rounded-xl bg-sky-200/40 dark:bg-neutral-800/60 border border-sky-300/60 dark:border-white/5 text-[10px] leading-tight flex flex-col gap-0.5">
-            <span className="text-[9px] text-sky-800 dark:text-neutral-400">
+          {/* Selected Date Summary in Day / Month / Year format with High Contrast */}
+          <div className="p-2.5 rounded-xl bg-white/90 dark:bg-neutral-900/95 border border-amber-400/50 dark:border-white/15 text-[11px] leading-tight flex flex-col gap-1 shadow-xs">
+            <span className="text-[10px] font-semibold text-slate-600 dark:text-neutral-400">
               Selected Date: (click any day in the grid)
             </span>
             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
-              <span>{selectedDateInfo.dateStr}</span>
+              <span className="font-mono text-xs">{selectedDateInfo.dateStr}</span>
               {isSelectedToday && (
-                <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-600 text-white font-bold tracking-tight">
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold tracking-tight shadow-2xs">
                   TODAY
                 </span>
               )}
-              <span className="text-amber-600 dark:text-amber-400">
+              <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-950 dark:text-amber-200 font-extrabold font-mono text-[11px]">
                 {selectedDateInfo.lp}
               </span>
-              <span>{selectedDateInfo.animal}</span>
-              <span>{selectedDateInfo.zodiac}</span>
+              <span className="text-slate-800 dark:text-neutral-200 font-semibold">{selectedDateInfo.animal}</span>
+              <span className="text-slate-800 dark:text-neutral-200 font-semibold">{selectedDateInfo.zodiac}</span>
             </div>
           </div>
         </div>

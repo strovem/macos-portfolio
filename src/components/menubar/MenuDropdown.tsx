@@ -65,7 +65,7 @@ export const MenuDropdown: React.FC<MenuDropdownProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: -2 }}
           transition={{ duration: 0.1, ease: 'easeOut' }}
-          className={`absolute top-full left-0 mt-0.5 min-w-[220px] backdrop-blur-xl bg-white/85 dark:bg-neutral-900/85 border border-black/10 dark:border-white/10 shadow-2xl rounded-lg py-1 text-xs z-50 text-slate-800 dark:text-slate-100 select-none ${className}`}
+          className={`absolute top-full left-0 mt-0.5 min-w-[220px] liquid-glass shadow-2xl rounded-xl py-1 text-xs z-50 text-slate-800 dark:text-slate-100 select-none ${className}`}
         >
           {items.map((item, idx) => {
             if (item.isDivider) {

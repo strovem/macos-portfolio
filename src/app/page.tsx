@@ -50,6 +50,22 @@ export default function Home() {
   const minimizeAllWindows = useWindowStore((state) => state.minimizeAllWindows);
   const resetWindows = useWindowStore((state) => state.resetWindows);
   const openWindow = useWindowStore((state) => state.openWindow);
+  const unfocusAllWindows = useWindowStore((state) => state.unfocusAllWindows);
+
+  const handleDesktopPointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('[data-window]') ||
+      target.closest('[data-dock]') ||
+      target.closest('[data-desktop-item]') ||
+      target.closest('header') ||
+      target.closest('[data-context-menu]') ||
+      target.closest('[data-modal]')
+    ) {
+      return;
+    }
+    unfocusAllWindows();
+  };
 
   const handleContextMenu = (e: React.MouseEvent) => {
     // Disabled on mobile viewports (< 768px)
@@ -128,8 +144,10 @@ export default function Home() {
   };
 
   // Synchronize menubar activeAppName with activeWindowId
-  const activeAppName = activeWindowId
-    ? windows[activeWindowId]?.title || (activeWindowId.charAt(0).toUpperCase() + activeWindowId.slice(1))
+  const activeWindow = activeWindowId ? windows[activeWindowId] : null;
+  const isTargetActive = Boolean(activeWindow && activeWindow.isOpen && !activeWindow.isMinimized && activeWindowId);
+  const activeAppName = isTargetActive && activeWindow && activeWindowId
+    ? activeWindow.title || (activeWindowId.charAt(0).toUpperCase() + activeWindowId.slice(1))
     : 'Finder';
 
   // Filter windows that are open and unminimized for rendering with AnimatePresence
@@ -175,6 +193,7 @@ export default function Home() {
   return (
     <main
       onContextMenu={handleContextMenu}
+      onPointerDown={handleDesktopPointerDown}
       className="relative w-full h-full overflow-hidden select-none"
     >
       {/* Dynamic Wallpaper Canvas */}

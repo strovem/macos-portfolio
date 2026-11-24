@@ -21,6 +21,9 @@ import { NowPlayingPopover } from './NowPlayingPopover';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
+import { useWindowStore } from '@/stores/useWindowStore';
+import { WALLPAPERS } from '@/data/wallpapers';
+import { AppId } from '@/types/os';
 
 interface MenubarProps {
   activeAppName?: string;
@@ -122,8 +125,20 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     return <CloudSun className="w-3.5 h-3.5 text-amber-500" />;
   };
 
-  const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode } = useSettingsStore();
+  const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper } = useSettingsStore();
   const { isPlaying: isAudioPlaying, currentTrack } = useAudioStore();
+
+  const openWindow = useWindowStore((state) => state.openWindow);
+  const closeWindow = useWindowStore((state) => state.closeWindow);
+  const minimizeWindow = useWindowStore((state) => state.minimizeWindow);
+  const maximizeWindow = useWindowStore((state) => state.maximizeWindow);
+  const cascadeWindows = useWindowStore((state) => state.cascadeWindows);
+  const centerActiveWindow = useWindowStore((state) => state.centerActiveWindow);
+  const bringAllToFront = useWindowStore((state) => state.bringAllToFront);
+  const minimizeAllWindows = useWindowStore((state) => state.minimizeAllWindows);
+  const focusWindow = useWindowStore((state) => state.focusWindow);
+  const activeWindowId = useWindowStore((state) => state.activeWindowId);
+  const windows = useWindowStore((state) => state.windows);
 
   // Close menus when Escape key is pressed
   useEffect(() => {
@@ -163,22 +178,22 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     {
       label: 'System Settings...',
       shortcut: '⌘,',
-      action: () => setIsControlCenterOpen(true),
+      action: () => openWindow('settings'),
+    },
+    {
+      label: 'Spotlight Ara...',
+      shortcut: '⌘K',
+      action: openSpotlight,
+    },
+    { isDivider: true },
+    {
+      label: 'Tüm Pencereleri Küçült',
+      shortcut: '⌥M',
+      action: minimizeAllWindows,
     },
     {
       label: 'App Store...',
       action: () => window.open('https://github.com', '_blank'),
-    },
-    { isDivider: true },
-    {
-      label: 'Recent Items',
-      disabled: true,
-    },
-    { isDivider: true },
-    {
-      label: 'Force Quit...',
-      shortcut: '⌥⌘⎋',
-      action: () => console.log('Force Quit triggered'),
     },
     { isDivider: true },
     {
@@ -206,7 +221,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
   ];
 
-  // Active App (Finder) Menu Items
+  // Active App Menu Items
   const appMenuItems: MenuItem[] = [
     {
       label: `About ${activeAppName}`,
@@ -216,26 +231,30 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     {
       label: 'Settings...',
       shortcut: '⌘,',
-      action: () => setIsControlCenterOpen(true),
-    },
-    { isDivider: true },
-    {
-      label: 'Empty Trash...',
-      shortcut: '⇧⌘⌫',
-      action: () => alert('Trash emptied.'),
+      action: () => openWindow('settings'),
     },
     { isDivider: true },
     {
       label: `Hide ${activeAppName}`,
       shortcut: '⌘H',
+      action: () => {
+        if (activeWindowId) minimizeWindow(activeWindowId);
+      },
     },
     {
       label: 'Hide Others',
       shortcut: '⌥⌘H',
+      action: () => {
+        Object.values(windows).forEach((w) => {
+          if (w.isOpen && w.id !== activeWindowId) {
+            minimizeWindow(w.id);
+          }
+        });
+      },
     },
     {
       label: 'Show All',
-      disabled: true,
+      action: bringAllToFront,
     },
   ];
 
@@ -244,32 +263,29 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     {
       label: 'New Finder Window',
       shortcut: '⌘N',
+      action: () => openWindow('finder'),
     },
     {
-      label: 'New Folder',
+      label: 'New Note',
       shortcut: '⇧⌘N',
+      action: () => openWindow('notes'),
     },
     {
-      label: 'New Smart Folder',
-      shortcut: '⌥⌘N',
-      disabled: true,
+      label: 'New Message',
+      action: () => openWindow('messages'),
     },
     {
-      label: 'Open...',
-      shortcut: '⌘O',
-    },
-    {
-      label: 'Close Window',
-      shortcut: '⌘W',
+      label: 'Open Studio (DAW)',
+      action: () => openWindow('studio'),
     },
     { isDivider: true },
     {
-      label: 'Get Info',
-      shortcut: '⌘I',
-    },
-    {
-      label: 'Quick Look',
-      shortcut: 'Space',
+      label: 'Close Window',
+      shortcut: '⌘W',
+      disabled: !activeWindowId,
+      action: () => {
+        if (activeWindowId) closeWindow(activeWindowId);
+      },
     },
   ];
 
@@ -307,28 +323,18 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // View Menu Items
   const viewMenuItems: MenuItem[] = [
     {
-      label: 'as Icons',
-      shortcut: '⌘1',
-    },
-    {
-      label: 'as List',
-      shortcut: '⌘2',
-    },
-    {
-      label: 'as Columns',
-      shortcut: '⌘3',
-    },
-    { isDivider: true },
-    {
       label: 'Toggle Dark Mode',
       shortcut: '⌃⌘D',
       action: toggleDarkMode,
     },
     {
-      label: 'Clean Up',
-    },
-    {
-      label: 'Sort By Name',
+      label: 'Next Wallpaper',
+      shortcut: '⌥W',
+      action: () => {
+        const currentIndex = WALLPAPERS.findIndex((w) => w.id === activeWallpaperId);
+        const nextIndex = (currentIndex + 1) % WALLPAPERS.length;
+        setWallpaper(WALLPAPERS[nextIndex].id);
+      },
     },
     { isDivider: true },
     {
@@ -345,18 +351,51 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   ];
 
   // Window Menu Items
+  const openWindowList = Object.values(windows).filter((w) => w.isOpen);
   const windowMenuItems: MenuItem[] = [
     {
       label: 'Minimize',
       shortcut: '⌘M',
+      disabled: !activeWindowId,
+      action: () => {
+        if (activeWindowId) minimizeWindow(activeWindowId);
+      },
     },
     {
-      label: 'Zoom',
+      label: 'Zoom / Maximize',
+      disabled: !activeWindowId,
+      action: () => {
+        if (activeWindowId) maximizeWindow(activeWindowId);
+      },
+    },
+    {
+      label: 'Center Active Window',
+      disabled: !activeWindowId,
+      action: centerActiveWindow,
     },
     { isDivider: true },
     {
-      label: 'Bring All to Front',
+      label: 'Cascade Windows',
+      action: cascadeWindows,
     },
+    {
+      label: 'Bring All to Front',
+      action: bringAllToFront,
+    },
+    {
+      label: 'Minimize All Windows',
+      shortcut: '⌥M',
+      action: minimizeAllWindows,
+    },
+    ...(openWindowList.length > 0
+      ? [
+          { isDivider: true },
+          ...openWindowList.map((w) => ({
+            label: `${activeWindowId === w.id ? '✓ ' : '   '}${w.title}`,
+            action: () => focusWindow(w.id),
+          })),
+        ]
+      : []),
   ];
 
   // Help Menu Items
@@ -379,7 +418,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-7 z-50 flex items-center justify-between px-3 text-xs select-none backdrop-blur-md bg-white/40 dark:bg-black/40 border-b border-black/5 dark:border-white/10 text-slate-800 dark:text-slate-200 transition-colors">
+      <header className="fixed top-0 left-0 right-0 h-7 z-50 flex items-center justify-between px-3 text-xs select-none liquid-glass border-b border-black/5 dark:border-white/10 text-slate-800 dark:text-slate-200 transition-colors">
         {/* Left Side: Apple Logo & App Menus */}
         <div className="flex items-center space-x-1">
           {/* Apple Logo Trigger */}

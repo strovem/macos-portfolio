@@ -28,6 +28,10 @@ export interface WindowStoreState {
   toggleWindow: (id: AppId) => void;
   minimizeAllWindows: () => void;
   resetWindows: () => void;
+  cascadeWindows: () => void;
+  centerActiveWindow: () => void;
+  bringAllToFront: () => void;
+  unfocusAllWindows: () => void;
 }
 
 const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
@@ -402,5 +406,71 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       });
       return { windows: updated };
     });
+  },
+
+  cascadeWindows: () => {
+    const { windows } = get();
+    const openWins = Object.values(windows).filter((w) => w.isOpen && !w.isMinimized);
+    if (openWins.length === 0) return;
+
+    const updated = { ...windows };
+    openWins.forEach((w, idx) => {
+      const newX = 50 + idx * 34;
+      const newY = 46 + idx * 34;
+      updated[w.id] = {
+        ...w,
+        position: { x: newX, y: newY },
+        isMaximized: false,
+      };
+    });
+    set({ windows: updated });
+  },
+
+  centerActiveWindow: () => {
+    const { windows, activeWindowId } = get();
+    if (!activeWindowId) return;
+    const target = windows[activeWindowId];
+    if (!target || !target.isOpen) return;
+
+    const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+
+    const newX = Math.max(20, Math.round((winW - target.size.width) / 2));
+    const newY = Math.max(34, Math.round((winH - target.size.height) / 2));
+
+    set({
+      windows: {
+        ...windows,
+        [activeWindowId]: {
+          ...target,
+          position: { x: newX, y: newY },
+          isMaximized: false,
+        },
+      },
+    });
+  },
+
+  bringAllToFront: () => {
+    const { windows, maxZIndex } = get();
+    let currentZ = maxZIndex;
+    const updated = { ...windows };
+
+    Object.keys(updated).forEach((key) => {
+      const appId = key as AppId;
+      if (updated[appId].isOpen) {
+        currentZ += 1;
+        updated[appId] = {
+          ...updated[appId],
+          isMinimized: false,
+          zIndex: currentZ,
+        };
+      }
+    });
+
+    set({ windows: updated, maxZIndex: currentZ });
+  },
+
+  unfocusAllWindows: () => {
+    set({ activeWindowId: null });
   },
 }));

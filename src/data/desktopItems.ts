@@ -50,7 +50,7 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
   {
     id: 'my-musics-folder',
     type: 'folder',
-    title: "My Music's",
+    title: 'My Music',
     subtitle: '7 items',
     targetAppId: 'finder',
     defaultPosition: { x: 660, y: 65 },

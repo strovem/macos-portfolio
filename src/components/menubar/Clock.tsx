@@ -33,7 +33,7 @@ export const Clock: React.FC = () => {
 
   return (
     <div
-      className="px-2 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default select-none font-medium text-xs whitespace-nowrap text-slate-800 dark:text-slate-200"
+      className="px-2 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default select-none font-medium text-xs whitespace-nowrap text-slate-800 dark:text-slate-200 tabular-nums"
       title={mounted ? new Date().toLocaleDateString('en-US', { dateStyle: 'full' }) : undefined}
       suppressHydrationWarning
     >

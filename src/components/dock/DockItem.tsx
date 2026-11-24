@@ -80,6 +80,7 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
       {/* Bounce Wrapper and Icon Button with Tactile Feedback */}
       <motion.button
         type="button"
+        data-dock-app={app.id}
         aria-label={app.title}
         onClick={handleClick}
         whileTap={{ scale: 0.88 }}
@@ -117,7 +118,7 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="w-1 h-1 rounded-full bg-slate-700/80 dark:bg-white/90 shadow-sm"
+            className="w-1.5 h-1.5 rounded-full bg-slate-800 dark:bg-white shadow-[0_0_5px_rgba(255,255,255,0.9),0_0_2px_rgba(0,122,255,0.6)]"
           />
         )}
       </div>

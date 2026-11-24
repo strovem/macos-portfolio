@@ -69,12 +69,24 @@ export function Dock({
     >
       <motion.nav
         onMouseMove={(e) => {
-          if (!isMobile) mouseX.set(e.pageX);
+          if (!isMobile) {
+            mouseX.set(e.pageX);
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--sheen-x', `${e.clientX - rect.left}px`);
+            e.currentTarget.style.setProperty('--sheen-y', `${e.clientY - rect.top}px`);
+          }
         }}
-        onMouseLeave={() => {
-          if (!isMobile) mouseX.set(Infinity);
+        onMouseLeave={(e) => {
+          if (!isMobile) {
+            mouseX.set(Infinity);
+            e.currentTarget.style.setProperty('--sheen-x', '-999px');
+          }
         }}
-        className={`backdrop-blur-2xl bg-white/30 dark:bg-black/40 border border-white/25 dark:border-white/10 rounded-2xl shadow-2xl flex items-end ${
+        style={{
+          backgroundImage:
+            'radial-gradient(circle 100px at var(--sheen-x, -999px) var(--sheen-y, -999px), rgba(255, 255, 255, 0.16), transparent 70%)',
+        }}
+        className={`liquid-glass rounded-2xl flex items-end relative ${
           isMobile
             ? 'p-1.5 px-2 gap-1.5 overflow-x-auto no-scrollbar max-w-full'
             : 'p-2 px-3 gap-2.5'

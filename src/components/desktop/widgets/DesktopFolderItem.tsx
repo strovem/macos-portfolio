@@ -89,10 +89,10 @@ export function DesktopFolderItem({
         {renderMacFolderIcon('w-12 h-10')}
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-            {item.title || "My Music's"}
+            {item.title || 'My Music'}
           </div>
           <div className="text-xs text-slate-500 dark:text-neutral-400">
-            {item.subtitle || '8 Tracks'} • Open in Finder
+            {item.subtitle || '7 items'} • Open in Finder
           </div>
         </div>
         <ArrowUpRight className="w-4 h-4 text-[#007AFF]" />
@@ -117,16 +117,16 @@ export function DesktopFolderItem({
       {/* Folder Label */}
       <div className="mt-1 flex flex-col items-center max-w-[96px]">
         <span
-          className={`text-[11px] font-medium text-center leading-tight transition-colors px-1.5 py-0.5 rounded break-words line-clamp-2 ${
+          className={`text-[11px] font-semibold text-center leading-tight transition-all px-2 py-0.5 rounded-md break-words line-clamp-2 ${
             isSelected
-              ? 'bg-[#007AFF] text-white shadow-sm'
-              : 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] group-hover:bg-black/25'
+              ? 'bg-[#007AFF] text-white shadow-md'
+              : 'text-slate-900 dark:text-white drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] dark:drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)] group-hover:bg-black/15 dark:group-hover:bg-white/15'
           }`}
         >
-          {item.title || "My Music's"}
+          {item.title || 'My Music'}
         </span>
-        <span className="text-[9px] text-white/80 font-normal drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] mt-0.5">
-          {item.subtitle || '8 items'}
+        <span className="text-[9px] text-slate-700 dark:text-white/80 font-medium drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] mt-0.5">
+          {item.subtitle || '7 items'}
         </span>
       </div>
     </div>

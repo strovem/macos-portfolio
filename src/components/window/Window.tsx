@@ -126,14 +126,27 @@ export function Window({
     updatePosition(id, { x: clampedX, y: clampedY });
   };
 
-  const handleResizePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  type ResizeDirection = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+
+  const handleResizeStart = (e: React.PointerEvent<HTMLDivElement>, dir: ResizeDirection) => {
     e.preventDefault();
     e.stopPropagation();
     focusWindow(id);
     setIsResizing(true);
 
+    const cursorMap: Record<ResizeDirection, string> = {
+      n: 'n-resize',
+      s: 's-resize',
+      e: 'e-resize',
+      w: 'w-resize',
+      ne: 'ne-resize',
+      nw: 'nw-resize',
+      se: 'se-resize',
+      sw: 'sw-resize',
+    };
+
     if (typeof document !== 'undefined') {
-      document.body.style.cursor = 'se-resize';
+      document.body.style.cursor = cursorMap[dir];
       document.body.style.userSelect = 'none';
     }
 
@@ -141,19 +154,59 @@ export function Window({
     const startY = e.clientY;
     const startWidth = windowData.size.width;
     const startHeight = windowData.size.height;
+    const startPosX = posX.get();
+    const startPosY = posY.get();
+
+    const minWidth = 360;
+    const minHeight = 240;
+    const maxWidth = typeof window !== 'undefined' ? window.innerWidth - 24 : 1600;
+    const maxHeight = typeof window !== 'undefined' ? window.innerHeight - 60 : 1000;
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaY = moveEvent.clientY - startY;
 
-      const minWidth = Math.min(windowData.defaultSize.width, 380);
-      const minHeight = Math.min(windowData.defaultSize.height, 260);
-      const maxWidth = typeof window !== 'undefined' ? window.innerWidth - 40 : 1600;
-      const maxHeight = typeof window !== 'undefined' ? window.innerHeight - 80 : 1000;
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newPosX = startPosX;
+      let newPosY = startPosY;
 
-      const newWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, startWidth + deltaX)));
-      const newHeight = Math.round(Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY)));
+      // Horizontal resize
+      if (dir === 'e' || dir === 'ne' || dir === 'se') {
+        newWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, startWidth + deltaX)));
+      } else if (dir === 'w' || dir === 'nw' || dir === 'sw') {
+        const potentialWidth = startWidth - deltaX;
+        if (potentialWidth >= minWidth && potentialWidth <= maxWidth) {
+          newWidth = Math.round(potentialWidth);
+          newPosX = Math.round(startPosX + deltaX);
+        } else if (potentialWidth < minWidth) {
+          newWidth = minWidth;
+          newPosX = Math.round(startPosX + (startWidth - minWidth));
+        }
+      }
 
+      // Vertical resize (clamp top to Menubar height >= 28px)
+      if (dir === 's' || dir === 'se' || dir === 'sw') {
+        newHeight = Math.round(Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY)));
+      } else if (dir === 'n' || dir === 'ne' || dir === 'nw') {
+        const potentialHeight = startHeight - deltaY;
+        const potentialPosY = startPosY + deltaY;
+        if (potentialHeight >= minHeight && potentialPosY >= 28) {
+          newHeight = Math.round(potentialHeight);
+          newPosY = Math.round(potentialPosY);
+        } else if (potentialPosY < 28) {
+          const allowedDeltaY = 28 - startPosY;
+          newHeight = Math.round(startHeight - allowedDeltaY);
+          newPosY = 28;
+        } else if (potentialHeight < minHeight) {
+          newHeight = minHeight;
+          newPosY = Math.round(startPosY + (startHeight - minHeight));
+        }
+      }
+
+      posX.set(newPosX);
+      posY.set(newPosY);
+      updatePosition(id, { x: newPosX, y: newPosY });
       updateSize(id, { width: newWidth, height: newHeight });
     };
 
@@ -245,10 +298,10 @@ export function Window({
         }
         className={`w-full h-full flex flex-col ${
           isMobile ? 'rounded-t-2xl rounded-b-none border-t border-x' : 'rounded-xl border'
-        } overflow-hidden glass-panel backdrop-blur-2xl transition-shadow duration-200 ${
+        } overflow-hidden glass-panel backdrop-blur-2xl transition-all duration-200 ${
           isActive
-            ? 'shadow-window dark:shadow-2xl border-black/15 dark:border-white/15'
-            : 'shadow-lg opacity-[0.98] border-black/10 dark:border-white/10'
+            ? 'shadow-2xl ring-1 ring-white/30 dark:ring-white/15 border-black/20 dark:border-white/20'
+            : 'shadow-md opacity-[0.96] border-black/10 dark:border-white/10'
         } ${className}`}
       >
         {/* Title Bar Header with Drag Controls & Traffic Lights / Mobile Done */}
@@ -300,28 +353,59 @@ export function Window({
           </div>
         </WindowContext.Provider>
 
-        {/* Bottom-right Corner Resize Handle (Desktop only) */}
+        {/* 8-Way Window Resize Handles (Desktop only) */}
         {!isMaximized && !isMobile && (
-          <div
-            onPointerDown={handleResizePointerDown}
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 select-none z-30 group"
-            title="Resize window"
-            role="separator"
-            aria-label="Resize handle"
-          >
-            <svg
-              className="w-2.5 h-2.5 text-neutral-400 dark:text-neutral-500 opacity-40 group-hover:opacity-100 transition-opacity"
-              viewBox="0 0 10 10"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinecap="round"
+          <>
+            {/* Edge Handles */}
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'n')}
+              className="absolute top-0 left-3 right-3 h-1.5 cursor-n-resize z-40"
+            />
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 's')}
+              className="absolute bottom-0 left-3 right-3 h-1.5 cursor-s-resize z-40"
+            />
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'w')}
+              className="absolute top-3 bottom-3 left-0 w-1.5 cursor-w-resize z-40"
+            />
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'e')}
+              className="absolute top-3 bottom-3 right-0 w-1.5 cursor-e-resize z-40"
+            />
+
+            {/* Corner Handles */}
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'nw')}
+              className="absolute top-0 left-0 w-3 h-3 cursor-nw-resize z-40"
+            />
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'ne')}
+              className="absolute top-0 right-0 w-3 h-3 cursor-ne-resize z-40"
+            />
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'sw')}
+              className="absolute bottom-0 left-0 w-3 h-3 cursor-sw-resize z-40"
+            />
+            <div
+              onPointerDown={(e) => handleResizeStart(e, 'se')}
+              className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-40 flex items-end justify-end p-0.5 select-none group"
+              title="Resize window"
             >
-              <line x1="8" y1="2" x2="2" y2="8" />
-              <line x1="9" y1="5" x2="5" y2="9" />
-              <line x1="9" y1="8" x2="8" y2="9" />
-            </svg>
-          </div>
+              <svg
+                className="w-2.5 h-2.5 text-neutral-400 dark:text-neutral-500 opacity-40 group-hover:opacity-100 transition-opacity"
+                viewBox="0 0 10 10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              >
+                <line x1="8" y1="2" x2="2" y2="8" />
+                <line x1="9" y1="5" x2="5" y2="9" />
+                <line x1="9" y1="8" x2="8" y2="9" />
+              </svg>
+            </div>
+          </>
         )}
       </motion.div>
     </motion.div>

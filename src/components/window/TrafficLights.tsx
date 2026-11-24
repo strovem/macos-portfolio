@@ -37,7 +37,7 @@ export function TrafficLights({
         className={`w-3 h-3 rounded-full flex items-center justify-center border transition-all duration-150 cursor-pointer focus:outline-none ${
           isActive
             ? 'bg-[#FF5F56] border-[#E0443E]'
-            : 'bg-[#FF5F56]/60 border-[#E0443E]/60 group-hover:bg-[#FF5F56] group-hover:border-[#E0443E]'
+            : 'bg-[#D1D1D6] dark:bg-[#3A3A3C] border-[#BCBCC0] dark:border-[#48484A] group-hover:bg-[#FF5F56] group-hover:border-[#E0443E]'
         }`}
       >
         <svg
@@ -64,7 +64,7 @@ export function TrafficLights({
         className={`w-3 h-3 rounded-full flex items-center justify-center border transition-all duration-150 cursor-pointer focus:outline-none ${
           isActive
             ? 'bg-[#FFBD2E] border-[#DEA123]'
-            : 'bg-[#FFBD2E]/60 border-[#DEA123]/60 group-hover:bg-[#FFBD2E] group-hover:border-[#DEA123]'
+            : 'bg-[#D1D1D6] dark:bg-[#3A3A3C] border-[#BCBCC0] dark:border-[#48484A] group-hover:bg-[#FFBD2E] group-hover:border-[#DEA123]'
         }`}
       >
         <svg
@@ -91,7 +91,7 @@ export function TrafficLights({
         className={`w-3 h-3 rounded-full flex items-center justify-center border transition-all duration-150 cursor-pointer focus:outline-none ${
           isActive
             ? 'bg-[#27C93F] border-[#1AAB29]'
-            : 'bg-[#27C93F]/60 border-[#1AAB29]/60 group-hover:bg-[#27C93F] group-hover:border-[#1AAB29]'
+            : 'bg-[#D1D1D6] dark:bg-[#3A3A3C] border-[#BCBCC0] dark:border-[#48484A] group-hover:bg-[#27C93F] group-hover:border-[#1AAB29]'
         }`}
       >
         {isMaximized ? (
