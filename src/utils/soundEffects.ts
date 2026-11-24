@@ -257,3 +257,63 @@ export function playMessageSentSound() {
     // ignore
   }
 }
+
+/**
+ * Crisp macOS UI item click / selection sound
+ */
+export function playClickSound() {
+  const ctx = getAudioContext();
+  const vol = getMasterVolume();
+  if (!ctx || vol <= 0) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(700, now + 0.018);
+
+    gain.gain.setValueAtTime(vol * 0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.022);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Soft context menu open whisper
+ */
+export function playMenuOpenSound() {
+  const ctx = getAudioContext();
+  const vol = getMasterVolume();
+  if (!ctx || vol <= 0) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(750, now);
+    osc.frequency.exponentialRampToValueAtTime(450, now + 0.035);
+
+    gain.gain.setValueAtTime(vol * 0.07, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.045);
+  } catch {
+    // ignore
+  }
+}

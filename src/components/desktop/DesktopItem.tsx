@@ -191,6 +191,7 @@ export function DesktopItem({
             }
       }
       data-desktop-item="true"
+      data-item-id={item.id}
       className={`pointer-events-auto select-none ${
         isMobile
           ? 'cursor-pointer w-full flex justify-center py-1 transition-transform active:scale-[0.98]'

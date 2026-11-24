@@ -37,6 +37,8 @@ import { TrafficLights } from '@/components/window/TrafficLights';
 import { WindowContext } from '@/components/window/Window';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useSpotlightStore } from '@/stores/useSpotlightStore';
+import { useContextMenu } from '@/components/os/ContextMenu';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { AppId } from '@/types/os';
 import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
@@ -431,6 +433,49 @@ export const FinderApp: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [sortAsc, setSortAsc] = useState(true);
   const [previewFile, setPreviewFile] = useState<FinderFileItem | null>(null);
+
+  const { handleContextMenu } = useContextMenu();
+  const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
+
+  const onFileContextMenu = (e: React.MouseEvent, file: FinderFileItem) => {
+    setSelectedFileId(file.id);
+    handleContextMenu(e, [
+      {
+        label: 'Hızlı Bakış (Space)',
+        shortcut: 'Space',
+        icon: <Eye className="w-3.5 h-3.5 text-blue-500" />,
+        onClick: () => {
+          setPreviewFile(file);
+        },
+      },
+      {
+        label: file.kind === 'Folder' ? 'Klasörü Aç' : file.kind === 'Application' ? 'Uygulamayı Aç' : file.track ? 'Parçayı Çal' : 'Aç',
+        shortcut: '↵',
+        icon: <ExternalLink className="w-3.5 h-3.5 text-slate-500" />,
+        onClick: () => {
+          if (file.kind === 'Folder' || file.targetSection) {
+            setActiveSection(file.targetSection || 'music');
+            return;
+          }
+          if (file.targetAppId) {
+            openWindow(file.targetAppId);
+            return;
+          }
+          setPreviewFile(file);
+          if (file.track) {
+            playTrack(file.track);
+          }
+        },
+      },
+      { separator: true },
+      {
+        label: 'Spotlight Ara...',
+        shortcut: '⌘K',
+        icon: <Search className="w-3.5 h-3.5 text-slate-400" />,
+        onClick: openSpotlight,
+      },
+    ]);
+  };
 
   // Auto-close sidebar on mobile viewports so files are immediately visible full-width
   useEffect(() => {
@@ -912,6 +957,7 @@ export const FinderApp: React.FC = () => {
                     <tr
                       key={file.id}
                       onClick={() => setSelectedFileId(file.id)}
+                      onContextMenu={(e) => onFileContextMenu(e, file)}
                       onDoubleClick={() => {
                         if (file.kind === 'Folder' || file.targetSection) {
                           setActiveSection(file.targetSection || 'music');
@@ -1015,6 +1061,7 @@ export const FinderApp: React.FC = () => {
                   <div
                     key={file.id}
                     onClick={() => setSelectedFileId(file.id)}
+                    onContextMenu={(e) => onFileContextMenu(e, file)}
                     onDoubleClick={() => {
                       if (file.kind === 'Folder' || file.targetSection) {
                         setActiveSection(file.targetSection || 'music');

@@ -20,6 +20,7 @@ import { ControlCenter } from './ControlCenter';
 import { NowPlayingPopover } from './NowPlayingPopover';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useSpotlightStore } from '@/stores/useSpotlightStore';
 
 interface MenubarProps {
   activeAppName?: string;
@@ -27,6 +28,7 @@ interface MenubarProps {
 }
 
 export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) => {
+  const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
@@ -630,9 +632,9 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
           {/* Spotlight Search Icon */}
           <button
             type="button"
-            onClick={() => alert('Spotlight Search: Press ⌘Space to search apps, files, and portfolio projects.')}
-            title="Spotlight Search (⌘Space)"
-            className="hidden sm:flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none text-slate-700 dark:text-slate-300"
+            onClick={openSpotlight}
+            title="Spotlight Search (⌘K / ⌘Space)"
+            className="flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none text-slate-700 dark:text-slate-300 cursor-pointer"
           >
             <Search className="w-3.5 h-3.5" />
           </button>

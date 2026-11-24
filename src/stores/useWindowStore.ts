@@ -26,6 +26,8 @@ export interface WindowStoreState {
   updatePosition: (id: AppId, pos: { x: number; y: number }) => void;
   updateSize: (id: AppId, size: { width: number; height: number }) => void;
   toggleWindow: (id: AppId) => void;
+  minimizeAllWindows: () => void;
+  resetWindows: () => void;
 }
 
 const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
@@ -367,5 +369,38 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     } else {
       focusWindow(id);
     }
+  },
+
+  minimizeAllWindows: () => {
+    set((state) => {
+      const updated = { ...state.windows };
+      Object.keys(updated).forEach((key) => {
+        const appId = key as AppId;
+        if (updated[appId].isOpen) {
+          updated[appId] = { ...updated[appId], isMinimized: true };
+        }
+      });
+      return { windows: updated, activeWindowId: null };
+    });
+  },
+
+  resetWindows: () => {
+    set((state) => {
+      const updated = { ...state.windows };
+      Object.keys(updated).forEach((key) => {
+        const appId = key as AppId;
+        const defaultWin = DEFAULT_WINDOWS[appId];
+        if (defaultWin) {
+          updated[appId] = {
+            ...updated[appId],
+            position: { ...defaultWin.position },
+            size: { ...defaultWin.size },
+            isMaximized: false,
+            isMinimized: false,
+          };
+        }
+      });
+      return { windows: updated };
+    });
   },
 }));

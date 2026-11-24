@@ -103,3 +103,19 @@ export interface ExperienceItem {
   technologies: string[];
   type: 'work' | 'education' | 'award';
 }
+
+export interface ContextMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  shortcut?: string;
+  onClick: () => void;
+  variant?: 'default' | 'danger';
+  separator?: false;
+}
+
+export interface ContextMenuSeparator {
+  separator: true;
+}
+
+export type ContextMenuEntry = ContextMenuItem | ContextMenuSeparator;
+

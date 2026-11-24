@@ -12,7 +12,7 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { AppId } from '@/types/os';
 import { DESKTOP_ITEMS } from '@/data/desktopItems';
 import { DesktopItem } from '@/components/desktop/DesktopItem';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Search, Sparkles, Moon, Sliders, RotateCcw, HelpCircle } from 'lucide-react';
 import { FinderApp } from '@/components/apps/FinderApp';
 import { SafariApp } from '@/components/apps/SafariApp';
 import { TerminalApp } from '@/components/apps/TerminalApp';
@@ -22,7 +22,15 @@ import { PhotosApp } from '@/components/apps/PhotosApp';
 import { SettingsApp } from '@/components/apps/SettingsApp';
 import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
 import { StudioApp } from '@/components/apps/StudioApp';
-import { DesktopContextMenu } from '@/components/desktop/DesktopContextMenu';
+import { ContextMenu } from '@/components/os/ContextMenu';
+import { DesktopMarquee } from '@/components/os/DesktopMarquee';
+import { SpotlightModal } from '@/components/os/SpotlightModal';
+import { AppSwitcherHUD } from '@/components/os/AppSwitcherHUD';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useContextMenuStore } from '@/stores/useContextMenuStore';
+import { useSpotlightStore } from '@/stores/useSpotlightStore';
+import { WALLPAPERS } from '@/data/wallpapers';
+import { ContextMenuEntry } from '@/types/os';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function Home() {
@@ -31,49 +39,80 @@ export default function Home() {
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
   const isMobile = useIsMobile();
 
-  // Desktop right-click context menu state
-  const [contextMenu, setContextMenu] = React.useState<{ isOpen: boolean; x: number; y: number }>({
-    isOpen: false,
-    x: 0,
-    y: 0,
-  });
-  const touchTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  // Global keyboard shortcuts (Cmd+K, Alt+W, Alt+M, Alt+Tab, Esc)
+  useKeyboardShortcuts();
+
+  const openContextMenu = useContextMenuStore((state) => state.openContextMenu);
+  const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
+  const toggleDarkMode = useSettingsStore((state) => state.toggleDarkMode);
+  const setWallpaper = useSettingsStore((state) => state.setWallpaper);
+  const activeWallpaperId = useSettingsStore((state) => state.activeWallpaperId);
+  const minimizeAllWindows = useWindowStore((state) => state.minimizeAllWindows);
+  const resetWindows = useWindowStore((state) => state.resetWindows);
+  const openWindow = useWindowStore((state) => state.openWindow);
 
   const handleContextMenu = (e: React.MouseEvent) => {
+    // Disabled on mobile viewports (< 768px)
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
+
     const target = e.target as HTMLElement;
     if (
       target.closest('[data-window]') ||
       target.closest('[data-dock]') ||
       target.closest('[data-desktop-item]') ||
-      target.closest('header')
+      target.closest('header') ||
+      target.closest('[data-context-menu]') ||
+      target.closest('[data-modal]')
     ) {
       return;
     }
+
     e.preventDefault();
-    setContextMenu({ isOpen: true, x: e.clientX, y: e.clientY });
-  };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (
-      target.closest('[data-window]') ||
-      target.closest('[data-dock]') ||
-      target.closest('[data-desktop-item]') ||
-      target.closest('header')
-    ) {
-      return;
-    }
-    const touch = e.touches[0];
-    touchTimerRef.current = setTimeout(() => {
-      setContextMenu({ isOpen: true, x: touch.clientX, y: touch.clientY });
-    }, 520);
-  };
+    const desktopItems: ContextMenuEntry[] = [
+      {
+        label: 'Spotlight Ara...',
+        shortcut: '⌘K',
+        icon: <Search className="w-3.5 h-3.5 text-blue-500" />,
+        onClick: openSpotlight,
+      },
+      { separator: true },
+      {
+        label: 'Duvar Kağıdını Değiştir',
+        shortcut: '⌥W',
+        icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" />,
+        onClick: () => {
+          const currentIndex = WALLPAPERS.findIndex((w) => w.id === activeWallpaperId);
+          const nextIndex = (currentIndex + 1) % WALLPAPERS.length;
+          setWallpaper(WALLPAPERS[nextIndex].id);
+        },
+      },
+      {
+        label: 'Açık / Koyu Mod Değiştir',
+        shortcut: '⌥T',
+        icon: <Moon className="w-3.5 h-3.5 text-indigo-500" />,
+        onClick: toggleDarkMode,
+      },
+      {
+        label: 'Tüm Pencereleri Küçült',
+        shortcut: '⌥M',
+        icon: <Sliders className="w-3.5 h-3.5 text-slate-500" />,
+        onClick: minimizeAllWindows,
+      },
+      {
+        label: 'Pencereleri Sıfırla',
+        icon: <RotateCcw className="w-3.5 h-3.5 text-cyan-500" />,
+        onClick: resetWindows,
+      },
+      { separator: true },
+      {
+        label: 'Bu Mac Hakkında',
+        icon: <HelpCircle className="w-3.5 h-3.5 text-emerald-500" />,
+        onClick: () => openWindow('notes'),
+      },
+    ];
 
-  const handleTouchEnd = () => {
-    if (touchTimerRef.current) {
-      clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
-    }
+    openContextMenu(e.clientX, e.clientY, desktopItems);
   };
 
   // Desktop items z-index management for tactile elevation
@@ -136,9 +175,6 @@ export default function Home() {
   return (
     <main
       onContextMenu={handleContextMenu}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchEnd}
       className="relative w-full h-full overflow-hidden select-none"
     >
       {/* Dynamic Wallpaper Canvas */}
@@ -209,13 +245,11 @@ export default function Home() {
       {/* Spring-Magnified macOS Dock (bottom-3 fixed z-40) */}
       <Dock />
 
-      {/* Desktop macOS Right-Click Context Menu */}
-      <DesktopContextMenu
-        isOpen={contextMenu.isOpen}
-        x={contextMenu.x}
-        y={contextMenu.y}
-        onClose={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
-      />
+      {/* Dynamic macOS Liquid Glass Overlays & Input Layer */}
+      <ContextMenu />
+      <DesktopMarquee disabled={isMobile} />
+      <SpotlightModal />
+      <AppSwitcherHUD />
     </main>
   );
 }
