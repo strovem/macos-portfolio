@@ -31,6 +31,7 @@ import {
   ArrowUpRight,
   AudioWaveform,
   Eye,
+  Share2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
@@ -46,6 +47,7 @@ import { FinderQuickLookModal } from './FinderQuickLookModal';
 import { playDockClickSound, playTrashSound, playDropSnapSound, playTrashCrumpleSound } from '@/utils/soundEffects';
 import { useDragStore } from '@/stores/useDragStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { copyPortfolioDeepLink } from '@/hooks/useUrlDeepLink';
 
 type SidebarSection =
   | 'recents'
@@ -955,6 +957,17 @@ export const FinderApp: React.FC = () => {
                 </button>
               )}
             </div>
+
+            {/* Share / Copy Deep Link Button */}
+            <button
+              type="button"
+              onClick={() => copyPortfolioDeepLink('finder', activeSection)}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 border border-black/[0.04] dark:border-white/[0.06] text-slate-600 dark:text-neutral-300 text-xs font-medium hover:bg-neutral-200/60 dark:hover:bg-neutral-700 transition-colors cursor-pointer shadow-2xs"
+              title="Bağlantıyı Kopyala (Deep Link)"
+            >
+              <Share2 className="w-3.5 h-3.5 text-[#007AFF]" />
+              <span className="text-[11px]">Paylaş</span>
+            </button>
           </div>
         </div>
 

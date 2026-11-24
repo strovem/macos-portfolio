@@ -32,6 +32,7 @@ export interface WindowStoreState {
   centerActiveWindow: () => void;
   bringAllToFront: () => void;
   unfocusAllWindows: () => void;
+  clampAllWindowsToViewport: (viewportWidth: number, viewportHeight: number) => void;
 }
 
 const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
@@ -474,5 +475,58 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
 
   unfocusAllWindows: () => {
     set({ activeWindowId: null });
+  },
+
+  clampAllWindowsToViewport: (viewportWidth: number, viewportHeight: number) => {
+    const menubarHeight = 32;
+    const dockHeight = 70;
+    set((state) => {
+      let changed = false;
+      const nextWindows = { ...state.windows };
+
+      for (const key of Object.keys(nextWindows) as AppId[]) {
+        const win = nextWindows[key];
+        if (!win.isOpen || win.isMinimized || win.isMaximized) continue;
+
+        let { x, y } = win.position;
+        let { width, height } = win.size;
+
+        const maxWidth = Math.max(320, viewportWidth - 24);
+        if (width > maxWidth) {
+          width = maxWidth;
+          changed = true;
+        }
+
+        const maxHeight = Math.max(240, viewportHeight - menubarHeight - dockHeight - 20);
+        if (height > maxHeight) {
+          height = maxHeight;
+          changed = true;
+        }
+
+        const maxX = Math.max(12, viewportWidth - width - 12);
+        const clampedX = Math.min(Math.max(12, x), maxX);
+        if (clampedX !== x) {
+          x = clampedX;
+          changed = true;
+        }
+
+        const maxY = Math.max(menubarHeight + 6, viewportHeight - dockHeight - height);
+        const clampedY = Math.min(Math.max(menubarHeight + 6, y), maxY);
+        if (clampedY !== y) {
+          y = clampedY;
+          changed = true;
+        }
+
+        if (changed) {
+          nextWindows[key] = {
+            ...win,
+            position: { x, y },
+            size: { width, height },
+          };
+        }
+      }
+
+      return changed ? { windows: nextWindows } : state;
+    });
   },
 }));

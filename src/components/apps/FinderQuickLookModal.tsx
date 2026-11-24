@@ -18,6 +18,7 @@ import { FinderFileItem } from './FinderApp';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { playQuickLookSound, playWindowCloseSound } from '@/utils/soundEffects';
+import { Z_INDEX } from '@/constants/zIndex';
 
 interface FinderQuickLookModalProps {
   file: FinderFileItem | null;
@@ -87,7 +88,10 @@ export function FinderQuickLookModal({ file, isOpen, onClose }: FinderQuickLookM
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-md">
+      <div
+        style={{ zIndex: Z_INDEX.QUICK_LOOK }}
+        className="fixed inset-0 flex items-center justify-center p-4 bg-black/45 backdrop-blur-md"
+      >
         {/* Click backdrop to close */}
         <div className="absolute inset-0" onClick={onClose} />
 

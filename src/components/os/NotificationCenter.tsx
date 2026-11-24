@@ -6,6 +6,7 @@ import { Bell, Trash2, X, ChevronRight } from 'lucide-react';
 import { useNotificationStore, NotificationItem } from '@/stores/useNotificationStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { AppIcon } from '@/components/dock/AppIcon';
+import { Z_INDEX } from '@/constants/zIndex';
 import { AppMetadata } from '@/data/apps';
 
 export function NotificationCenter() {
@@ -73,7 +74,8 @@ export function NotificationCenter() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={closeCenter}
-            className="fixed inset-0 z-[75] bg-black/10 dark:bg-black/25"
+            style={{ zIndex: Z_INDEX.NOTIFICATION_CENTER_BACKDROP }}
+            className="fixed inset-0 bg-black/10 dark:bg-black/25"
           />
 
           {/* Sliding Notification Drawer */}
@@ -82,7 +84,8 @@ export function NotificationCenter() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="fixed top-7 right-0 bottom-0 w-84 sm:w-96 z-[80] liquid-glass border-l border-white/20 dark:border-white/10 shadow-2xl flex flex-col select-none overflow-hidden"
+            style={{ zIndex: Z_INDEX.NOTIFICATION_CENTER }}
+            className="fixed top-7 right-0 bottom-0 w-84 sm:w-96 liquid-glass border-l border-white/20 dark:border-white/10 shadow-2xl flex flex-col select-none overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 pb-3 border-b border-black/5 dark:border-white/10 flex items-center justify-between">

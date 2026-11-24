@@ -6,6 +6,7 @@ import { useAppSwitcherStore } from '@/stores/useAppSwitcherStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { APPS } from '@/data/apps';
 import { AppIcon } from '@/components/dock/AppIcon';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export const AppSwitcherHUD: React.FC = () => {
   const { isOpen, openApps, selectedIndex } = useAppSwitcherStore();
@@ -15,7 +16,10 @@ export const AppSwitcherHUD: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[130] flex items-center justify-center pointer-events-none select-none">
+      <div
+        style={{ zIndex: Z_INDEX.APP_SWITCHER }}
+        className="fixed inset-0 flex items-center justify-center pointer-events-none select-none"
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

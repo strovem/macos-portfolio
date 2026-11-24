@@ -22,11 +22,13 @@ import {
   Radio,
   ChevronLeft,
   ChevronRight,
+  Share2,
 } from 'lucide-react';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useDragStore } from '@/stores/useDragStore';
+import { copyPortfolioDeepLink } from '@/hooks/useUrlDeepLink';
 import { StudioBeatPad } from './StudioBeatPad';
 
 // Extended production credits and hardware chain per track
@@ -391,6 +393,17 @@ export function StudioApp() {
               {Math.round(volume * 100)}%
             </span>
           </div>
+
+          {/* Share / Copy Studio Deep Link */}
+          <button
+            type="button"
+            onClick={() => copyPortfolioDeepLink('studio')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-neutral-300 transition-all cursor-pointer shadow-2xs"
+            title="Studio Bağlantısını Kopyala (Deep Link)"
+          >
+            <Share2 className="w-3.5 h-3.5 text-violet-400" />
+            <span className="hidden md:inline text-[11px]">Paylaş</span>
+          </button>
         </div>
       </header>
 

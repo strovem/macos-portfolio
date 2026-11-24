@@ -46,6 +46,10 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F5F7FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export default function RootLayout({
@@ -54,7 +58,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('korumtas-os-settings');if(s){var p=JSON.parse(s);if(p&&p.state&&p.state.isDarkMode){document.documentElement.classList.add('dark');}}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="antialiased w-screen h-screen h-[100dvh] overflow-hidden select-none bg-[#F5F7FA] text-slate-800">
         {children}
       </body>

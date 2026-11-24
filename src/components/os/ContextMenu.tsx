@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useContextMenuStore } from '@/stores/useContextMenuStore';
 import { ContextMenuEntry, ContextMenuItem } from '@/types/os';
 import { playClickSound } from '@/utils/soundEffects';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export function useContextMenu() {
   const openContextMenu = useContextMenuStore((state) => state.openContextMenu);
@@ -85,8 +86,8 @@ export const ContextMenu: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.94 }}
           transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
-          style={{ top: position.y, left: position.x }}
-          className="fixed z-[100] w-56 rounded-xl liquid-glass py-1.5 px-1 select-none text-slate-800 dark:text-neutral-100 text-xs font-sans shadow-2xl"
+          style={{ top: position.y, left: position.x, zIndex: Z_INDEX.CONTEXT_MENU }}
+          className="fixed w-56 rounded-xl liquid-glass py-1.5 px-1 select-none text-slate-800 dark:text-neutral-100 text-xs font-sans shadow-2xl"
         >
           {items.map((entry, idx) => {
             if (entry.separator) {

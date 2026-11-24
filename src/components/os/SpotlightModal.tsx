@@ -27,6 +27,7 @@ import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { Z_INDEX } from '@/constants/zIndex';
 import { APPS } from '@/data/apps';
 import { PROJECTS } from '@/data/projects';
 import { ORIGINAL_TRACKS } from '@/data/music';
@@ -275,7 +276,10 @@ export const SpotlightModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[120] flex justify-center items-start pt-[12vh] sm:pt-[15vh] px-3 sm:px-4">
+      <div
+        style={{ zIndex: Z_INDEX.SPOTLIGHT }}
+        className="fixed inset-0 flex justify-center items-start pt-[12vh] sm:pt-[15vh] px-3 sm:px-4"
+      >
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}

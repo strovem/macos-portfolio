@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { AnimatePresence } from 'framer-motion';
 import { Wallpaper } from '@/components/desktop/Wallpaper';
 import { FloatingBubbles } from '@/components/desktop/FloatingBubbles';
@@ -14,24 +15,17 @@ import { DESKTOP_ITEMS } from '@/data/desktopItems';
 import { DesktopItem } from '@/components/desktop/DesktopItem';
 import { Trash2, Search, Sparkles, Moon, Sliders, RotateCcw, HelpCircle, LayoutGrid, Lock } from 'lucide-react';
 import { FinderApp } from '@/components/apps/FinderApp';
-import { SafariApp } from '@/components/apps/SafariApp';
-import { TerminalApp } from '@/components/apps/TerminalApp';
 import { NotesApp } from '@/components/apps/NotesApp';
 import { MessagesApp } from '@/components/apps/MessagesApp';
-import { PhotosApp } from '@/components/apps/PhotosApp';
-import { SettingsApp } from '@/components/apps/SettingsApp';
-import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
-import { StudioApp } from '@/components/apps/StudioApp';
 import { ContextMenu } from '@/components/os/ContextMenu';
 import { DesktopMarquee } from '@/components/os/DesktopMarquee';
 import { SpotlightModal } from '@/components/os/SpotlightModal';
 import { AppSwitcherHUD } from '@/components/os/AppSwitcherHUD';
 import { NotificationStack } from '@/components/os/NotificationStack';
 import { NotificationCenter } from '@/components/os/NotificationCenter';
-import { MissionControl } from '@/components/os/MissionControl';
-import { LockScreen } from '@/components/os/LockScreen';
 import { DragPillOverlay } from '@/components/os/DragPillOverlay';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useUrlDeepLink } from '@/hooks/useUrlDeepLink';
 import { useContextMenuStore } from '@/stores/useContextMenuStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
@@ -40,6 +34,48 @@ import { useLockStore } from '@/stores/useLockStore';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { ContextMenuEntry } from '@/types/os';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { Z_INDEX } from '@/constants/zIndex';
+
+const WindowLoadingSkeleton = () => (
+  <div className="flex flex-col items-center justify-center h-full w-full p-8 text-slate-500 dark:text-neutral-400 bg-white/40 dark:bg-black/40 backdrop-blur-md">
+    <div className="w-8 h-8 rounded-full border-2 border-[#007AFF] border-t-transparent animate-spin mb-3 opacity-80" />
+    <span className="text-xs font-medium tracking-tight text-slate-600 dark:text-neutral-300">Uygulama Yükleniyor...</span>
+  </div>
+);
+
+// Heavy Applications — Lazy Loaded On-Demand to optimize First Load JS bundle
+const SafariApp = dynamic(() => import('@/components/apps/SafariApp').then((m) => m.SafariApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
+const TerminalApp = dynamic(() => import('@/components/apps/TerminalApp').then((m) => m.TerminalApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
+const PhotosApp = dynamic(() => import('@/components/apps/PhotosApp').then((m) => m.PhotosApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
+const SettingsApp = dynamic(() => import('@/components/apps/SettingsApp').then((m) => m.SettingsApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
+const ToneGeneratorApp = dynamic(() => import('@/components/apps/ToneGeneratorApp').then((m) => m.ToneGeneratorApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
+const StudioApp = dynamic(() => import('@/components/apps/StudioApp').then((m) => m.StudioApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
+
+// Heavy Full-Screen System Overlays — Lazy Loaded
+const MissionControl = dynamic(() => import('@/components/os/MissionControl').then((m) => m.MissionControl), {
+  ssr: false,
+});
+const LockScreen = dynamic(() => import('@/components/os/LockScreen').then((m) => m.LockScreen), {
+  ssr: false,
+});
 
 export default function Home() {
   const brightness = useSettingsStore((state) => state.brightness);
@@ -49,6 +85,28 @@ export default function Home() {
 
   // Global keyboard shortcuts (Cmd+K, Alt+W, Alt+M, Alt+Tab, Esc)
   useKeyboardShortcuts();
+
+  // URL Deep-Linking & Shareable link synchronization (?app=studio, ?app=finder&section=music)
+  useUrlDeepLink();
+
+  // Viewport resize guard: clamp open windows inside viewport boundaries
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let resizeTimer: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        useWindowStore.getState().clampAllWindowsToViewport(window.innerWidth, window.innerHeight);
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const openContextMenu = useContextMenuStore((state) => state.openContextMenu);
   const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
@@ -273,20 +331,24 @@ export default function Home() {
       {/* Screen Brightness Overlay */}
       {brightness < 100 && (
         <div
-          className="fixed inset-0 pointer-events-none z-[45] transition-opacity duration-150"
+          className="fixed inset-0 pointer-events-none transition-opacity duration-150"
           style={{
+            zIndex: Z_INDEX.BRIGHTNESS_OVERLAY,
             backgroundColor: 'black',
             opacity: ((100 - brightness) / 100) * 0.75,
           }}
         />
       )}
 
-      {/* Menubar (top-0 fixed z-50) */}
+      {/* Menubar (top-0 fixed) */}
       <Menubar activeAppName={activeAppName} />
 
       {/* Draggable Desktop Canvas Playground (Pure CSS Responsive: Vertical stack on mobile, free-canvas on desktop) */}
       {/* 1. Mobile Desktop Stack: block md:hidden. Zero-delay vertical stack, no horizontal overflow or swiping */}
-      <div className="block md:hidden absolute inset-0 pt-10 pb-28 px-3 overflow-y-auto overflow-x-hidden no-scrollbar z-[15] pointer-events-auto">
+      <div
+        style={{ zIndex: Z_INDEX.DESKTOP_CANVAS }}
+        className="block md:hidden absolute inset-0 pt-10 pb-28 px-3 overflow-y-auto overflow-x-hidden no-scrollbar pointer-events-auto"
+      >
         <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto py-2">
           {DESKTOP_ITEMS.map((item) => (
             <div key={`mobile-wrap-${item.id}`} className="w-full flex justify-center">
@@ -303,7 +365,10 @@ export default function Home() {
       </div>
 
       {/* 2. Desktop Canvas: hidden md:block. Draggable tactile playground for desktop screens */}
-      <div className="hidden md:block absolute inset-0 pt-7 pb-20 pointer-events-none z-[15] overflow-hidden">
+      <div
+        style={{ zIndex: Z_INDEX.DESKTOP_CANVAS }}
+        className="hidden md:block absolute inset-0 pt-7 pb-20 pointer-events-none overflow-hidden"
+      >
         {DESKTOP_ITEMS.map((item) => (
           <DesktopItem
             key={`desktop-${item.id}`}
@@ -316,7 +381,10 @@ export default function Home() {
       </div>
 
       {/* Desktop Canvas Root */}
-      <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-20">
+      <div
+        style={{ zIndex: Z_INDEX.WINDOWS_BASE }}
+        className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none"
+      >
         {/* Open Windows Render Canvas */}
         <div className="flex-1 relative pointer-events-none">
           <AnimatePresence>

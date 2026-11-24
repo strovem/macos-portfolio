@@ -11,28 +11,29 @@ import { useNotificationStore } from '@/stores/useNotificationStore';
 import { AppId } from '@/types/os';
 
 export function useKeyboardShortcuts() {
-  const { toggleSpotlight, closeSpotlight, isOpen: isSpotlightOpen } = useSpotlightStore();
-  const { closeContextMenu, isOpen: isContextMenuOpen } = useContextMenuStore();
-  const {
-    isOpen: isSwitcherOpen,
-    openSwitcher,
-    selectNext,
-    selectPrev,
-    closeSwitcher,
-  } = useAppSwitcherStore();
+  const toggleSpotlight = useSpotlightStore((s) => s.toggleSpotlight);
+  const closeSpotlight = useSpotlightStore((s) => s.closeSpotlight);
+  const isSpotlightOpen = useSpotlightStore((s) => s.isOpen);
 
-  const {
-    activeWindowId,
-    windows,
-    closeWindow,
-    minimizeWindow,
-    openWindow,
-    focusWindow,
-  } = useWindowStore();
+  const closeContextMenu = useContextMenuStore((s) => s.closeContextMenu);
+  const isContextMenuOpen = useContextMenuStore((s) => s.isOpen);
 
-  const { isOpen: isMissionControlOpen, closeMissionControl, toggleMissionControl } = useMissionControlStore();
-  const { lock, isLocked, isSleeping } = useLockStore();
-  const { isCenterOpen, closeCenter } = useNotificationStore();
+  const isSwitcherOpen = useAppSwitcherStore((s) => s.isOpen);
+  const openSwitcher = useAppSwitcherStore((s) => s.openSwitcher);
+  const selectNext = useAppSwitcherStore((s) => s.selectNext);
+  const selectPrev = useAppSwitcherStore((s) => s.selectPrev);
+  const closeSwitcher = useAppSwitcherStore((s) => s.closeSwitcher);
+
+  const isMissionControlOpen = useMissionControlStore((s) => s.isOpen);
+  const closeMissionControl = useMissionControlStore((s) => s.closeMissionControl);
+  const toggleMissionControl = useMissionControlStore((s) => s.toggleMissionControl);
+
+  const lock = useLockStore((s) => s.lock);
+  const isLocked = useLockStore((s) => s.isLocked);
+  const isSleeping = useLockStore((s) => s.isSleeping);
+
+  const isCenterOpen = useNotificationStore((s) => s.isCenterOpen);
+  const closeCenter = useNotificationStore((s) => s.closeCenter);
 
   const altKeyHeldRef = useRef(false);
 
@@ -106,7 +107,9 @@ export function useKeyboardShortcuts() {
       // If user is actively typing in an input/textarea/contenteditable, skip remaining window shortcuts
       if (isInput) return;
 
-      // 3. Close Active Window: Alt + W (or Cmd/Ctrl + W)
+      const { activeWindowId, windows, closeWindow, minimizeWindow } = useWindowStore.getState();
+
+      // 5. Close Active Window: Alt + W (or Cmd/Ctrl + W)
       if ((e.altKey && (e.key === 'w' || e.key === 'W')) || (isCmdOrCtrl && (e.key === 'w' || e.key === 'W'))) {
         if (activeWindowId && windows[activeWindowId]?.isOpen) {
           e.preventDefault();
@@ -115,7 +118,7 @@ export function useKeyboardShortcuts() {
         }
       }
 
-      // 4. Minimize Active Window: Alt + M (or Cmd/Ctrl + M)
+      // 6. Minimize Active Window: Alt + M (or Cmd/Ctrl + M)
       if ((e.altKey && (e.key === 'm' || e.key === 'M')) || (isCmdOrCtrl && (e.key === 'm' || e.key === 'M'))) {
         if (activeWindowId && windows[activeWindowId]?.isOpen) {
           e.preventDefault();
@@ -124,7 +127,7 @@ export function useKeyboardShortcuts() {
         }
       }
 
-      // 5. Alt + Tab: App Switcher HUD
+      // 7. Alt + Tab: App Switcher HUD
       if (e.altKey && (e.key === 'Tab' || e.code === 'Tab')) {
         e.preventDefault();
         altKeyHeldRef.current = true;
@@ -156,6 +159,7 @@ export function useKeyboardShortcuts() {
         if (isSwitcherOpen) {
           const chosen = closeSwitcher();
           if (chosen) {
+            const { openWindow, focusWindow } = useWindowStore.getState();
             openWindow(chosen);
             focusWindow(chosen);
           }
@@ -174,8 +178,10 @@ export function useKeyboardShortcuts() {
     isSpotlightOpen,
     isContextMenuOpen,
     isSwitcherOpen,
-    activeWindowId,
-    windows,
+    isMissionControlOpen,
+    isCenterOpen,
+    isLocked,
+    isSleeping,
     toggleSpotlight,
     closeSpotlight,
     closeContextMenu,
@@ -183,9 +189,9 @@ export function useKeyboardShortcuts() {
     selectNext,
     selectPrev,
     closeSwitcher,
-    closeWindow,
-    minimizeWindow,
-    openWindow,
-    focusWindow,
+    toggleMissionControl,
+    closeMissionControl,
+    closeCenter,
+    lock,
   ]);
 }

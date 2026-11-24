@@ -8,6 +8,7 @@ import { DockItem } from './DockItem';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { playDockClickSound } from '@/utils/soundEffects';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export interface DockProps {
   openAppIds?: AppId[];
@@ -56,14 +57,15 @@ export function Dock({
   return (
     <footer
       data-dock="true"
-      style={
-        isMobile
+      style={{
+        zIndex: Z_INDEX.DOCK,
+        ...(isMobile
           ? { bottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }
-          : undefined
-      }
+          : {}),
+      }}
       className={`fixed ${
         isMobile ? 'max-w-[calc(100vw-1rem)]' : 'bottom-3'
-      } left-1/2 -translate-x-1/2 z-40 pointer-events-auto ${className}`}
+      } left-1/2 -translate-x-1/2 pointer-events-auto ${className}`}
       role="region"
       aria-label="Application Dock"
     >

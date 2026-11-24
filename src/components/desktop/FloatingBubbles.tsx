@@ -179,13 +179,23 @@ export const FloatingBubbles: React.FC = () => {
   const bubblesEnabled = useSettingsStore((state) => state.bubblesEnabled);
   const isPlaying = useAudioStore((state) => state.isPlaying);
   const [mounted, setMounted] = useState(false);
+  const [isTabVisible, setIsTabVisible] = useState(true);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     setMounted(true);
+
+    const handleVisibility = () => {
+      setIsTabVisible(!document.hidden);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
-  if (!mounted || !bubblesEnabled) return null;
+  if (!mounted || !bubblesEnabled || !isTabVisible) return null;
 
   // On mobile devices, throttle to 3 lightweight ambient bubbles to preserve 60fps and mobile battery
   const activeBubbles = isMobile ? BUBBLES.slice(0, 3) : BUBBLES;

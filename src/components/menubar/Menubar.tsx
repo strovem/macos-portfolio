@@ -23,6 +23,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { Z_INDEX } from '@/constants/zIndex';
 import { useMissionControlStore } from '@/stores/useMissionControlStore';
 import { useLockStore } from '@/stores/useLockStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
@@ -215,15 +216,21 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
     { isDivider: true },
     {
-      label: 'Restart...',
+      label: 'Yeniden Başlat...',
       action: () => window.location.reload(),
     },
     {
-      label: 'Shut Down...',
-      action: () => alert('Shutting down Web OS... Refresh page to reboot.'),
+      label: 'Sistemi Kapat...',
+      action: () => {
+        useNotificationStore.getState().pushNotification({
+          title: 'Sistem Kapatılıyor',
+          message: 'Web OS oturumu sonlandırıldı. Sayfayı yenileyerek yeniden başlatabilirsiniz.',
+          duration: 4000,
+        });
+      },
     },
     {
-      label: 'Log Out User...',
+      label: 'Oturumu Kapat...',
       shortcut: '⇧⌘Q',
       action: () => window.location.reload(),
     },
@@ -447,7 +454,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-7 z-50 flex items-center justify-between px-3 text-xs select-none liquid-glass border-b border-black/5 dark:border-white/10 text-slate-800 dark:text-slate-200 transition-colors">
+      <header
+        style={{ zIndex: Z_INDEX.MENUBAR }}
+        className="fixed top-0 left-0 right-0 h-7 flex items-center justify-between px-3 text-xs select-none liquid-glass border-b border-black/5 dark:border-white/10 text-slate-800 dark:text-slate-200 transition-colors"
+      >
         {/* Left Side: Apple Logo & App Menus */}
         <div className="flex items-center space-x-1">
           {/* Apple Logo Trigger */}
@@ -767,7 +777,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
 
       {/* "About This Mac" Modal */}
       {showAboutMac && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm select-none p-4">
+        <div
+          style={{ zIndex: Z_INDEX.SPOTLIGHT }}
+          className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm select-none p-4"
+        >
           <div className="w-[380px] p-6 rounded-2xl glass-panel shadow-2xl backdrop-blur-2xl border border-black/10 dark:border-white/15 text-center flex flex-col items-center">
             {/* macOS Apple Logo */}
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-slate-200 to-white dark:from-neutral-800 dark:to-neutral-700 shadow-md flex items-center justify-center mb-3 border border-black/5 dark:border-white/10">

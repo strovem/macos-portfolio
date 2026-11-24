@@ -4,6 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, FileText, Sparkles } from 'lucide-react';
 import { useDragStore } from '@/stores/useDragStore';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export function DragPillOverlay() {
   const isDragging = useDragStore((state) => state.isDragging);
@@ -15,10 +16,11 @@ export function DragPillOverlay() {
 
   return (
     <div
-      className="fixed pointer-events-none z-[100] transition-transform duration-75 select-none"
+      className="fixed pointer-events-none transition-transform duration-75 select-none"
       style={{
         left: cursorPosition.x + 14,
         top: cursorPosition.y + 14,
+        zIndex: Z_INDEX.DRAG_PILL,
       }}
     >
       <motion.div

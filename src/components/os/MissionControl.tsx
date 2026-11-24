@@ -6,6 +6,7 @@ import { LayoutGrid, X, Folder, Music, FileText, MessageSquare, Sparkles } from 
 import { useMissionControlStore } from '@/stores/useMissionControlStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { AppIcon } from '@/components/dock/AppIcon';
+import { Z_INDEX } from '@/constants/zIndex';
 import { AppMetadata } from '@/data/apps';
 import { AppId, WindowState } from '@/types/os';
 
@@ -53,7 +54,8 @@ export function MissionControl() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={closeMissionControl}
-          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-md select-none flex flex-col justify-between overflow-hidden"
+          style={{ zIndex: Z_INDEX.MISSION_CONTROL }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-md select-none flex flex-col justify-between overflow-hidden"
         >
           {/* Top Virtual Desktops Bar */}
           <div

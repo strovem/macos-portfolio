@@ -7,6 +7,7 @@ import { useLockStore } from '@/stores/useLockStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { Wallpaper } from '@/components/desktop/Wallpaper';
 import { playUnlockSound } from '@/utils/soundEffects';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export function LockScreen() {
   const isLocked = useLockStore((state) => state.isLocked);
@@ -81,7 +82,8 @@ export function LockScreen() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             onClick={wake}
-            className="fixed inset-0 z-[95] bg-black cursor-pointer flex flex-col items-center justify-center select-none"
+            style={{ zIndex: Z_INDEX.SLEEP_SCREEN }}
+            className="fixed inset-0 bg-black cursor-pointer flex flex-col items-center justify-center select-none"
           >
             <span className="text-xs font-mono text-white/20 animate-pulse">
               Uyanmak için tıklayın veya bir tuşa basın
@@ -98,7 +100,8 @@ export function LockScreen() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.06, filter: 'blur(10px)' }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="fixed inset-0 z-[90] h-[100dvh] w-full flex flex-col justify-between items-center py-12 px-6 select-none overflow-hidden"
+            style={{ zIndex: Z_INDEX.LOCK_SCREEN }}
+            className="fixed inset-0 h-[100dvh] w-full flex flex-col justify-between items-center py-12 px-6 select-none overflow-hidden"
           >
             {/* Blurred Dynamic Wallpaper Canvas */}
             <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">

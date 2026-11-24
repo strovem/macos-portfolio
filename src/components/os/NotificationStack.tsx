@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell } from 'lucide-react';
 import { useNotificationStore, NotificationItem } from '@/stores/useNotificationStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { Z_INDEX } from '@/constants/zIndex';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { AppMetadata } from '@/data/apps';
 
@@ -139,7 +140,10 @@ export function NotificationStack() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-10 right-4 sm:right-6 z-[80] flex flex-col gap-2.5 pointer-events-auto max-w-sm w-[calc(100vw-2rem)] sm:w-88">
+    <div
+      style={{ zIndex: Z_INDEX.NOTIFICATION_STACK }}
+      className="fixed top-10 right-4 sm:right-6 flex flex-col gap-2.5 pointer-events-auto max-w-sm w-[calc(100vw-2rem)] sm:w-88"
+    >
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <SingleToast key={toast.id} item={toast} onDismiss={dismissToast} />
