@@ -29,6 +29,8 @@ import { useLockStore } from '@/stores/useLockStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { AppId } from '@/types/os';
+import { useTranslation } from '@/hooks/useTranslation';
+import { playClickSound } from '@/utils/systemSounds';
 
 interface MenubarProps {
   activeAppName?: string;
@@ -40,8 +42,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [showAboutMac, setShowAboutMac] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const languageMenuRef = React.useRef<HTMLDivElement>(null);
 
   // Listen for PWA installation prompt
   useEffect(() => {
@@ -137,6 +141,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const closeWindow = useWindowStore((state) => state.closeWindow);
   const minimizeWindow = useWindowStore((state) => state.minimizeWindow);
   const maximizeWindow = useWindowStore((state) => state.maximizeWindow);
+  const tileWindow = useWindowStore((state) => state.tileWindow);
   const cascadeWindows = useWindowStore((state) => state.cascadeWindows);
   const centerActiveWindow = useWindowStore((state) => state.centerActiveWindow);
   const bringAllToFront = useWindowStore((state) => state.bringAllToFront);
@@ -144,6 +149,8 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const focusWindow = useWindowStore((state) => state.focusWindow);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
   const windows = useWindowStore((state) => state.windows);
+
+  const { t, language, setLanguage } = useTranslation();
 
   const toggleMissionControl = useMissionControlStore((state) => state.toggleMissionControl);
   const { lock, sleep } = useLockStore();
@@ -156,11 +163,24 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         setActiveMenuId(null);
         setIsControlCenterOpen(false);
         setIsNowPlayingOpen(false);
+        setIsLanguageMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Click outside listener for language menu
+  useEffect(() => {
+    if (!isLanguageMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(e.target as Node)) {
+        setIsLanguageMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [isLanguageMenuOpen]);
 
   const handleMenuClick = (menuId: string) => {
     setActiveMenuId((prev) => (prev === menuId ? null : menuId));
@@ -180,23 +200,23 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
     { isDivider: true },
     {
-      label: 'About This Mac',
+      label: t('aboutMac'),
       action: () => setShowAboutMac(true),
     },
     { isDivider: true },
     {
-      label: 'System Settings...',
+      label: t('systemSettings'),
       shortcut: '⌘,',
       action: () => openWindow('settings'),
     },
     {
-      label: 'Spotlight Ara...',
+      label: t('spotlight'),
       shortcut: '⌘K',
       action: openSpotlight,
     },
     { isDivider: true },
     {
-      label: 'Tüm Pencereleri Küçült',
+      label: t('minimizeAll'),
       shortcut: '⌥M',
       action: minimizeAllWindows,
     },
@@ -206,31 +226,31 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
     { isDivider: true },
     {
-      label: 'Uyku Modu',
+      label: t('sleep'),
       action: sleep,
     },
     {
-      label: 'Ekranı Kilitle',
+      label: t('lock'),
       shortcut: '⌥L',
       action: lock,
     },
     { isDivider: true },
     {
-      label: 'Yeniden Başlat...',
+      label: t('restart'),
       action: () => window.location.reload(),
     },
     {
-      label: 'Sistemi Kapat...',
+      label: t('shutDown'),
       action: () => {
         useNotificationStore.getState().pushNotification({
-          title: 'Sistem Kapatılıyor',
-          message: 'Web OS oturumu sonlandırıldı. Sayfayı yenileyerek yeniden başlatabilirsiniz.',
+          title: t('systemShutdownTitle'),
+          message: t('systemShutdownMessage'),
           duration: 4000,
         });
       },
     },
     {
-      label: 'Oturumu Kapat...',
+      label: t('logOut'),
       shortcut: '⇧⌘Q',
       action: () => window.location.reload(),
     },
@@ -385,6 +405,36 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const openWindowList = Object.values(windows).filter((w) => w.isOpen);
   const windowMenuItems: MenuItem[] = [
     {
+      label: t('tileLeft'),
+      shortcut: '⌥←',
+      disabled: !activeWindowId,
+      action: () => {
+        if (activeWindowId) tileWindow(activeWindowId, 'left');
+      },
+    },
+    {
+      label: t('tileRight'),
+      shortcut: '⌥→',
+      disabled: !activeWindowId,
+      action: () => {
+        if (activeWindowId) tileWindow(activeWindowId, 'right');
+      },
+    },
+    {
+      label: t('fillScreen'),
+      shortcut: '⌥⇧↑',
+      disabled: !activeWindowId,
+      action: () => {
+        if (activeWindowId) tileWindow(activeWindowId, 'full');
+      },
+    },
+    {
+      label: t('centerWindow'),
+      disabled: !activeWindowId,
+      action: centerActiveWindow,
+    },
+    { isDivider: true },
+    {
       label: 'Minimize',
       shortcut: '⌘M',
       disabled: !activeWindowId,
@@ -399,11 +449,6 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         if (activeWindowId) maximizeWindow(activeWindowId);
       },
     },
-    {
-      label: 'Center Active Window',
-      disabled: !activeWindowId,
-      action: centerActiveWindow,
-    },
     { isDivider: true },
     {
       label: 'Mission Control',
@@ -411,15 +456,15 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       action: toggleMissionControl,
     },
     {
-      label: 'Cascade Windows',
+      label: t('cascade'),
       action: cascadeWindows,
     },
     {
-      label: 'Bring All to Front',
+      label: t('bringAllFront'),
       action: bringAllToFront,
     },
     {
-      label: 'Minimize All Windows',
+      label: t('minimizeAll'),
       shortcut: '⌥M',
       action: minimizeAllWindows,
     },
@@ -522,7 +567,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                     : 'hover:bg-black/10 dark:hover:bg-white/10'
                 }`}
               >
-                File
+                {t('file')}
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'file'}
@@ -544,7 +589,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                     : 'hover:bg-black/10 dark:hover:bg-white/10'
                 }`}
               >
-                Edit
+                {t('edit')}
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'edit'}
@@ -566,7 +611,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                     : 'hover:bg-black/10 dark:hover:bg-white/10'
                 }`}
               >
-                View
+                {t('view')}
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'view'}
@@ -588,7 +633,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                     : 'hover:bg-black/10 dark:hover:bg-white/10'
                 }`}
               >
-                Window
+                {t('window')}
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'window'}
@@ -610,7 +655,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                     : 'hover:bg-black/10 dark:hover:bg-white/10'
                 }`}
               >
-                Help
+                {t('help')}
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'help'}
@@ -739,7 +784,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             data-control-center-trigger
             onClick={() => {
               setIsControlCenterOpen(!isControlCenterOpen);
-              if (!isControlCenterOpen) setIsNowPlayingOpen(false);
+              if (!isControlCenterOpen) {
+                setIsNowPlayingOpen(false);
+                setIsLanguageMenuOpen(false);
+              }
             }}
             title="Control Center"
             aria-label="Control Center"
@@ -757,6 +805,71 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               <circle cx="11" cy="11" r="1.2" fill="currentColor" />
             </svg>
           </button>
+
+          {/* macOS Input Source (TR / EN) Language Switcher */}
+          <div ref={languageMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLanguageMenuOpen(!isLanguageMenuOpen);
+                if (!isLanguageMenuOpen) {
+                  setIsControlCenterOpen(false);
+                  setIsNowPlayingOpen(false);
+                }
+              }}
+              title={t('language')}
+              className={`px-1.5 py-0.5 rounded text-[11px] font-semibold tracking-wider transition-colors focus:outline-none flex items-center gap-1 cursor-pointer ${
+                isLanguageMenuOpen
+                  ? 'bg-black/15 dark:bg-white/20 text-black dark:text-white'
+                  : 'hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <span className="uppercase">{language}</span>
+            </button>
+
+            {/* Input Source Popover Menu */}
+            {isLanguageMenuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1.5 w-44 rounded-xl liquid-glass border border-white/20 dark:border-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.28)] p-1 z-50 backdrop-blur-2xl"
+              >
+                <div className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-neutral-500">
+                  {t('language')}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLanguage('tr');
+                    setIsLanguageMenuOpen(false);
+                    playClickSound();
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-medium transition-colors cursor-pointer ${
+                    language === 'tr'
+                      ? 'bg-[#007AFF] text-white'
+                      : 'text-slate-700 dark:text-neutral-200 hover:bg-black/5 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <span>{t('turkish')}</span>
+                  {language === 'tr' && <span className="font-bold">✓</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLanguage('en');
+                    setIsLanguageMenuOpen(false);
+                    playClickSound();
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-medium transition-colors cursor-pointer ${
+                    language === 'en'
+                      ? 'bg-[#007AFF] text-white'
+                      : 'text-slate-700 dark:text-neutral-200 hover:bg-black/5 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <span>{t('english')}</span>
+                  {language === 'en' && <span className="font-bold">✓</span>}
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Real-time Hydration-safe Clock & Notification Center Trigger */}
           <Clock onClick={toggleCenter} />

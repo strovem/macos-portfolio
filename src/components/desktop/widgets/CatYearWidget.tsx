@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { Sparkles, Calendar as CalendarIcon, User, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CatYearWidgetProps {
   item: DesktopCardItem;
@@ -317,10 +318,15 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     setTimeout(() => setClearedSuccess(false), 1500);
   };
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  const { t, language } = useTranslation();
+
+  const monthNames = language === 'tr'
+    ? ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const dayHeaders = language === 'tr'
+    ? ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
+    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
     <div className="relative w-full max-w-[310px] p-3 rounded-2xl backdrop-blur-2xl bg-[#FFE4BA]/92 dark:bg-neutral-900/92 border border-amber-300/60 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 font-sans text-slate-800 dark:text-neutral-100">
@@ -331,7 +337,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             <Sparkles className="w-3 h-3" />
           </div>
           <span className="text-xs font-bold font-mono tracking-tight text-amber-950 dark:text-amber-200">
-            Numerology & Astrology
+            {t('calendarTitle')}
           </span>
         </div>
 
@@ -350,7 +356,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             }`}
           >
             <CalendarIcon className="w-2.5 h-2.5" />
-            <span>Calendar</span>
+            <span>{t('calendarTab')}</span>
           </button>
 
           <button
@@ -366,7 +372,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             }`}
           >
             <User className="w-2.5 h-2.5" />
-            <span>Reading</span>
+            <span>{t('readingTab')}</span>
           </button>
         </div>
       </div>
@@ -390,9 +396,9 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                   setSelectedDay(now.getDate());
                 }}
                 className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-amber-500/20 text-amber-950 dark:text-amber-200 hover:bg-amber-500/30 transition-colors cursor-pointer"
-                title="Go to Today"
+                title={t('today')}
               >
-                Today
+                {t('today')}
               </button>
               <button
                 type="button"
@@ -421,7 +427,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           <div className="rounded-xl overflow-hidden border border-sky-300/80 dark:border-neutral-700 bg-sky-100/60 dark:bg-neutral-950 shadow-inner">
             {/* Days of Week Header */}
             <div className="grid grid-cols-7 text-[9px] font-semibold text-center py-1 bg-sky-200/70 dark:bg-sky-950/70 text-sky-900 dark:text-sky-300 border-b border-sky-300/70 dark:border-neutral-700">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+              {dayHeaders.map((d, i) => (
                 <div key={i}>{d}</div>
               ))}
             </div>
@@ -487,7 +493,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                     )}
                     {!isSelected && isRealToday && (
                       <span className="text-[6px] leading-none text-amber-600 dark:text-amber-400 font-bold -mt-0.5 uppercase tracking-tighter">
-                        TODAY
+                        {t('todayBadge')}
                       </span>
                     )}
                     <span className="text-[10px] font-bold leading-tight">

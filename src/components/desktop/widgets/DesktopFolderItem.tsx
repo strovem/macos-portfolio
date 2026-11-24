@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { ArrowUpRight } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DesktopFolderItemProps {
   item: DesktopCardItem;
@@ -15,7 +16,10 @@ export function DesktopFolderItem({
   onOpenApp,
   isMobile = false,
 }: DesktopFolderItemProps) {
+  const { t } = useTranslation();
   const [isSelected, setIsSelected] = useState(false);
+  const title = t('folderMusicTitle');
+  const subtitle = t('folderMusicSubtitle');
 
   // SVG representation of macOS blue folder with embossed music note
   const renderMacFolderIcon = (size = 'w-16 h-14') => (
@@ -89,10 +93,10 @@ export function DesktopFolderItem({
         {renderMacFolderIcon('w-12 h-10')}
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-            {item.title || 'My Music'}
+            {title}
           </div>
           <div className="text-xs text-slate-500 dark:text-neutral-400">
-            {item.subtitle || '7 items'} • Open in Finder
+            {subtitle}
           </div>
         </div>
         <ArrowUpRight className="w-4 h-4 text-[#007AFF]" />
@@ -123,10 +127,10 @@ export function DesktopFolderItem({
               : 'text-slate-900 dark:text-white drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] dark:drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)] group-hover:bg-black/15 dark:group-hover:bg-white/15'
           }`}
         >
-          {item.title || 'My Music'}
+          {title}
         </span>
         <span className="text-[9px] text-slate-700 dark:text-white/80 font-medium drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] mt-0.5">
-          {item.subtitle || '7 items'}
+          {subtitle}
         </span>
       </div>
     </div>

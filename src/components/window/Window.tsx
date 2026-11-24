@@ -2,22 +2,25 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useDragControls, useMotionValue } from 'framer-motion';
-import { AppId, WindowState } from '@/types/os';
+import { AppId, WindowState, TilePosition } from '@/types/os';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { WindowHeader } from './WindowHeader';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { AppMetadata } from '@/data/apps';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { playDropSnapSound } from '@/utils/soundEffects';
 
 export interface WindowContextType {
   id: AppId;
   isActive: boolean;
   isMaximized: boolean;
   isMobile: boolean;
+  tilePosition?: TilePosition;
   dragControls: ReturnType<typeof useDragControls>;
   onClose: () => void;
   onMinimize: () => void;
   onMaximize: () => void;
+  onTile?: (tile: 'left' | 'right' | 'full' | 'center' | 'restore') => void;
   onFocus: () => void;
 }
 
@@ -52,6 +55,9 @@ export function Window({
   const maximizeWindow = useWindowStore((state) => state.maximizeWindow);
   const updatePosition = useWindowStore((state) => state.updatePosition);
   const updateSize = useWindowStore((state) => state.updateSize);
+  const tileWindow = useWindowStore((state) => state.tileWindow);
+  const unsnapWindow = useWindowStore((state) => state.unsnapWindow);
+  const setSnapPreviewZone = useWindowStore((state) => state.setSnapPreviewZone);
 
   const windowData = propWindow || storeWindow;
 
@@ -101,8 +107,41 @@ export function Window({
     }
   };
 
+  const handleDragStart = () => {
+    if (isMobile) return;
+    if (windowData.tilePosition || windowData.isMaximized) {
+      unsnapWindow(id);
+    }
+  };
+
+  const handleDrag = (_: MouseEvent | TouchEvent | PointerEvent, info: { point: { x: number; y: number } }) => {
+    if (isMobile) return;
+    const winWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const { x, y } = info.point;
+
+    let zone: 'left' | 'right' | 'top' | null = null;
+    if (x <= 16) {
+      zone = 'left';
+    } else if (x >= winWidth - 16) {
+      zone = 'right';
+    } else if (y <= 38 + 12) {
+      zone = 'top';
+    }
+
+    setSnapPreviewZone(zone);
+  };
+
   const handleDragEnd = () => {
-    if (isMaximized || isMobile) return;
+    if (isMobile) return;
+
+    const snapZone = useWindowStore.getState().snapPreviewZone;
+    setSnapPreviewZone(null);
+
+    if (snapZone) {
+      playDropSnapSound();
+      tileWindow(id, snapZone === 'top' ? 'full' : snapZone);
+      return;
+    }
 
     const curX = posX.get();
     const curY = posY.get();
@@ -312,10 +351,12 @@ export function Window({
             isActive={isActive}
             isMaximized={isMaximized}
             isMobile={isMobile}
+            tilePosition={windowData.tilePosition}
             dragControls={dragControls}
             onClose={() => closeWindow(id)}
             onMinimize={() => minimizeWindow(id)}
             onMaximize={() => maximizeWindow(id)}
+            onTile={(tile) => tileWindow(id, tile)}
             onFocus={() => focusWindow(id)}
           >
             {headerContent}
@@ -329,10 +370,12 @@ export function Window({
             isActive,
             isMaximized,
             isMobile,
+            tilePosition: windowData.tilePosition,
             dragControls,
             onClose: () => closeWindow(id),
             onMinimize: () => minimizeWindow(id),
             onMaximize: () => maximizeWindow(id),
+            onTile: (tile) => tileWindow(id, tile),
             onFocus: () => focusWindow(id),
           }}
         >

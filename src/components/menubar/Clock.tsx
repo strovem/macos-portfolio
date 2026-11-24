@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ClockProps {
   onClick?: () => void;
 }
 
 export const Clock: React.FC<ClockProps> = ({ onClick }) => {
+  const { language, t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [timeString, setTimeString] = useState('');
 
@@ -15,15 +17,29 @@ export const Clock: React.FC<ClockProps> = ({ onClick }) => {
 
     const formatMacTime = () => {
       const now = new Date();
-      const weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
-      const month = now.toLocaleDateString('en-US', { month: 'short' });
-      const day = now.getDate();
-      const time = now.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-      return `${weekday} ${month} ${day}  ${time}`;
+      const locale = language === 'tr' ? 'tr-TR' : 'en-US';
+
+      if (language === 'tr') {
+        const weekday = now.toLocaleDateString('tr-TR', { weekday: 'short' });
+        const day = now.getDate();
+        const month = now.toLocaleDateString('tr-TR', { month: 'short' });
+        const time = now.toLocaleTimeString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        });
+        return `${day} ${month} ${weekday}  ${time}`;
+      } else {
+        const weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
+        const month = now.toLocaleDateString('en-US', { month: 'short' });
+        const day = now.getDate();
+        const time = now.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+        return `${weekday} ${month} ${day}  ${time}`;
+      }
     };
 
     setTimeString(formatMacTime());
@@ -33,13 +49,13 @@ export const Clock: React.FC<ClockProps> = ({ onClick }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [language]);
 
   return (
     <div
       onClick={onClick}
       className="px-2 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none font-medium text-xs whitespace-nowrap text-slate-800 dark:text-slate-200 tabular-nums"
-      title="Bildirim Merkezi"
+      title={t('notifications')}
       suppressHydrationWarning
     >
       {mounted ? timeString : 'Sun Nov 22  2:38 PM'}

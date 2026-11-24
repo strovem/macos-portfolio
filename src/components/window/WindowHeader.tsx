@@ -5,6 +5,7 @@ import { DragControls } from 'framer-motion';
 import { TrafficLights } from './TrafficLights';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { AppMetadata } from '@/data/apps';
+import { TilePosition } from '@/types/os';
 
 export interface WindowHeaderProps {
   title: string;
@@ -12,10 +13,12 @@ export interface WindowHeaderProps {
   isActive?: boolean;
   isMaximized?: boolean;
   isMobile?: boolean;
+  tilePosition?: TilePosition;
   dragControls?: DragControls;
   onClose?: () => void;
   onMinimize?: () => void;
   onMaximize?: () => void;
+  onTile?: (tile: 'left' | 'right' | 'full' | 'center' | 'restore') => void;
   onFocus?: () => void;
   className?: string;
   children?: React.ReactNode;
@@ -27,10 +30,12 @@ export function WindowHeader({
   isActive = true,
   isMaximized = false,
   isMobile = false,
+  tilePosition,
   dragControls,
   onClose,
   onMinimize,
   onMaximize,
+  onTile,
   onFocus,
   className = '',
   children,
@@ -69,6 +74,8 @@ export function WindowHeader({
           onMaximize={onMaximize}
           isMaximized={isMaximized}
           isActive={isActive}
+          onTile={onTile}
+          tilePosition={tilePosition}
         />
       </div>
 

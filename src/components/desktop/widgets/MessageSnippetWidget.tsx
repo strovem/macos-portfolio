@@ -3,6 +3,7 @@
 import React from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { MessageCircle, ArrowUpRight } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessageSnippetWidgetProps {
   item: DesktopCardItem;
@@ -10,13 +11,13 @@ interface MessageSnippetWidgetProps {
 }
 
 export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetProps) {
-  const sender = item.metadata?.sender || 'Sarah Jenkins';
-  const handle = item.metadata?.handle || 'Design Lead';
-  const time = item.metadata?.time || '10:42 AM';
-  const bubbles = item.metadata?.bubbles || [
-    { text: 'Hey! Loved the new tactile desktop release 🔥', isSender: false },
-    { text: 'Thanks! The physics & stickers feel super organic.', isSender: true },
-    { text: 'Can we collaborate on the next spatial canvas?', isSender: false },
+  const { t } = useTranslation();
+  const sender = t('messageSender');
+  const handle = t('messageHandle');
+  const time = t('messageTime');
+  const bubbles = [
+    { text: t('messageBubble1'), isSender: false },
+    { text: t('messageBubble2'), isSender: false },
   ];
 
   return (
@@ -68,7 +69,7 @@ export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetPr
       {/* Footer / Reply in Messages CTA */}
       <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
         <span className="text-[9px] text-slate-400 dark:text-neutral-500 font-mono">
-          Delivered
+          {t('messageDelivered')}
         </span>
         <button
           type="button"
@@ -78,7 +79,7 @@ export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetPr
           }}
           className="inline-flex items-center gap-1 text-[10px] text-[#007AFF] hover:text-blue-600 dark:hover:text-sky-400 font-semibold cursor-pointer transition-colors"
         >
-          <span>{item.metadata?.callToAction || 'Reply in Messages'}</span>
+          <span>{item.metadata?.callToAction || t('messageCta')}</span>
           <ArrowUpRight className="w-2.5 h-2.5" />
         </button>
       </div>

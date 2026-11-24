@@ -8,8 +8,10 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { Wallpaper } from '@/components/desktop/Wallpaper';
 import { playUnlockSound } from '@/utils/soundEffects';
 import { Z_INDEX } from '@/constants/zIndex';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function LockScreen() {
+  const { t, language } = useTranslation();
   const isLocked = useLockStore((state) => state.isLocked);
   const isSleeping = useLockStore((state) => state.isSleeping);
   const unlock = useLockStore((state) => state.unlock);
@@ -24,15 +26,16 @@ export function LockScreen() {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
+      const locale = language === 'tr' ? 'tr-TR' : 'en-US';
       setTimeStr(
-        now.toLocaleTimeString('tr-TR', {
+        now.toLocaleTimeString(locale, {
           hour: '2-digit',
           minute: '2-digit',
-          hour12: false,
+          hour12: language !== 'tr',
         })
       );
       setDateStr(
-        now.toLocaleDateString('tr-TR', {
+        now.toLocaleDateString(locale, {
           weekday: 'long',
           day: 'numeric',
           month: 'long',
@@ -43,7 +46,7 @@ export function LockScreen() {
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [language]);
 
   // Keyboard controls for Sleep Mode (wake) and Lock Screen (unlock via Enter/Space)
   useEffect(() => {
@@ -86,7 +89,7 @@ export function LockScreen() {
             className="fixed inset-0 bg-black cursor-pointer flex flex-col items-center justify-center select-none"
           >
             <span className="text-xs font-mono text-white/20 animate-pulse">
-              Uyanmak için tıklayın veya bir tuşa basın
+              {t('wakeHint')}
             </span>
           </motion.div>
         )}
@@ -143,7 +146,7 @@ export function LockScreen() {
                   Hüseyin Korumtaş
                 </h2>
                 <span className="text-xs text-white/70 font-medium drop-shadow-sm">
-                  Creative Producer & Audio Lead
+                  {t('producerRole')}
                 </span>
               </div>
 
@@ -154,7 +157,7 @@ export function LockScreen() {
                 className="liquid-glass group px-6 py-2.5 rounded-full border border-white/30 hover:border-white/50 text-white flex items-center gap-2.5 shadow-2xl cursor-pointer active:scale-95 transition-all text-xs font-semibold"
               >
                 <Unlock className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                <span>Kilidi Aç</span>
+                <span>{language === 'tr' ? 'Kilidi Aç' : 'Unlock'}</span>
                 <span className="text-[10px] text-white/50 font-mono hidden sm:inline ml-1">
                   (Enter)
                 </span>

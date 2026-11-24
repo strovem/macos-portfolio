@@ -33,6 +33,10 @@ export interface WindowStoreState {
   bringAllToFront: () => void;
   unfocusAllWindows: () => void;
   clampAllWindowsToViewport: (viewportWidth: number, viewportHeight: number) => void;
+  snapPreviewZone: 'left' | 'right' | 'top' | null;
+  setSnapPreviewZone: (zone: 'left' | 'right' | 'top' | null) => void;
+  tileWindow: (id: AppId, tile: 'left' | 'right' | 'full' | 'center' | 'restore') => void;
+  unsnapWindow: (id: AppId) => void;
 }
 
 const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
@@ -527,6 +531,158 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
       }
 
       return changed ? { windows: nextWindows } : state;
+    });
+  },
+
+  snapPreviewZone: null,
+
+  setSnapPreviewZone: (zone: 'left' | 'right' | 'top' | null) => {
+    if (get().snapPreviewZone !== zone) {
+      set({ snapPreviewZone: zone });
+    }
+  },
+
+  tileWindow: (id: AppId, tile: 'left' | 'right' | 'full' | 'center' | 'restore') => {
+    const winWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const winHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const menubarHeight = 32;
+    const dockMargin = 72;
+    const availableHeight = winHeight - menubarHeight - dockMargin - 10;
+    const targetY = menubarHeight + 6;
+
+    set((state) => {
+      const win = state.windows[id];
+      if (!win) return state;
+
+      const previousBounds = (win.tilePosition || win.isMaximized) && win.previousBounds
+        ? win.previousBounds
+        : { position: { ...win.position }, size: { ...win.size } };
+
+      const newMaxZ = state.maxZIndex + 1;
+
+      if (tile === 'restore') {
+        if (win.previousBounds) {
+          return {
+            windows: {
+              ...state.windows,
+              [id]: {
+                ...win,
+                position: win.previousBounds.position,
+                size: win.previousBounds.size,
+                isMaximized: false,
+                tilePosition: null,
+                zIndex: newMaxZ,
+              },
+            },
+            activeWindowId: id,
+            maxZIndex: newMaxZ,
+          };
+        }
+        return state;
+      }
+
+      if (tile === 'center') {
+        const newX = Math.max(16, Math.round((winWidth - win.size.width) / 2));
+        const newY = Math.max(menubarHeight + 6, Math.round((winHeight - win.size.height - dockMargin + menubarHeight) / 2));
+        return {
+          windows: {
+            ...state.windows,
+            [id]: {
+              ...win,
+              position: { x: newX, y: newY },
+              isMaximized: false,
+              tilePosition: null,
+              zIndex: newMaxZ,
+            },
+          },
+          activeWindowId: id,
+          maxZIndex: newMaxZ,
+        };
+      }
+
+      if (tile === 'left') {
+        const halfWidth = Math.floor((winWidth - 24) / 2);
+        return {
+          windows: {
+            ...state.windows,
+            [id]: {
+              ...win,
+              position: { x: 8, y: targetY },
+              size: { width: halfWidth, height: availableHeight },
+              isMaximized: false,
+              tilePosition: 'left',
+              previousBounds,
+              zIndex: newMaxZ,
+            },
+          },
+          activeWindowId: id,
+          maxZIndex: newMaxZ,
+        };
+      }
+
+      if (tile === 'right') {
+        const halfWidth = Math.floor((winWidth - 24) / 2);
+        const targetX = Math.floor(winWidth / 2) + 4;
+        return {
+          windows: {
+            ...state.windows,
+            [id]: {
+              ...win,
+              position: { x: targetX, y: targetY },
+              size: { width: halfWidth, height: availableHeight },
+              isMaximized: false,
+              tilePosition: 'right',
+              previousBounds,
+              zIndex: newMaxZ,
+            },
+          },
+          activeWindowId: id,
+          maxZIndex: newMaxZ,
+        };
+      }
+
+      if (tile === 'full') {
+        const fullWidth = winWidth - 16;
+        return {
+          windows: {
+            ...state.windows,
+            [id]: {
+              ...win,
+              position: { x: 8, y: targetY },
+              size: { width: fullWidth, height: availableHeight },
+              isMaximized: false,
+              tilePosition: 'full',
+              previousBounds,
+              zIndex: newMaxZ,
+            },
+          },
+          activeWindowId: id,
+          maxZIndex: newMaxZ,
+        };
+      }
+
+      return state;
+    });
+  },
+
+  unsnapWindow: (id: AppId) => {
+    set((state) => {
+      const win = state.windows[id];
+      if (!win || (!win.tilePosition && !win.isMaximized)) return state;
+
+      const restoredSize = win.previousBounds ? win.previousBounds.size : win.defaultSize;
+
+      return {
+        windows: {
+          ...state.windows,
+          [id]: {
+            ...win,
+            isMaximized: false,
+            tilePosition: null,
+            size: restoredSize,
+          },
+        },
+      };
     });
   },
 }));

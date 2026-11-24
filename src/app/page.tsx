@@ -8,6 +8,7 @@ import { FloatingBubbles } from '@/components/desktop/FloatingBubbles';
 import { Menubar } from '@/components/menubar/Menubar';
 import { Dock } from '@/components/dock/Dock';
 import { Window } from '@/components/window/Window';
+import { WindowSnapOverlay } from '@/components/window/WindowSnapOverlay';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { AppId } from '@/types/os';
@@ -26,6 +27,7 @@ import { NotificationCenter } from '@/components/os/NotificationCenter';
 import { DragPillOverlay } from '@/components/os/DragPillOverlay';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useUrlDeepLink } from '@/hooks/useUrlDeepLink';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useContextMenuStore } from '@/stores/useContextMenuStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
@@ -122,6 +124,7 @@ export default function Home() {
   const pushNotification = useNotificationStore((state) => state.pushNotification);
   const toggleMissionControl = useMissionControlStore((state) => state.toggleMissionControl);
   const lock = useLockStore((state) => state.lock);
+  const { t } = useTranslation();
 
   // First Visit Welcome Notification (once per session via sessionStorage)
   React.useEffect(() => {
@@ -132,11 +135,11 @@ export default function Home() {
         sessionStorage.setItem('macos_welcome_shown', 'true');
         const timer = setTimeout(() => {
           pushNotification({
-            title: 'Hüseyin Korumtaş OS',
-            message: 'Hoş Geldin — ⌘K ile Spotlight\'ı açabilir veya Studio\'da 1-6 tuşlarıyla Beat Pad deneyebilirsin.',
+            title: t('welcomeTitle'),
+            message: t('welcomeMessage'),
             appId: 'studio',
             targetAppId: 'studio',
-            actionLabel: 'Studio\'yu Aç ↗',
+            actionLabel: t('openInStudio'),
             duration: 8000,
           });
         }, 2500);
@@ -145,7 +148,7 @@ export default function Home() {
     } catch {
       // ignore
     }
-  }, [pushNotification]);
+  }, [pushNotification, t]);
 
   const handleDesktopPointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
@@ -182,20 +185,20 @@ export default function Home() {
 
     const desktopItems: ContextMenuEntry[] = [
       {
-        label: 'Spotlight Ara...',
+        label: t('spotlight'),
         shortcut: '⌘K',
         icon: <Search className="w-3.5 h-3.5 text-blue-500" />,
         onClick: openSpotlight,
       },
       {
-        label: 'Mission Control',
+        label: t('missionControl'),
         shortcut: 'F3',
         icon: <LayoutGrid className="w-3.5 h-3.5 text-indigo-500" />,
         onClick: toggleMissionControl,
       },
       { separator: true },
       {
-        label: 'Duvar Kağıdını Değiştir',
+        label: t('changeWallpaper'),
         shortcut: '⌥W',
         icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" />,
         onClick: () => {
@@ -203,52 +206,52 @@ export default function Home() {
           const nextIndex = (currentIndex + 1) % WALLPAPERS.length;
           setWallpaper(WALLPAPERS[nextIndex].id);
           pushNotification({
-            title: 'Duvar Kağıdı Değiştirildi',
+            title: t('wallpaperChangedTitle'),
             message: WALLPAPERS[nextIndex].name,
             duration: 2500,
           });
         },
       },
       {
-        label: 'Açık / Koyu Mod Değiştir',
+        label: t('toggleAppearance'),
         shortcut: '⌥T',
         icon: <Moon className="w-3.5 h-3.5 text-indigo-500" />,
         onClick: () => {
           toggleDarkMode();
           pushNotification({
-            title: 'Görünüm Değiştirildi',
-            message: !isDarkMode ? 'Koyu Mod aktif' : 'Açık Mod aktif',
+            title: t('appearanceChangedTitle'),
+            message: !isDarkMode ? t('darkModeActive') : t('lightModeActive'),
             duration: 2500,
           });
         },
       },
       {
-        label: 'Tüm Pencereleri Küçült',
+        label: t('minimizeAll'),
         shortcut: '⌥M',
         icon: <Sliders className="w-3.5 h-3.5 text-slate-500" />,
         onClick: minimizeAllWindows,
       },
       {
-        label: 'Pencereleri Sıfırla',
+        label: t('resetWindows'),
         icon: <RotateCcw className="w-3.5 h-3.5 text-cyan-500" />,
         onClick: () => {
           resetWindows();
           pushNotification({
-            title: 'Pencereler Sıfırlandı',
-            message: 'Tüm pencere konumları varsayılan düzene alındı.',
+            title: t('windowsResetTitle'),
+            message: t('windowsResetMessage'),
             duration: 2500,
           });
         },
       },
       { separator: true },
       {
-        label: 'Ekranı Kilitle',
+        label: t('lock'),
         shortcut: '⌥L',
         icon: <Lock className="w-3.5 h-3.5 text-rose-500" />,
         onClick: lock,
       },
       {
-        label: 'Bu Mac Hakkında',
+        label: t('aboutMac'),
         icon: <HelpCircle className="w-3.5 h-3.5 text-emerald-500" />,
         onClick: () => openWindow('notes'),
       },
@@ -385,6 +388,9 @@ export default function Home() {
         style={{ zIndex: Z_INDEX.WINDOWS_BASE }}
         className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none"
       >
+        {/* Ghost Preview Frame for Sequoia Window Snap / Tiling */}
+        <WindowSnapOverlay />
+
         {/* Open Windows Render Canvas */}
         <div className="flex-1 relative pointer-events-none">
           <AnimatePresence>

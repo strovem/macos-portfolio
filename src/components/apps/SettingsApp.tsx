@@ -18,11 +18,13 @@ import {
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { playToggleSound } from '@/utils/soundEffects';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type SettingsSection = 'appearance' | 'wallpaper' | 'atmosphere' | 'displays' | 'about';
 
 export const SettingsApp: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('appearance');
+  const { t, language, setLanguage } = useTranslation();
 
   const {
     activeWallpaperId,
@@ -282,6 +284,39 @@ export const SettingsApp: React.FC = () => {
                 <span className="w-6 h-6 rounded-full bg-[#EC4899] hover:scale-110 transition-transform cursor-pointer" />
                 <span className="w-6 h-6 rounded-full bg-[#10B981] hover:scale-110 transition-transform cursor-pointer" />
                 <span className="w-6 h-6 rounded-full bg-[#F59E0B] hover:scale-110 transition-transform cursor-pointer" />
+              </div>
+            </div>
+
+            {/* Language Selection */}
+            <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex flex-col gap-3">
+              <span className="text-xs font-semibold text-slate-700 dark:text-neutral-300">
+                {t('languageLabel')}
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLanguage('tr')}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    language === 'tr'
+                      ? 'border-[#007AFF] bg-blue-50/60 dark:bg-blue-900/20 text-[#007AFF] font-bold shadow-xs'
+                      : 'border-black/5 dark:border-white/10 hover:border-black/20 text-slate-700 dark:text-neutral-200'
+                  }`}
+                >
+                  <span className="text-xs">{t('turkish')}</span>
+                  {language === 'tr' && <Check className="w-3.5 h-3.5 stroke-3" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    language === 'en'
+                      ? 'border-[#007AFF] bg-blue-50/60 dark:bg-blue-900/20 text-[#007AFF] font-bold shadow-xs'
+                      : 'border-black/5 dark:border-white/10 hover:border-black/20 text-slate-700 dark:text-neutral-200'
+                  }`}
+                >
+                  <span className="text-xs">{t('english')}</span>
+                  {language === 'en' && <Check className="w-3.5 h-3.5 stroke-3" />}
+                </button>
               </div>
             </div>
           </div>

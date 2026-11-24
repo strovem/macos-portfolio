@@ -8,8 +8,10 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { Z_INDEX } from '@/constants/zIndex';
 import { AppMetadata } from '@/data/apps';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function NotificationCenter() {
+  const { t, language } = useTranslation();
   const isCenterOpen = useNotificationStore((state) => state.isCenterOpen);
   const closeCenter = useNotificationStore((state) => state.closeCenter);
   const history = useNotificationStore((state) => state.history);
@@ -23,13 +25,13 @@ export function NotificationCenter() {
 
   useEffect(() => {
     const now = new Date();
-    const formatter = new Intl.DateTimeFormat('tr-TR', {
+    const formatter = new Intl.DateTimeFormat(language === 'tr' ? 'tr-TR' : 'en-US', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
     });
     setCurrentDateStr(formatter.format(now));
-  }, []);
+  }, [language]);
 
   // Close on Escape key
   useEffect(() => {
@@ -55,12 +57,12 @@ export function NotificationCenter() {
 
   const formatRelativeTime = (timestamp: number) => {
     const diffSec = Math.floor((Date.now() - timestamp) / 1000);
-    if (diffSec < 60) return 'Az önce';
+    if (diffSec < 60) return language === 'tr' ? 'Az önce' : 'Just now';
     const diffMin = Math.floor(diffSec / 60);
-    if (diffMin < 60) return `${diffMin} dk önce`;
+    if (diffMin < 60) return language === 'tr' ? `${diffMin} dk önce` : `${diffMin}m ago`;
     const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr} sa önce`;
-    return new Date(timestamp).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    if (diffHr < 24) return language === 'tr' ? `${diffHr} sa önce` : `${diffHr}h ago`;
+    return new Date(timestamp).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short' });
   };
 
   return (
@@ -91,10 +93,10 @@ export function NotificationCenter() {
             <div className="p-4 pb-3 border-b border-black/5 dark:border-white/10 flex items-center justify-between">
               <div>
                 <div className="text-[11px] font-semibold tracking-wide uppercase text-blue-600 dark:text-blue-400">
-                  {currentDateStr || 'Bugün'}
+                  {currentDateStr || t('today')}
                 </div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-neutral-100 flex items-center gap-2">
-                  <span>Bildirimler</span>
+                  <span>{t('notifications')}</span>
                   {history.length > 0 && (
                     <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300">
                       {history.length}
@@ -109,10 +111,10 @@ export function NotificationCenter() {
                     type="button"
                     onClick={clearHistory}
                     className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-xs font-medium flex items-center gap-1 cursor-pointer"
-                    title="Tümünü Temizle"
+                    title={t('clearAll')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Temizle</span>
+                    <span className="text-[11px]">{t('clearAll')}</span>
                   </button>
                 )}
 
@@ -135,7 +137,7 @@ export function NotificationCenter() {
                     <Bell className="w-6 h-6 opacity-40" />
                   </div>
                   <p className="text-sm font-semibold text-slate-700 dark:text-neutral-300 mb-1">
-                    Yeni Bildirim Yok
+                    {t('noNotifications')}
                   </p>
                   <p className="text-xs max-w-xs text-slate-500 dark:text-neutral-400">
                     Sistem olayları ve gelen mesajlar bu alanda listelenir.

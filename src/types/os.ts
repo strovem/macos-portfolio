@@ -11,6 +11,8 @@ export type AppId =
   | 'tonegenerator'
   | 'studio';
 
+export type TilePosition = 'left' | 'right' | 'full' | null;
+
 export interface WindowState {
   id: AppId;
   title: string;
@@ -18,6 +20,11 @@ export interface WindowState {
   isOpen: boolean;
   isMinimized: boolean;
   isMaximized: boolean;
+  tilePosition?: TilePosition;
+  previousBounds?: {
+    position: { x: number; y: number };
+    size: { width: number; height: number };
+  };
   zIndex: number;
   position: { x: number; y: number };
   size: { width: number; height: number };

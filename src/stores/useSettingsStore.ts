@@ -6,6 +6,7 @@ export type AuraIntensity = 'subtle' | 'vibrant' | 'max';
 
 export interface SettingsState {
   _hasHydrated: boolean;
+  language: 'tr' | 'en';
   activeWallpaperId: string;
   isDarkMode: boolean;
   soundEnabled: boolean;
@@ -15,6 +16,8 @@ export interface SettingsState {
   auraIntensity: AuraIntensity;
   tapeWarmth: boolean;
   setHasHydrated: (val: boolean) => void;
+  setLanguage: (lang: 'tr' | 'en') => void;
+  toggleLanguage: () => void;
   setWallpaper: (id: string) => void;
   toggleDarkMode: () => void;
   toggleSound: () => void;
@@ -29,6 +32,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       _hasHydrated: false,
+      language: 'tr',
       activeWallpaperId: 'gucduck-blue',
       isDarkMode: false,
       soundEnabled: true,
@@ -38,6 +42,8 @@ export const useSettingsStore = create<SettingsState>()(
       auraIntensity: 'vibrant',
       tapeWarmth: false,
       setHasHydrated: (val: boolean) => set({ _hasHydrated: val }),
+      setLanguage: (lang: 'tr' | 'en') => set({ language: lang }),
+      toggleLanguage: () => set((state) => ({ language: state.language === 'tr' ? 'en' : 'tr' })),
       setWallpaper: (id: string) => set({ activeWallpaperId: id }),
       toggleDarkMode: () =>
         set((state) => {

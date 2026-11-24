@@ -83,8 +83,8 @@ export function useKeyboardShortcuts() {
         }
       }
 
-      // 2. Mission Control: F3 OR Alt/Ctrl + ArrowUp
-      if (e.key === 'F3' || ((e.altKey || e.ctrlKey) && e.key === 'ArrowUp')) {
+      // 2. Mission Control: F3 OR Alt/Ctrl + ArrowUp (without Shift)
+      if (e.key === 'F3' || (!e.shiftKey && (e.altKey || e.ctrlKey) && e.key === 'ArrowUp')) {
         e.preventDefault();
         toggleMissionControl();
         return;
@@ -123,6 +123,28 @@ export function useKeyboardShortcuts() {
         if (activeWindowId && windows[activeWindowId]?.isOpen) {
           e.preventDefault();
           minimizeWindow(activeWindowId);
+          return;
+        }
+      }
+
+      // 6.1 Sequoia Window Tiling: Alt + ArrowLeft (Tile Left), Alt + ArrowRight (Tile Right), Alt + Shift + ArrowUp (Fill/Restore)
+      if (e.altKey && activeWindowId && windows[activeWindowId]?.isOpen) {
+        const { tileWindow } = useWindowStore.getState();
+        if (e.shiftKey && e.key === 'ArrowUp') {
+          e.preventDefault();
+          const targetWin = windows[activeWindowId];
+          const isTiledOrMax = targetWin.isMaximized || Boolean(targetWin.tilePosition);
+          tileWindow(activeWindowId, isTiledOrMax ? 'restore' : 'full');
+          return;
+        }
+        if (!e.shiftKey && e.key === 'ArrowLeft') {
+          e.preventDefault();
+          tileWindow(activeWindowId, 'left');
+          return;
+        }
+        if (!e.shiftKey && e.key === 'ArrowRight') {
+          e.preventDefault();
+          tileWindow(activeWindowId, 'right');
           return;
         }
       }

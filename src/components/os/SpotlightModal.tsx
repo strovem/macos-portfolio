@@ -34,6 +34,7 @@ import { ORIGINAL_TRACKS } from '@/data/music';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { playClickSound } from '@/utils/soundEffects';
 import { AppId } from '@/types/os';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SpotlightItem {
   id: string;
@@ -59,6 +60,7 @@ function normalizeSearch(str: string): string {
 }
 
 export const SpotlightModal: React.FC = () => {
+  const { t } = useTranslation();
   const { isOpen, closeSpotlight } = useSpotlightStore();
   const { openWindow, minimizeAllWindows, resetWindows, openFinderToSection } = useWindowStore();
   const { isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper, soundEnabled, toggleSound } = useSettingsStore();
@@ -306,7 +308,7 @@ export const SpotlightModal: React.FC = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Spotlight ile ara (uygulama, proje, müzik veya komut)..."
+              placeholder={t('searchPlaceholder')}
               className="flex-1 bg-transparent text-sm sm:text-base font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 outline-none"
             />
             {query ? (
@@ -332,7 +334,7 @@ export const SpotlightModal: React.FC = () => {
             {filteredResults.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-500 dark:text-neutral-400">
                 <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <span>&ldquo;{query}&rdquo; için sonuç bulunamadı.</span>
+                <span>{t('noResults')}</span>
               </div>
             ) : (
               filteredResults.map((item, idx) => {

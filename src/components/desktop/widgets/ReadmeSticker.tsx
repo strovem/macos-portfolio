@@ -3,6 +3,7 @@
 import React from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { FileText, ArrowUpRight } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ReadmeStickerProps {
   item: DesktopCardItem;
@@ -10,10 +11,11 @@ interface ReadmeStickerProps {
 }
 
 export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
-  const lines = item.metadata?.lines || [
-    '✨ Crafting playful interactions',
-    '⚡ TypeScript • Next.js • React',
-    '🦆 Duck-first design philosophy',
+  const { t } = useTranslation();
+  const lines = [
+    t('readmeLine1'),
+    t('readmeLine2'),
+    t('readmeLine3'),
   ];
 
   return (
@@ -30,18 +32,18 @@ export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
           </span>
         </div>
         <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/10 text-neutral-800">
-          {item.metadata?.tag || 'PINNED'}
+          {item.metadata?.tag || t('readmeTag')}
         </span>
       </div>
 
       {/* Greeting / Subtitle */}
       <div className="text-xs font-semibold text-neutral-900 mb-1">
-        {item.subtitle}
+        {t('readmeSubtitle')}
       </div>
 
       {/* Main Content */}
       <p className="text-[11px] leading-relaxed text-neutral-700 mb-3">
-        {item.content}
+        {t('readmeContent')}
       </p>
 
       {/* Quick bullet points */}
@@ -63,7 +65,7 @@ export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
           }}
           className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-full bg-neutral-900 text-yellow-200 hover:bg-neutral-800 active:scale-95 transition-all shadow-sm cursor-pointer"
         >
-          <span>{item.metadata?.callToAction || 'Open Notes'}</span>
+          <span>{item.metadata?.callToAction || t('readmeCta')}</span>
           <ArrowUpRight className="w-2.5 h-2.5" />
         </button>
 
