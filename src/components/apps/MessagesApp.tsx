@@ -87,6 +87,7 @@ export const MessagesApp: React.FC = () => {
   const [threads, setThreads] = useState<ChatThread[]>(INITIAL_THREADS);
   const [activeThreadId, setActiveThreadId] = useState<string>('huseyin');
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileView, setMobileView] = useState<'threads' | 'chat'>('chat');
 
   // Contact form fields
   const [name, setName] = useState('');
@@ -201,7 +202,11 @@ export const MessagesApp: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
       {/* 1. Left Sidebar: Conversations */}
-      <div className="w-60 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 flex flex-col justify-between backdrop-blur-md">
+      <div
+        className={`${
+          mobileView === 'chat' ? 'hidden' : 'flex'
+        } md:flex w-full md:w-60 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 flex-col justify-between backdrop-blur-md`}
+      >
         <div>
           {/* Search Header */}
           <div className="p-3 border-b border-black/5 dark:border-white/5">
@@ -212,7 +217,7 @@ export const MessagesApp: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search conversations..."
-                className="w-full h-7 pl-8 pr-3 text-xs rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50"
+                className="w-full h-8 pl-8 pr-3 text-base sm:text-xs rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50"
               />
             </div>
           </div>
@@ -227,7 +232,10 @@ export const MessagesApp: React.FC = () => {
                 <button
                   key={thread.id}
                   type="button"
-                  onClick={() => setActiveThreadId(thread.id)}
+                  onClick={() => {
+                    setActiveThreadId(thread.id);
+                    setMobileView('chat');
+                  }}
                   className={`w-full p-2.5 rounded-xl text-left transition-colors flex items-center gap-3 cursor-pointer ${
                     isSelected
                       ? 'bg-[#007AFF] text-white shadow-sm'
@@ -280,12 +288,23 @@ export const MessagesApp: React.FC = () => {
       </div>
 
       {/* 2. Right Pane: Chat Window & Input */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-neutral-50/30 dark:bg-neutral-900/40">
+      <div
+        className={`${
+          mobileView === 'threads' ? 'hidden' : 'flex'
+        } md:flex flex-1 flex-col h-full overflow-hidden bg-neutral-50/30 dark:bg-neutral-900/40`}
+      >
         {/* Chat Header */}
-        <div className="h-12 px-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="h-12 px-3 sm:px-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setMobileView('threads')}
+              className="flex md:hidden items-center gap-1 text-[#007AFF] hover:underline font-semibold text-xs mr-1 cursor-pointer"
+            >
+              <span>‹ Chats</span>
+            </button>
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white ${activeThread.avatarBg}`}
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs text-white ${activeThread.avatarBg}`}
             >
               {activeThread.avatarText}
             </div>
@@ -372,14 +391,14 @@ export const MessagesApp: React.FC = () => {
                 placeholder="Your Name (e.g. Alex Smith)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-7 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
+                className="h-8 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-base sm:text-xs"
               />
               <input
                 type="email"
                 placeholder="Your Email (e.g. alex@company.com)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-7 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
+                className="h-8 px-3 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-base sm:text-xs"
               />
             </div>
           )}
@@ -396,7 +415,7 @@ export const MessagesApp: React.FC = () => {
                     ? 'Write your message or project inquiry...'
                     : `Message ${activeThread.name}...`
                 }
-                className="w-full h-8.5 pl-3 pr-8 rounded-full bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-xs"
+                className="w-full h-9 pl-3.5 pr-8 rounded-full bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 text-base sm:text-xs"
               />
             </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface BubbleData {
   id: number;
@@ -176,12 +177,16 @@ const BUBBLES: BubbleData[] = [
 export const FloatingBubbles: React.FC = () => {
   const bubblesEnabled = useSettingsStore((state) => state.bubblesEnabled);
   const [mounted, setMounted] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted || !bubblesEnabled) return null;
+
+  // On mobile devices, throttle to 3 lightweight ambient bubbles to preserve 60fps and mobile battery
+  const activeBubbles = isMobile ? BUBBLES.slice(0, 3) : BUBBLES;
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-[1] select-none">
@@ -193,13 +198,13 @@ export const FloatingBubbles: React.FC = () => {
           transition={{ duration: 1 }}
           className="relative w-full h-full"
         >
-          {BUBBLES.map((bubble) => (
+          {activeBubbles.map((bubble) => (
             <motion.div
               key={bubble.id}
               className="absolute rounded-full pointer-events-none select-none will-change-transform"
               style={{
-                width: bubble.size,
-                height: bubble.size,
+                width: isMobile ? Math.min(bubble.size, 70) : bubble.size,
+                height: isMobile ? Math.min(bubble.size, 70) : bubble.size,
                 left: bubble.left,
                 top: bubble.top,
               }}
@@ -215,9 +220,11 @@ export const FloatingBubbles: React.FC = () => {
                 delay: bubble.delay,
               }}
             >
-              {/* Glassmorphic bubble body */}
+              {/* Glassmorphic bubble body (optimized for mobile GPU) */}
               <div
-                className="w-full h-full rounded-full relative overflow-hidden backdrop-blur-[2px] border border-white/40 shadow-inner"
+                className={`w-full h-full rounded-full relative overflow-hidden ${
+                  isMobile ? 'backdrop-blur-none border border-white/20' : 'backdrop-blur-[2px] border border-white/40 shadow-inner'
+                }`}
                 style={{
                   background:
                     'radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.18) 30%, rgba(255, 255, 255, 0.04) 70%, rgba(255, 255, 255, 0.22) 100%)',

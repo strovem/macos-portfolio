@@ -185,9 +185,77 @@ export const PhotosApp: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
-      {/* 1. Left Sidebar: Albums */}
-      <div className="w-56 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 p-3 flex flex-col justify-between backdrop-blur-md">
+    <div className="flex flex-col md:flex-row h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
+      {/* Mobile Top Category Filter Scrollbar */}
+      <div className="flex md:hidden items-center gap-1.5 p-2 bg-neutral-100/90 dark:bg-neutral-950/80 border-b border-black/5 dark:border-white/5 overflow-x-auto no-scrollbar shrink-0">
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('all')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'all'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Tüm Kareler ({PHOTOS.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('campaign')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'campaign'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Casper Excalibur</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('gear')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'gear'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          <span>Analog Synths</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('sessions')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'sessions'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Aranjman</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('club')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'club'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Heart className="w-3.5 h-3.5" />
+          <span>Kulüp & Sahne</span>
+        </button>
+      </div>
+
+      {/* 1. Left Sidebar: Albums (Desktop only) */}
+      <div className="hidden md:flex w-56 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 p-3 flex-col justify-between backdrop-blur-md">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 px-2">
             Studio & Production
@@ -294,8 +362,8 @@ export const PhotosApp: React.FC = () => {
       </div>
 
       {/* 2. Main Gallery Grid */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 custom-scrollbar">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredPhotos.map((photo) => (
             <motion.div
               key={photo.id}
@@ -345,14 +413,14 @@ export const PhotosApp: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setLightboxPhoto(null)}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-8"
           >
             <motion.div
               initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.92, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-2xl w-full bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col max-h-[90vh] overflow-y-auto"
+              className="relative max-w-2xl w-full bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col max-h-[90dvh] overflow-y-auto"
             >
               {/* Lightbox Banner / Image */}
               <div

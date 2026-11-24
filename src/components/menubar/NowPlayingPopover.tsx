@@ -108,7 +108,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
           transition={{ duration: 0.16, ease: 'easeOut' }}
-          className="fixed top-9 right-8 sm:right-28 w-[320px] max-w-[calc(100vw-1.5rem)] p-3.5 rounded-2xl backdrop-blur-2xl bg-white/85 dark:bg-neutral-900/85 border border-black/10 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.35)] z-50 select-none text-slate-800 dark:text-slate-100 flex flex-col gap-3 font-sans text-xs"
+          className="fixed top-9 right-2 sm:right-28 w-[calc(100vw-1rem)] sm:w-[320px] max-w-[320px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3.5 rounded-2xl backdrop-blur-2xl bg-white/85 dark:bg-neutral-900/85 border border-black/10 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.35)] z-50 select-none text-slate-800 dark:text-slate-100 flex flex-col gap-3 font-sans text-xs touch-pan-y"
         >
           {/* Header Row */}
           <div className="flex items-center justify-between border-b border-black/5 dark:border-white/10 pb-2">

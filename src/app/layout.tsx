@@ -45,6 +45,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -54,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased w-screen h-screen overflow-hidden select-none bg-[#F5F7FA] text-slate-800">
+      <body className="antialiased w-screen h-screen h-[100dvh] overflow-hidden select-none bg-[#F5F7FA] text-slate-800">
         {children}
       </body>
     </html>

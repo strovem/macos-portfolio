@@ -146,7 +146,7 @@ export const SafariApp: React.FC = () => {
               type="text"
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
-              className="w-full h-7 pl-8 pr-8 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white text-center text-xs focus:text-left focus:pl-8 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 transition-all font-mono"
+              className="w-full h-7 pl-8 pr-8 rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white text-center text-base sm:text-xs focus:text-left focus:pl-8 focus:outline-none focus:ring-1 focus:ring-[#007AFF]/50 transition-all font-mono"
             />
             {isLoading && (
               <div className="w-3 h-3 rounded-full border-2 border-[#007AFF] border-t-transparent animate-spin absolute right-3" />
@@ -187,7 +187,7 @@ export const SafariApp: React.FC = () => {
       </div>
 
       {/* 3. Main Viewport */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 custom-scrollbar">
         {activeTab === 'showcase' ? (
           <div className="max-w-4xl mx-auto flex flex-col gap-6">
             {/* Header Hero */}
@@ -197,7 +197,7 @@ export const SafariApp: React.FC = () => {
                   <Sparkles className="w-3 h-3" />
                   <span>Creative Production & Sound Direction</span>
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                   Selected Works & Commercial Case Studies
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
@@ -206,7 +206,7 @@ export const SafariApp: React.FC = () => {
               </div>
 
               {/* Category Filter Pills */}
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/10 text-xs font-medium self-start sm:self-auto">
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/10 text-xs font-medium self-start sm:self-auto overflow-x-auto no-scrollbar max-w-full shrink-0">
                 <button
                   type="button"
                   onClick={() => setCategoryFilter('all')}

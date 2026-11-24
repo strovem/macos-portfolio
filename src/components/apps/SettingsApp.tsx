@@ -44,9 +44,77 @@ export const SettingsApp: React.FC = () => {
   } = useSettingsStore();
 
   return (
-    <div className="flex h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
-      {/* 1. Left Sidebar Navigation */}
-      <div className="w-56 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 p-3 flex flex-col justify-between backdrop-blur-md">
+    <div className="flex flex-col md:flex-row h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
+      {/* Mobile Top Category Scrollbar */}
+      <div className="flex md:hidden items-center gap-1.5 p-2 bg-neutral-100/90 dark:bg-neutral-950/80 border-b border-black/5 dark:border-white/5 overflow-x-auto no-scrollbar shrink-0">
+        <button
+          type="button"
+          onClick={() => setActiveSection('appearance')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            activeSection === 'appearance'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Palette className="w-3.5 h-3.5" />
+          <span>Appearance</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('wallpaper')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            activeSection === 'wallpaper'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Wallpaper</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('atmosphere')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            activeSection === 'atmosphere'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Atmosphere</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('displays')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            activeSection === 'displays'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Monitor className="w-3.5 h-3.5" />
+          <span>Displays</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('about')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+            activeSection === 'about'
+              ? 'bg-[#007AFF] text-white shadow-xs'
+              : 'text-slate-600 dark:text-neutral-300 bg-black/5 dark:bg-white/5'
+          }`}
+        >
+          <Info className="w-3.5 h-3.5" />
+          <span>About</span>
+        </button>
+      </div>
+
+      {/* 1. Left Sidebar Navigation (Desktop only) */}
+      <div className="hidden md:flex w-56 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 p-3 flex-col justify-between backdrop-blur-md">
         <div className="flex flex-col gap-1">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 px-2 mb-1">
             System Preferences
@@ -125,7 +193,7 @@ export const SettingsApp: React.FC = () => {
       </div>
 
       {/* 2. Right Content Settings View */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 custom-scrollbar">
         {/* Section 1: Appearance */}
         {activeSection === 'appearance' && (
           <div className="max-w-xl flex flex-col gap-6">

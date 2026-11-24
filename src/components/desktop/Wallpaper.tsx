@@ -152,7 +152,7 @@ export const Wallpaper: React.FC = () => {
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{ backgroundColor: currentAura.deep }}
           >
-            {/* Rhythmic Ambient Glow Pulses with Track BPM & User Intensity */}
+            {/* Rhythmic Ambient Glow Pulses with Track BPM & User Intensity (GPU accelerated) */}
             <motion.div
               animate={{
                 scale: [1, activeIntensity.scaleMax, 1],
@@ -163,8 +163,9 @@ export const Wallpaper: React.FC = () => {
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-full will-change-transform"
               style={{
+                transform: 'translateZ(0)',
                 background: `
                   radial-gradient(circle at 50% 35%, ${currentAura.primary} 0%, transparent 68%),
                   radial-gradient(circle at 75% 72%, ${currentAura.secondary} 0%, transparent 58%),

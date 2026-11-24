@@ -432,6 +432,21 @@ export const FinderApp: React.FC = () => {
   const [sortAsc, setSortAsc] = useState(true);
   const [previewFile, setPreviewFile] = useState<FinderFileItem | null>(null);
 
+  // Auto-close sidebar on mobile viewports so files are immediately visible full-width
+  useEffect(() => {
+    if (windowContext?.isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [windowContext?.isMobile]);
+
+  const selectSection = (sec: SidebarSection, defaultFileId = '') => {
+    setActiveSection(sec);
+    setSelectedFileId(defaultFileId);
+    if (windowContext?.isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   // Retrieve files for the active section
   const sectionFiles = useMemo(() => {
     switch (activeSection) {
@@ -525,7 +540,7 @@ export const FinderApp: React.FC = () => {
     <div className="flex h-full w-full bg-[#FAFAFA] dark:bg-[#181818] text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
       {/* 1. Left Sidebar */}
       {isSidebarOpen && (
-        <aside className="w-48 shrink-0 bg-[#F4F4F5]/80 dark:bg-[#202020]/80 border-r border-black/[0.06] dark:border-white/[0.06] flex flex-col justify-between backdrop-blur-xl">
+        <aside className="w-full sm:w-48 shrink-0 bg-[#F4F4F5]/95 dark:bg-[#202020]/95 border-r border-black/[0.06] dark:border-white/[0.06] flex flex-col justify-between backdrop-blur-xl z-20">
           <div>
             {/* Top Bar of Sidebar: Traffic Lights & Sidebar Toggle */}
             <div
@@ -556,10 +571,7 @@ export const FinderApp: React.FC = () => {
               <div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveSection('recents');
-                    setSelectedFileId('');
-                  }}
+                  onClick={() => selectSection('recents')}
                   className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs font-normal transition-colors ${
                     activeSection === 'recents'
                       ? 'bg-[#E4E4E7] dark:bg-white/15 text-slate-900 dark:text-white font-medium'
@@ -579,10 +591,7 @@ export const FinderApp: React.FC = () => {
                 <div className="flex flex-col gap-0.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSection('downloads');
-                      setSelectedFileId('');
-                    }}
+                    onClick={() => selectSection('downloads')}
                     className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
                       activeSection === 'downloads'
                         ? 'bg-[#E4E4E7] dark:bg-white/15 text-slate-900 dark:text-white font-medium'
@@ -595,10 +604,7 @@ export const FinderApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSection('desktop');
-                      setSelectedFileId('');
-                    }}
+                    onClick={() => selectSection('desktop')}
                     className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
                       activeSection === 'desktop'
                         ? 'bg-[#E4E4E7] dark:bg-white/15 text-slate-900 dark:text-white font-medium'
@@ -612,10 +618,7 @@ export const FinderApp: React.FC = () => {
                   {/* Documents (Exact match to active pill in screenshot) */}
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSection('documents');
-                      setSelectedFileId('f1');
-                    }}
+                    onClick={() => selectSection('documents', 'f1')}
                     className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
                       activeSection === 'documents'
                         ? 'bg-[#E2E8F0] dark:bg-[#007AFF]/20 text-[#0066CC] dark:text-[#38BDF8] font-medium'
@@ -634,10 +637,7 @@ export const FinderApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSection('music');
-                      setSelectedFileId('');
-                    }}
+                    onClick={() => selectSection('music')}
                     className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
                       activeSection === 'music'
                         ? 'bg-[#E4E4E7] dark:bg-white/15 text-slate-900 dark:text-white font-medium'
@@ -650,10 +650,7 @@ export const FinderApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSection('applications');
-                      setSelectedFileId('');
-                    }}
+                    onClick={() => selectSection('applications')}
                     className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
                       activeSection === 'applications'
                         ? 'bg-[#E4E4E7] dark:bg-white/15 text-slate-900 dark:text-white font-medium'
@@ -674,10 +671,7 @@ export const FinderApp: React.FC = () => {
                 <div className="flex flex-col gap-0.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSection('trash');
-                      setSelectedFileId('');
-                    }}
+                    onClick={() => selectSection('trash')}
                     className={`flex items-center gap-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
                       activeSection === 'trash'
                         ? 'bg-[#E4E4E7] dark:bg-white/15 text-slate-900 dark:text-white font-medium'
@@ -703,12 +697,12 @@ export const FinderApp: React.FC = () => {
         {/* Top Header / Toolbar */}
         <div
           onPointerDown={handleDragPointerDown}
-          className="h-13 px-6 flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-md shrink-0 cursor-default"
+          className="h-13 px-3 sm:px-6 flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-md shrink-0 cursor-default gap-2"
         >
           {/* Left: Folder Title & Optional Toggle if Sidebar is closed */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {!isSidebarOpen && (
-              <div className="flex items-center gap-2 mr-2">
+              <div className="flex items-center gap-2 mr-1 sm:mr-2 shrink-0">
                 <TrafficLights
                   onClose={windowContext?.onClose}
                   onMinimize={windowContext?.onMinimize}
@@ -726,7 +720,7 @@ export const FinderApp: React.FC = () => {
                 </button>
               </div>
             )}
-            <h1 className="text-lg font-bold text-slate-850 dark:text-white tracking-tight">
+            <h1 className="text-base sm:text-lg font-bold text-slate-850 dark:text-white tracking-tight truncate">
               {currentTitle}
             </h1>
           </div>
@@ -843,7 +837,7 @@ export const FinderApp: React.FC = () => {
         </div>
 
         {/* Content Table / Grid */}
-        <div className="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-2 custom-scrollbar">
           {/* Trash Section Action Bar */}
           {activeSection === 'trash' && (
             <div className="mb-3.5 p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/60 border border-black/5 dark:border-white/5 flex items-center justify-between text-xs">
@@ -897,13 +891,13 @@ export const FinderApp: React.FC = () => {
               <thead>
                 <tr className="text-[11px] font-normal text-slate-400 dark:text-neutral-500 border-b border-black/[0.04] dark:border-white/[0.04]">
                   <th className="py-2 pr-4 font-normal">Name</th>
-                  <th className="py-2 px-3 border-l border-neutral-200/70 dark:border-neutral-700/60 font-normal w-48">
+                  <th className="hidden sm:table-cell py-2 px-3 border-l border-neutral-200/70 dark:border-neutral-700/60 font-normal w-48">
                     Date Modified
                   </th>
-                  <th className="py-2 px-3 border-l border-neutral-200/70 dark:border-neutral-700/60 font-normal w-28">
+                  <th className="hidden sm:table-cell py-2 px-3 border-l border-neutral-200/70 dark:border-neutral-700/60 font-normal w-28">
                     Size
                   </th>
-                  <th className="py-2 pl-3 border-l border-neutral-200/70 dark:border-neutral-700/60 font-normal w-40">
+                  <th className="hidden sm:table-cell py-2 pl-3 border-l border-neutral-200/70 dark:border-neutral-700/60 font-normal w-40">
                     Kind
                   </th>
                 </tr>
@@ -995,13 +989,13 @@ export const FinderApp: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="py-1.5 px-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
+                      <td className="hidden sm:table-cell py-1.5 px-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
                         {file.dateModified}
                       </td>
-                      <td className="py-1.5 px-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
+                      <td className="hidden sm:table-cell py-1.5 px-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
                         {file.size}
                       </td>
-                      <td className="py-1.5 pl-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
+                      <td className="hidden sm:table-cell py-1.5 pl-3 text-[11px] text-slate-500 dark:text-neutral-400 font-normal">
                         {file.kind}
                       </td>
                     </tr>
@@ -1011,7 +1005,7 @@ export const FinderApp: React.FC = () => {
             </table>
           ) : viewMode === 'grid' ? (
             /* GRID VIEW */
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 py-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4 py-4">
               {displayedFiles.map((file) => {
                 const isSelected = selectedFileId === file.id;
                 const isThisTrackPlaying =

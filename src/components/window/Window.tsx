@@ -194,12 +194,13 @@ export function Window({
         isMobile
           ? {
               position: 'fixed',
-              top: 32,
+              top: 28,
               left: 0,
               right: 0,
-              bottom: 64,
+              bottom: 'calc(54px + env(safe-area-inset-bottom, 0px))',
               width: '100%',
-              height: 'calc(100vh - 96px)',
+              height: 'calc(100dvh - 82px - env(safe-area-inset-bottom, 0px))',
+              touchAction: 'pan-y',
               zIndex: windowData.zIndex,
               x: 0,
               y: 0,

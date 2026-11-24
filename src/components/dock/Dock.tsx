@@ -56,8 +56,13 @@ export function Dock({
   return (
     <footer
       data-dock="true"
+      style={
+        isMobile
+          ? { bottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }
+          : undefined
+      }
       className={`fixed ${
-        isMobile ? 'bottom-2 max-w-[calc(100vw-1rem)]' : 'bottom-3'
+        isMobile ? 'max-w-[calc(100vw-1rem)]' : 'bottom-3'
       } left-1/2 -translate-x-1/2 z-40 pointer-events-auto ${className}`}
       role="region"
       aria-label="Application Dock"

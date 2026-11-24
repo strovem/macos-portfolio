@@ -62,6 +62,7 @@ export const NotesApp: React.FC = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string>('bio');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
 
   const openWindow = useWindowStore((state) => state.openWindow);
 
@@ -93,7 +94,11 @@ export const NotesApp: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 select-none overflow-hidden font-sans">
       {/* 1. Left Notes List Panel */}
-      <div className="w-64 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 flex flex-col justify-between backdrop-blur-md">
+      <div
+        className={`${
+          mobileView === 'detail' ? 'hidden' : 'flex'
+        } md:flex w-full md:w-64 shrink-0 bg-neutral-100/70 dark:bg-neutral-950/40 border-r border-black/5 dark:border-white/5 flex-col justify-between backdrop-blur-md`}
+      >
         <div>
           {/* Notes Search Header */}
           <div className="p-3 border-b border-black/5 dark:border-white/5">
@@ -104,7 +109,7 @@ export const NotesApp: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search notes..."
-                className="w-full h-7 pl-8 pr-3 text-xs rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                className="w-full h-8 pl-8 pr-3 text-base sm:text-xs rounded-lg bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
               />
             </div>
           </div>
@@ -117,8 +122,11 @@ export const NotesApp: React.FC = () => {
                 <button
                   key={note.id}
                   type="button"
-                  onClick={() => setSelectedNoteId(note.id)}
-                  className={`w-full p-2.5 rounded-lg text-left transition-colors flex flex-col gap-1 ${
+                  onClick={() => {
+                    setSelectedNoteId(note.id);
+                    setMobileView('detail');
+                  }}
+                  className={`w-full p-2.5 rounded-lg text-left transition-colors flex flex-col gap-1 cursor-pointer ${
                     isSelected
                       ? 'bg-amber-500/20 dark:bg-amber-500/25 border border-amber-500/30'
                       : 'hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'
@@ -148,12 +156,25 @@ export const NotesApp: React.FC = () => {
       </div>
 
       {/* 2. Right Note Viewer & Content Pane */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-amber-50/20 dark:bg-neutral-900">
+      <div
+        className={`${
+          mobileView === 'list' ? 'hidden' : 'flex'
+        } md:flex flex-1 flex-col h-full overflow-hidden bg-amber-50/20 dark:bg-neutral-900`}
+      >
         {/* Note Action Toolbar */}
-        <div className="h-11 px-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm shrink-0">
-          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-neutral-500">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>Last edited {selectedNote.date}</span>
+        <div className="h-11 px-3 sm:px-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileView('list')}
+              className="flex md:hidden items-center gap-1 text-amber-500 hover:text-amber-600 font-semibold text-xs mr-2 cursor-pointer"
+            >
+              <span>‹ Notes</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-neutral-500">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{selectedNote.date}</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -178,7 +199,7 @@ export const NotesApp: React.FC = () => {
         </div>
 
         {/* Note Body Area */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 custom-scrollbar">
           {/* Note 1: Introduction & Bio */}
           {selectedNote.id === 'bio' && (
             <div className="max-w-2xl mx-auto flex flex-col gap-6">

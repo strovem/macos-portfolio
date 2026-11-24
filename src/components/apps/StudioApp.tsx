@@ -20,6 +20,8 @@ import {
   Clock,
   Music,
   Radio,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { useAudioStore } from '@/stores/useAudioStore';
@@ -114,6 +116,7 @@ export function StudioApp() {
   const openFinderToSection = useWindowStore((state) => state.openFinderToSection);
 
   const [activeTab, setActiveTab] = useState<'arrangement' | 'mixer' | 'credits' | 'beatpad'>('arrangement');
+  const [mobileTab, setMobileTab] = useState<'tracks' | 'waveform'>('tracks');
   const [isLooping, setIsLooping] = useState<boolean>(true);
   const [mutedTracks, setMutedTracks] = useState<Record<string, boolean>>({});
   const [soloTrackId, setSoloTrackId] = useState<string | null>(null);
@@ -191,6 +194,7 @@ export function StudioApp() {
     } else {
       playTrack(track);
     }
+    setMobileTab('waveform');
   };
 
   const toggleMute = (trackId: string, e: React.MouseEvent) => {
@@ -206,25 +210,25 @@ export function StudioApp() {
   return (
     <div className="flex flex-col h-full w-full bg-[#141419] text-neutral-200 select-none overflow-hidden font-sans">
       {/* 1. TOP TRANSPORT BAR (Logic Pro / Ableton style header) */}
-      <header className="h-14 bg-[#1C1C24] border-b border-white/10 px-4 flex items-center justify-between shrink-0 shadow-md">
+      <header className="h-14 bg-[#1C1C24] border-b border-white/10 px-3 sm:px-4 flex items-center justify-between shrink-0 shadow-md gap-2 overflow-x-auto no-scrollbar">
         {/* Left: Branding & Status */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-800 flex items-center justify-center shadow-[0_0_12px_rgba(147,51,234,0.4)] border border-violet-400/30">
             <AudioWaveform className="w-4 h-4 text-white" />
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-bold tracking-wide text-white flex items-center gap-1.5">
-              <span>Hüseyin Studio</span>
+              <span>Studio</span>
               <span className="px-1.5 py-0.2 rounded bg-violet-500/20 text-violet-300 text-[9px] font-mono border border-violet-500/30">
                 PRO 12
               </span>
             </span>
-            <span className="text-[10px] text-neutral-400">Audio Lab & Multitrack Showcase</span>
+            <span className="hidden sm:inline text-[10px] text-neutral-400">Audio Lab</span>
           </div>
         </div>
 
         {/* Center: Main Transport Controls & LCD Readout */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Playback Buttons */}
           <div className="flex items-center gap-1 bg-[#121217] p-1 rounded-lg border border-white/10">
             <button
@@ -240,7 +244,7 @@ export function StudioApp() {
               type="button"
               onClick={togglePlay}
               title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
-              className={`p-1.5 px-3 rounded font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+              className={`p-1.5 px-2.5 sm:px-3 rounded font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
                 isPlaying
                   ? 'bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]'
                   : 'bg-white/15 text-white hover:bg-white/25'
@@ -254,7 +258,7 @@ export function StudioApp() {
               type="button"
               onClick={pause}
               title="Stop"
-              className="p-1.5 rounded hover:bg-white/10 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              className="hidden sm:flex p-1.5 rounded hover:bg-white/10 text-neutral-400 hover:text-white transition-colors cursor-pointer"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
             </button>
@@ -281,19 +285,19 @@ export function StudioApp() {
           </div>
 
           {/* Logic Pro LCD Display */}
-          <div className="bg-[#0B0D11] border border-emerald-500/30 rounded-lg px-3 py-1 flex items-center gap-4 text-emerald-400 font-mono shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+          <div className="bg-[#0B0D11] border border-emerald-500/30 rounded-lg px-2.5 sm:px-3 py-1 flex items-center gap-2 sm:gap-4 text-emerald-400 font-mono shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
             {/* Bars & Beats */}
-            <div className="flex flex-col items-center">
+            <div className="hidden md:flex flex-col items-center">
               <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">Bars / Beats</span>
               <span className="text-xs font-bold tracking-wider">{barsBeats}</span>
             </div>
 
-            <div className="h-6 w-[1px] bg-emerald-900/60" />
+            <div className="hidden md:block h-6 w-[1px] bg-emerald-900/60" />
 
             {/* Timecode */}
             <div className="flex flex-col items-center">
-              <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">Timecode</span>
-              <span className="text-xs font-bold tracking-wider">
+              <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">Time</span>
+              <span className="text-[11px] sm:text-xs font-bold tracking-wider">
                 {formatTime(currentTime)} / {formatTime(duration || activeTrack.durationSeconds || 180)}
               </span>
             </div>
@@ -302,27 +306,19 @@ export function StudioApp() {
 
             {/* Tempo & Key */}
             <div className="flex flex-col items-center">
-              <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">Tempo</span>
-              <span className="text-xs font-bold text-amber-300">{activeTrack.bpm} BPM</span>
-            </div>
-
-            <div className="h-6 w-[1px] bg-emerald-900/60" />
-
-            {/* Sample Rate */}
-            <div className="hidden sm:flex flex-col items-center">
-              <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">Master</span>
-              <span className="text-[10px] text-neutral-400">48kHz / 24b</span>
+              <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">BPM</span>
+              <span className="text-[11px] sm:text-xs font-bold text-amber-300">{activeTrack.bpm}</span>
             </div>
           </div>
         </div>
 
         {/* Right: Master Volume & Stereo Peak Meters */}
-        <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
           {/* Master Stereo Level Meter */}
-          <div className="flex flex-col gap-0.5 bg-black/60 p-1.5 rounded-md border border-white/10">
+          <div className="hidden md:flex flex-col gap-0.5 bg-black/60 p-1.5 rounded-md border border-white/10">
             <div className="flex items-center gap-1 text-[8px] font-mono text-neutral-400 leading-none">
               <span className="w-2.5">L</span>
-              <div className="w-18 h-1.5 bg-neutral-900 rounded-xs overflow-hidden flex">
+              <div className="w-16 h-1.5 bg-neutral-900 rounded-xs overflow-hidden flex">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 transition-all duration-75"
                   style={{ width: `${leftDbMeter * 100}%` }}
@@ -331,7 +327,7 @@ export function StudioApp() {
             </div>
             <div className="flex items-center gap-1 text-[8px] font-mono text-neutral-400 leading-none">
               <span className="w-2.5">R</span>
-              <div className="w-18 h-1.5 bg-neutral-900 rounded-xs overflow-hidden flex">
+              <div className="w-16 h-1.5 bg-neutral-900 rounded-xs overflow-hidden flex">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 transition-all duration-75"
                   style={{ width: `${rightDbMeter * 100}%` }}
@@ -366,12 +362,12 @@ export function StudioApp() {
       </header>
 
       {/* 2. SUB-NAVIGATION TABS */}
-      <div className="h-9 bg-[#17171F] border-b border-white/5 px-4 flex items-center justify-between text-xs shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="h-9 bg-[#17171F] border-b border-white/5 px-3 sm:px-4 flex items-center justify-between text-xs shrink-0 overflow-x-auto no-scrollbar gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab('arrangement')}
-            className={`px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 sm:px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'arrangement'
                 ? 'bg-white/15 text-white shadow-xs'
                 : 'text-neutral-400 hover:text-neutral-200'
@@ -384,7 +380,7 @@ export function StudioApp() {
           <button
             type="button"
             onClick={() => setActiveTab('credits')}
-            className={`px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 sm:px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'credits'
                 ? 'bg-white/15 text-white shadow-xs'
                 : 'text-neutral-400 hover:text-neutral-200'
@@ -397,7 +393,7 @@ export function StudioApp() {
           <button
             type="button"
             onClick={() => setActiveTab('beatpad')}
-            className={`px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 sm:px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'beatpad'
                 ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.6)] font-bold'
                 : 'text-neutral-400 hover:text-neutral-200'
@@ -411,7 +407,7 @@ export function StudioApp() {
         <button
           type="button"
           onClick={() => openFinderToSection('music')}
-          className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-violet-300 transition-colors cursor-pointer"
+          className="hidden sm:flex items-center gap-1 text-[11px] text-neutral-400 hover:text-violet-300 transition-colors cursor-pointer shrink-0"
         >
           <span>View in Finder ↗</span>
           <ExternalLink className="w-3 h-3" />
@@ -424,15 +420,43 @@ export function StudioApp() {
           <StudioBeatPad />
         </div>
       ) : (
-        <div className="flex-1 flex overflow-hidden">
-        {/* Left: Tracklist (8 Tracks with Mute/Solo and Details) */}
-        <div className="w-72 sm:w-80 bg-[#17171F] border-r border-white/10 flex flex-col shrink-0">
-          <div className="p-2.5 px-3 bg-[#13131A] border-b border-white/5 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
-            <span>TRACK LIST ({ORIGINAL_TRACKS.length})</span>
-            <span>M / S / VOL</span>
-          </div>
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+          {/* Mobile subview toggle pills for Arrangement tab */}
+          {activeTab === 'arrangement' && (
+            <div className="flex md:hidden p-2 bg-[#14141C] border-b border-white/10 shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileTab('tracks')}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                  mobileTab === 'tracks' ? 'bg-violet-600 text-white shadow-md' : 'bg-white/5 text-neutral-400'
+                }`}
+              >
+                Track List ({ORIGINAL_TRACKS.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileTab('waveform')}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                  mobileTab === 'waveform' ? 'bg-violet-600 text-white shadow-md' : 'bg-white/5 text-neutral-400'
+                }`}
+              >
+                Waveform & EQ
+              </button>
+            </div>
+          )}
 
-          <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1.5">
+          {/* Left: Tracklist (8 Tracks with Mute/Solo and Details) */}
+          <div
+            className={`${
+              activeTab === 'arrangement' && mobileTab === 'waveform' ? 'hidden' : 'flex'
+            } w-full md:w-72 lg:w-80 bg-[#17171F] border-r border-white/10 flex-col shrink-0 overflow-hidden`}
+          >
+            <div className="p-2.5 px-3 bg-[#13131A] border-b border-white/5 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
+              <span>TRACK LIST ({ORIGINAL_TRACKS.length})</span>
+              <span>M / S / VOL</span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1.5">
             {ORIGINAL_TRACKS.map((track, idx) => {
               const isSelected = activeTrack.id === track.id;
               const isTrackPlaying = isSelected && isPlaying;
@@ -512,30 +536,49 @@ export function StudioApp() {
         </div>
 
         {/* Center/Right: Interactive Waveform & Production Inspector */}
-        <div className="flex-1 flex flex-col bg-[#121217] overflow-y-auto no-scrollbar">
+        <div
+          className={`${
+            activeTab === 'arrangement' && mobileTab === 'tracks' ? 'hidden' : 'flex'
+          } flex-1 flex-col bg-[#121217] overflow-y-auto no-scrollbar`}
+        >
           {activeTab === 'arrangement' ? (
-            <div className="p-4 flex flex-col gap-4">
+            <div className="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4">
+              {/* Mobile Back Button to Tracklist */}
+              <div className="flex md:hidden items-center justify-between pb-1 border-b border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab('tracks')}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-xs text-white font-medium hover:bg-white/15 cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>‹ Track List ({ORIGINAL_TRACKS.length})</span>
+                </button>
+                <span className="text-[10px] text-amber-400 font-mono">
+                  {activeTrack.bpm} BPM • {activeTrack.genre}
+                </span>
+              </div>
+
               {/* Active Track Hero Header */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-[#1B1829] via-[#1E1933] to-[#161424] border border-violet-500/30 flex items-center justify-between shadow-lg">
-                <div className="flex items-center gap-4">
+              <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-[#1B1829] via-[#1E1933] to-[#161424] border border-violet-500/30 flex items-center justify-between shadow-lg gap-2">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                   <div
-                    className={`w-14 h-14 rounded-xl bg-gradient-to-br ${activeTrack.coverGradient} flex items-center justify-center shadow-md relative`}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${activeTrack.coverGradient} flex items-center justify-center shadow-md relative shrink-0`}
                   >
                     <Disc3
-                      className={`w-8 h-8 text-white ${isPlaying ? 'animate-spin' : ''}`}
+                      className={`w-6 h-6 sm:w-8 sm:h-8 text-white ${isPlaying ? 'animate-spin' : ''}`}
                       style={{ animationDuration: '4s' }}
                     />
                   </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-semibold border border-violet-500/30">
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[9px] sm:text-[10px] font-semibold border border-violet-500/30 truncate">
                         {activeTrack.genre}
                       </span>
-                      <span className="text-[11px] text-amber-400 font-mono font-bold">{activeTrack.bpm} BPM</span>
-                      <span className="text-[11px] text-neutral-400">{activeTrack.year} Release</span>
+                      <span className="text-[10px] sm:text-[11px] text-amber-400 font-mono font-bold">{activeTrack.bpm} BPM</span>
+                      <span className="hidden sm:inline text-[11px] text-neutral-400">{activeTrack.year}</span>
                     </div>
-                    <h2 className="text-lg font-bold text-white tracking-tight mt-0.5">{activeTrack.title}</h2>
-                    <span className="text-xs text-neutral-400">Production & Mix: {activeTrack.artist}</span>
+                    <h2 className="text-sm sm:text-lg font-bold text-white tracking-tight mt-0.5 truncate">{activeTrack.title}</h2>
+                    <span className="text-[10px] sm:text-xs text-neutral-400 truncate">Production & Mix: {activeTrack.artist}</span>
                   </div>
                 </div>
 
