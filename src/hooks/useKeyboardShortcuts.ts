@@ -5,6 +5,9 @@ import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useContextMenuStore } from '@/stores/useContextMenuStore';
 import { useAppSwitcherStore } from '@/stores/useAppSwitcherStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useMissionControlStore } from '@/stores/useMissionControlStore';
+import { useLockStore } from '@/stores/useLockStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import { AppId } from '@/types/os';
 
 export function useKeyboardShortcuts() {
@@ -27,12 +30,19 @@ export function useKeyboardShortcuts() {
     focusWindow,
   } = useWindowStore();
 
+  const { isOpen: isMissionControlOpen, closeMissionControl, toggleMissionControl } = useMissionControlStore();
+  const { lock, isLocked, isSleeping } = useLockStore();
+  const { isCenterOpen, closeCenter } = useNotificationStore();
+
   const altKeyHeldRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // If system is sleeping or locked, do not intercept desktop shortcuts
+      if (isSleeping || isLocked) return;
+
       const target = e.target as HTMLElement | null;
       const isInput =
         target &&
@@ -43,8 +53,18 @@ export function useKeyboardShortcuts() {
 
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
 
-      // 1. Esc Key — Close Spotlight or Context Menu
+      // 1. Esc Key — Close modals in priority order
       if (e.key === 'Escape') {
+        if (isMissionControlOpen) {
+          e.preventDefault();
+          closeMissionControl();
+          return;
+        }
+        if (isCenterOpen) {
+          e.preventDefault();
+          closeCenter();
+          return;
+        }
         if (isSpotlightOpen) {
           e.preventDefault();
           closeSpotlight();
@@ -62,7 +82,21 @@ export function useKeyboardShortcuts() {
         }
       }
 
-      // 2. Spotlight: Cmd/Ctrl + K OR Cmd/Ctrl + Space
+      // 2. Mission Control: F3 OR Alt/Ctrl + ArrowUp
+      if (e.key === 'F3' || ((e.altKey || e.ctrlKey) && e.key === 'ArrowUp')) {
+        e.preventDefault();
+        toggleMissionControl();
+        return;
+      }
+
+      // 3. Lock Screen: Alt + L OR Ctrl + Cmd + Q
+      if ((e.altKey && (e.key === 'l' || e.key === 'L')) || (e.ctrlKey && e.metaKey && (e.key === 'q' || e.key === 'Q'))) {
+        e.preventDefault();
+        lock();
+        return;
+      }
+
+      // 4. Spotlight: Cmd/Ctrl + K OR Cmd/Ctrl + Space
       if (isCmdOrCtrl && (e.key === 'k' || e.key === 'K' || e.code === 'Space')) {
         e.preventDefault();
         toggleSpotlight();

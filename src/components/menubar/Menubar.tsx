@@ -13,6 +13,7 @@ import {
   CloudRain,
   CloudSnow,
   Music2,
+  LayoutGrid,
 } from 'lucide-react';
 import { Clock } from './Clock';
 import { MenuDropdown, MenuItem } from './MenuDropdown';
@@ -22,6 +23,9 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useMissionControlStore } from '@/stores/useMissionControlStore';
+import { useLockStore } from '@/stores/useLockStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { AppId } from '@/types/os';
 
@@ -140,6 +144,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
   const windows = useWindowStore((state) => state.windows);
 
+  const toggleMissionControl = useMissionControlStore((state) => state.toggleMissionControl);
+  const { lock, sleep } = useLockStore();
+  const toggleCenter = useNotificationStore((state) => state.toggleCenter);
+
   // Close menus when Escape key is pressed
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -197,9 +205,15 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
     { isDivider: true },
     {
-      label: 'Sleep',
-      action: () => console.log('Sleep mode triggered'),
+      label: 'Uyku Modu',
+      action: sleep,
     },
+    {
+      label: 'Ekranı Kilitle',
+      shortcut: '⌥L',
+      action: lock,
+    },
+    { isDivider: true },
     {
       label: 'Restart...',
       action: () => window.location.reload(),
@@ -207,12 +221,6 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     {
       label: 'Shut Down...',
       action: () => alert('Shutting down Web OS... Refresh page to reboot.'),
-    },
-    { isDivider: true },
-    {
-      label: 'Lock Screen',
-      shortcut: '⌃⌘Q',
-      action: () => alert('Screen locked. Click OK to unlock.'),
     },
     {
       label: 'Log Out User...',
@@ -234,6 +242,22 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       action: () => openWindow('settings'),
     },
     { isDivider: true },
+    ...(activeAppName === 'Finder'
+      ? [
+          {
+            label: 'Empty Trash...',
+            shortcut: '⇧⌘⌫',
+            action: () => {
+              useNotificationStore.getState().pushNotification({
+                title: 'Çöp Sepeti Boşaltıldı',
+                message: 'Tüm silinmiş sistem öğeleri ve önbellek temizlendi.',
+                appId: 'trash',
+              });
+            },
+          },
+          { isDivider: true },
+        ]
+      : []),
     {
       label: `Hide ${activeAppName}`,
       shortcut: '⌘H',
@@ -374,6 +398,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       action: centerActiveWindow,
     },
     { isDivider: true },
+    {
+      label: 'Mission Control',
+      shortcut: 'F3',
+      action: toggleMissionControl,
+    },
     {
       label: 'Cascade Windows',
       action: cascadeWindows,
@@ -668,6 +697,16 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             <Battery className="w-3.5 h-3.5 fill-current" />
           </div>
 
+          {/* Mission Control Icon */}
+          <button
+            type="button"
+            onClick={toggleMissionControl}
+            title="Mission Control (F3)"
+            className="flex px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+          </button>
+
           {/* Spotlight Search Icon */}
           <button
             type="button"
@@ -703,8 +742,8 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </svg>
           </button>
 
-          {/* Real-time Hydration-safe Clock */}
-          <Clock />
+          {/* Real-time Hydration-safe Clock & Notification Center Trigger */}
+          <Clock onClick={toggleCenter} />
         </div>
       </header>
 

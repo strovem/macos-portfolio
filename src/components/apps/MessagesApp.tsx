@@ -16,6 +16,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { playMessageSentSound } from '@/utils/soundEffects';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 
 interface ChatMessage {
   id: string;
@@ -163,6 +164,14 @@ export const MessagesApp: React.FC = () => {
             email: senderEmail,
             message: currentText,
           }),
+        });
+
+        // Trigger system notification
+        useNotificationStore.getState().pushNotification({
+          title: 'Mesaj Gönderildi',
+          message: `${senderName}, mesajınız Hüseyin Korumtaş'a iletildi.`,
+          appId: 'messages',
+          targetAppId: 'messages',
         });
 
         // Show typing indicator
