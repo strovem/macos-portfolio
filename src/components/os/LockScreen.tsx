@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Unlock,
   Play,
@@ -37,7 +37,17 @@ export function LockScreen() {
 
   const weather = useWeatherStore((state) => state.weather);
   const solarPhase = useWeatherStore((state) => state.solarPhase);
-  const prefersReducedMotion = useReducedMotion();
+
+  // Replace useReducedMotion (causes SSR hydration mismatch → React #185 infinite loop)
+  // with a stable client-side media query listener
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -68,6 +78,11 @@ export function LockScreen() {
     return () => clearInterval(interval);
   }, [language]);
 
+  const handleUnlock = useCallback(() => {
+    playUnlockSound();
+    unlock();
+  }, [unlock]);
+
   // Keyboard controls for Sleep Mode (wake) and Lock Screen (unlock via Enter/Space)
   useEffect(() => {
     if (!isLocked && !isSleeping) return;
@@ -87,19 +102,17 @@ export function LockScreen() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLocked, isSleeping, wake]);
+  }, [isLocked, isSleeping, wake, handleUnlock]);
 
-  const handleUnlock = () => {
-    playUnlockSound();
-    unlock();
-  };
-
-  const auroraPalette =
-    solarPhase === 'sunset' || solarPhase === 'dawn'
-      ? ['rgba(251,146,60,0.34)', 'rgba(168,85,247,0.30)', 'rgba(56,189,248,0.22)']
-      : solarPhase === 'night'
-      ? ['rgba(56,189,248,0.28)', 'rgba(99,102,241,0.32)', 'rgba(16,185,129,0.20)']
-      : ['rgba(56,189,248,0.32)', 'rgba(139,92,246,0.26)', 'rgba(52,211,153,0.22)'];
+  // Memoize aurora palette so we don't create new array refs on every render
+  // (new refs on every render → Framer Motion deep-compare triggers internal state → infinite loop)
+  const auroraPalette = useMemo(() => {
+    if (solarPhase === 'sunset' || solarPhase === 'dawn')
+      return ['rgba(251,146,60,0.34)', 'rgba(168,85,247,0.30)', 'rgba(56,189,248,0.22)'];
+    if (solarPhase === 'night')
+      return ['rgba(56,189,248,0.28)', 'rgba(99,102,241,0.32)', 'rgba(16,185,129,0.20)'];
+    return ['rgba(56,189,248,0.32)', 'rgba(139,92,246,0.26)', 'rgba(52,211,153,0.22)'];
+  }, [solarPhase]);
 
   const renderWeatherIcon = () => {
     switch (weather.category) {
