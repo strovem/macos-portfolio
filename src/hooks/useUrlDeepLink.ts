@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useWindowStore, FinderSection } from '@/stores/useWindowStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { AppId } from '@/types/os';
 import { APPS } from '@/data/apps';
 
@@ -17,7 +18,6 @@ const VALID_APP_IDS: AppId[] = [
   'tonegenerator',
   'studio',
   'trash',
-  'instagram',
 ];
 
 const VALID_FINDER_SECTIONS: FinderSection[] = [
@@ -35,7 +35,13 @@ export function useUrlDeepLink() {
   const focusWindow = useWindowStore((s) => s.focusWindow);
   const openFinderToSection = useWindowStore((s) => s.openFinderToSection);
   const activeWindowId = useWindowStore((s) => s.activeWindowId);
-  const windows = useWindowStore((s) => s.windows);
+  const isTargetActive = useWindowStore((s) =>
+    Boolean(
+      s.activeWindowId &&
+        s.windows[s.activeWindowId]?.isOpen &&
+        !s.windows[s.activeWindowId]?.isMinimized
+    )
+  );
   const finderSection = useWindowStore((s) => s.finderSection);
 
   const initialParsedRef = useRef(false);
@@ -68,9 +74,6 @@ export function useUrlDeepLink() {
     if (typeof window === 'undefined' || !initialParsedRef.current) return;
 
     try {
-      const activeWin = activeWindowId ? windows[activeWindowId] : null;
-      const isTargetActive = Boolean(activeWin && activeWin.isOpen && !activeWin.isMinimized);
-
       const url = new URL(window.location.href);
 
       if (isTargetActive && activeWindowId) {
@@ -89,7 +92,7 @@ export function useUrlDeepLink() {
     } catch {
       // ignore
     }
-  }, [activeWindowId, windows, finderSection]);
+  }, [activeWindowId, isTargetActive, finderSection]);
 }
 
 /**
@@ -98,6 +101,7 @@ export function useUrlDeepLink() {
 export async function copyPortfolioDeepLink(appId: AppId, section?: FinderSection) {
   if (typeof window === 'undefined') return;
 
+  const language = useSettingsStore.getState().language;
   const url = new URL(window.location.origin + window.location.pathname);
   url.searchParams.set('app', appId);
   if (appId === 'finder' && section) {
@@ -110,14 +114,17 @@ export async function copyPortfolioDeepLink(appId: AppId, section?: FinderSectio
   try {
     await navigator.clipboard.writeText(url.toString());
     useNotificationStore.getState().pushNotification({
-      title: 'Bağlantı Kopyalandı 🔗',
-      message: `${appName}${section ? ` (${section})` : ''} için doğrudan link panoya kopyalandı.`,
+      title: language === 'tr' ? 'Bağlantı Kopyalandı' : 'Link Copied',
+      message:
+        language === 'tr'
+          ? `${appName}${section ? ` (${section})` : ''} için doğrudan link panoya kopyalandı.`
+          : `Direct link for ${appName}${section ? ` (${section})` : ''} copied to clipboard.`,
       appId: appId,
       duration: 3500,
     });
   } catch {
     useNotificationStore.getState().pushNotification({
-      title: 'Bağlantı Hazır',
+      title: language === 'tr' ? 'Bağlantı Hazır' : 'Link Ready',
       message: url.toString(),
       appId: appId,
       duration: 5000,

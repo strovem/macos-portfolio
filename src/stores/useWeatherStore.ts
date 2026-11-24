@@ -89,6 +89,44 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
   initWeather: async () => {
     // Read persisted city from settings store if available
     const savedCityId = useSettingsStore.getState().weatherCityId || 'eskisehir';
+
+    if (savedCityId === 'current-location') {
+      const cachedCustom = getCachedWeather('current-location');
+      let savedCoords: { latitude: number; longitude: number } | null = null;
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('korumtas_custom_weather_coords');
+          if (raw) savedCoords = JSON.parse(raw);
+        } catch {
+          // ignore
+        }
+      }
+
+      const customCity: WeatherCity = {
+        id: 'current-location',
+        name: cachedCustom?.cityName || 'Current Location',
+        trName: cachedCustom?.cityName || 'Mevcut Konum',
+        latitude: cachedCustom?.latitude ?? savedCoords?.latitude ?? PRESET_CITIES[0].latitude,
+        longitude: cachedCustom?.longitude ?? savedCoords?.longitude ?? PRESET_CITIES[0].longitude,
+        isCustom: true,
+      };
+
+      if (cachedCustom) {
+        set({
+          currentCity: customCity,
+          weather: cachedCustom,
+          solarPhase: calculateSolarPhase(new Date(), cachedCustom.sunrise, cachedCustom.sunset),
+        });
+        return;
+      }
+
+      if (savedCoords) {
+        set({ currentCity: customCity });
+        await get().fetchWeather(false);
+        return;
+      }
+    }
+
     const matched = PRESET_CITIES.find((c) => c.id === savedCityId) || PRESET_CITIES[0];
 
     const cached = getCachedWeather(matched.id);
@@ -163,6 +201,19 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
 
           set({ currentCity: customCity });
           useSettingsStore.getState().setWeatherCityId('current-location');
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(
+                'korumtas_custom_weather_coords',
+                JSON.stringify({
+                  latitude: customCity.latitude,
+                  longitude: customCity.longitude,
+                })
+              );
+            } catch {
+              // ignore storage quota
+            }
+          }
 
           try {
             const data = await fetchCityWeather(customCity, true);

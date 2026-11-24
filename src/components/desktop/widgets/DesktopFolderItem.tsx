@@ -18,8 +18,8 @@ export function DesktopFolderItem({
 }: DesktopFolderItemProps) {
   const { t } = useTranslation();
   const [isSelected, setIsSelected] = useState(false);
-  const title = t('folderMusicTitle');
-  const subtitle = t('folderMusicSubtitle');
+  const title = item.id === 'my-musics-folder' ? t('folderMusicTitle') : item.title;
+  const subtitle = item.id === 'my-musics-folder' ? t('folderMusicSubtitle') : (item.subtitle || '7 items');
 
   // SVG representation of macOS blue folder with embossed music note
   const renderMacFolderIcon = (size = 'w-16 h-14') => (
@@ -124,12 +124,12 @@ export function DesktopFolderItem({
           className={`text-[11px] font-semibold text-center leading-tight transition-all px-2 py-0.5 rounded-md break-words line-clamp-2 ${
             isSelected
               ? 'bg-[#007AFF] text-white shadow-md'
-              : 'text-slate-900 dark:text-white drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] dark:drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)] group-hover:bg-black/15 dark:group-hover:bg-white/15'
+              : 'text-slate-900 bg-white/55 backdrop-blur-sm shadow-xs dark:bg-black/35 dark:text-white group-hover:bg-white/75 dark:group-hover:bg-black/50'
           }`}
         >
           {title}
         </span>
-        <span className="text-[9px] text-slate-700 dark:text-white/80 font-medium drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] mt-0.5">
+        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/45 dark:bg-black/30 text-slate-800 dark:text-white/85 font-medium mt-0.5 backdrop-blur-xs">
           {subtitle}
         </span>
       </div>

@@ -30,7 +30,7 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { copyPortfolioDeepLink } from '@/hooks/useUrlDeepLink';
 import { StudioBeatPad } from './StudioBeatPad';
-import { getFrequencyBars } from '@/lib/audioAnalyser';
+import { getFrequencyBars, getAudioMetrics } from '@/lib/audioAnalyser';
 
 function StudioSpectrumCanvas({ isPlaying, volume }: { isPlaying: boolean; volume: number }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -139,7 +139,7 @@ function StudioSpectrumCanvas({ isPlaying, volume }: { isPlaying: boolean; volum
   }, [isPlaying, volume]);
 
   return (
-    <div className="h-18 bg-[#0E0E14] rounded-lg p-2 border border-white/5 relative overflow-hidden flex items-center justify-center">
+    <div className="h-[72px] bg-[#0E0E14] rounded-lg p-2 border border-white/5 relative overflow-hidden flex items-center justify-center">
       <canvas ref={canvasRef} className="w-full h-full block" />
     </div>
   );
@@ -215,20 +215,18 @@ const TRACK_PRODUCTION_DETAILS: Record<
 };
 
 export function StudioApp() {
-  const {
-    currentTrack,
-    isPlaying,
-    volume,
-    currentTime,
-    duration,
-    playTrack,
-    togglePlay,
-    pause,
-    seek,
-    nextTrack,
-    prevTrack,
-    setVolume,
-  } = useAudioStore();
+  const currentTrack = useAudioStore((s) => s.currentTrack);
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const volume = useAudioStore((s) => s.volume);
+  const currentTime = useAudioStore((s) => s.currentTime);
+  const duration = useAudioStore((s) => s.duration);
+  const playTrack = useAudioStore((s) => s.playTrack);
+  const togglePlay = useAudioStore((s) => s.togglePlay);
+  const pause = useAudioStore((s) => s.pause);
+  const seek = useAudioStore((s) => s.seek);
+  const nextTrack = useAudioStore((s) => s.nextTrack);
+  const prevTrack = useAudioStore((s) => s.prevTrack);
+  const setVolume = useAudioStore((s) => s.setVolume);
 
   const openFinderToSection = useWindowStore((state) => state.openFinderToSection);
 
@@ -238,9 +236,9 @@ export function StudioApp() {
   const [mutedTracks, setMutedTracks] = useState<Record<string, boolean>>({});
   const [soloTrackId, setSoloTrackId] = useState<string | null>(null);
 
-  // Animated Audio Level Meter Simulation
-  const [leftDbMeter, setLeftDbMeter] = useState<number>(0);
-  const [rightDbMeter, setRightDbMeter] = useState<number>(0);
+  // Animated Audio Level Meter Refs (Zero React re-renders during playback)
+  const leftMeterRef = useRef<HTMLDivElement | null>(null);
+  const rightMeterRef = useRef<HTMLDivElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
   // Active track production details
@@ -257,20 +255,35 @@ export function StudioApp() {
     );
   }, [activeTrack]);
 
-  // Real-time Level Meter Animation
+  // Real-time Level Meter Animation via direct DOM mutation & Web Audio metrics
   useEffect(() => {
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!isPlaying) {
+      if (leftMeterRef.current) leftMeterRef.current.style.width = '0%';
+      if (rightMeterRef.current) rightMeterRef.current.style.width = '0%';
+      return;
+    }
+
+    if (reducedMotion) {
+      const pct = Math.round(volume * 45);
+      if (leftMeterRef.current) leftMeterRef.current.style.width = `${pct}%`;
+      if (rightMeterRef.current) rightMeterRef.current.style.width = `${pct}%`;
+      return;
+    }
+
     let phase = 0;
     const updateMeters = () => {
-      if (isPlaying) {
+      if (!document.hidden) {
         phase += 0.2;
-        const base = Math.sin(phase) * 0.25 + 0.65;
-        const jitterL = (Math.random() - 0.5) * 0.15;
-        const jitterR = (Math.random() - 0.5) * 0.15;
-        setLeftDbMeter(Math.max(0.05, Math.min(0.98, (base + jitterL) * volume)));
-        setRightDbMeter(Math.max(0.05, Math.min(0.98, (base + jitterR) * volume)));
-      } else {
-        setLeftDbMeter((prev) => Math.max(0, prev * 0.85));
-        setRightDbMeter((prev) => Math.max(0, prev * 0.85));
+        const metrics = getAudioMetrics(true);
+        const energy = metrics.energy > 0.02 ? metrics.energy : Math.sin(phase) * 0.2 + 0.55;
+        const left = Math.max(6, Math.min(98, Math.round((energy + (Math.sin(phase * 1.7) * 0.08)) * Math.max(0.25, volume) * 100)));
+        const right = Math.max(6, Math.min(98, Math.round((energy + (Math.cos(phase * 1.9) * 0.08)) * Math.max(0.25, volume) * 100)));
+        if (leftMeterRef.current) leftMeterRef.current.style.width = `${left}%`;
+        if (rightMeterRef.current) rightMeterRef.current.style.width = `${right}%`;
       }
       animFrameRef.current = requestAnimationFrame(updateMeters);
     };
@@ -446,7 +459,7 @@ export function StudioApp() {
             {/* Timecode */}
             <div className="flex flex-col items-center">
               <span className="text-[8px] text-emerald-600 font-sans uppercase tracking-wider">Time</span>
-              <span className="text-[11px] sm:text-xs font-bold tracking-wider">
+              <span className="text-[11px] sm:text-xs font-bold tracking-wider tabular-nums">
                 {formatTime(currentTime)} / {formatTime(duration || activeTrack.durationSeconds || 180)}
               </span>
             </div>
@@ -469,8 +482,9 @@ export function StudioApp() {
               <span className="w-2.5">L</span>
               <div className="w-16 h-1.5 bg-neutral-900 rounded-xs overflow-hidden flex">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 transition-all duration-75"
-                  style={{ width: `${leftDbMeter * 100}%` }}
+                  ref={leftMeterRef}
+                  className="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 transition-[width] duration-75"
+                  style={{ width: '0%' }}
                 />
               </div>
             </div>
@@ -478,8 +492,9 @@ export function StudioApp() {
               <span className="w-2.5">R</span>
               <div className="w-16 h-1.5 bg-neutral-900 rounded-xs overflow-hidden flex">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 transition-all duration-75"
-                  style={{ width: `${rightDbMeter * 100}%` }}
+                  ref={rightMeterRef}
+                  className="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 transition-[width] duration-75"
+                  style={{ width: '0%' }}
                 />
               </div>
             </div>
@@ -503,7 +518,7 @@ export function StudioApp() {
               onChange={(e) => setVolume(parseFloat(e.target.value))}
               className="w-16 sm:w-20 accent-emerald-500 h-1 bg-neutral-800 rounded-lg cursor-pointer"
             />
-            <span className="text-[10px] font-mono w-7 text-right text-neutral-400">
+            <span className="text-[10px] font-mono tabular-nums w-7 text-right text-neutral-400">
               {Math.round(volume * 100)}%
             </span>
           </div>

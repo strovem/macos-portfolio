@@ -120,23 +120,22 @@ function getDayOfYear(year: number, month: number, day: number): number {
 export function CatYearWidget({ item }: CatYearWidgetProps) {
   const [activeTab, setActiveTab] = useState<'calendar' | 'reading'>('calendar');
 
-  // Calendar State (Defaults dynamically to Real-time Current Date)
-  const [currentYear, setCurrentYear] = useState<number>(() => {
-    return typeof window !== 'undefined' ? new Date().getFullYear() : 2026;
-  });
-  const [currentMonth, setCurrentMonth] = useState<number>(() => {
-    return typeof window !== 'undefined' ? new Date().getMonth() + 1 : 11;
-  });
-  const [selectedDay, setSelectedDay] = useState<number>(() => {
-    return typeof window !== 'undefined' ? new Date().getDate() : 24;
-  });
+  // Calendar State (SSR-safe default, synced on client mount)
+  const [currentYear, setCurrentYear] = useState<number>(2026);
+  const [currentMonth, setCurrentMonth] = useState<number>(11);
+  const [selectedDay, setSelectedDay] = useState<number>(24);
+  const [clientToday, setClientToday] = useState<{ year: number; month: number; day: number } | null>(null);
 
   // Client mount synchronization to user's real local time
   useEffect(() => {
     const now = new Date();
-    setCurrentYear(now.getFullYear());
-    setCurrentMonth(now.getMonth() + 1);
-    setSelectedDay(now.getDate());
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    setCurrentYear(y);
+    setCurrentMonth(m);
+    setSelectedDay(d);
+    setClientToday({ year: y, month: m, day: d });
   }, []);
 
   // Birthdate Reading State (Empty by default unless saved in localStorage: Day / Month / Year)
@@ -218,15 +217,15 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     };
   }, [currentMonth, selectedDay, currentYear]);
 
-  // Is selected day today's date?
+  // Is selected day today's date? (SSR-hydration safe)
   const isSelectedToday = useMemo(() => {
-    const now = new Date();
+    if (!clientToday) return false;
     return (
-      now.getFullYear() === currentYear &&
-      now.getMonth() + 1 === currentMonth &&
-      now.getDate() === selectedDay
+      clientToday.year === currentYear &&
+      clientToday.month === currentMonth &&
+      clientToday.day === selectedDay
     );
-  }, [currentYear, currentMonth, selectedDay]);
+  }, [clientToday, currentYear, currentMonth, selectedDay]);
 
   // Is valid birthdate entered?
   const isBirthdateEntered = useMemo(() => {
@@ -256,23 +255,24 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     const weekOfYear = Math.ceil(dayOfYear / 7);
 
     // Current Year dynamic data
-    const calYear = new Date().getFullYear();
+    const calYear = clientToday?.year ?? currentYear;
     const age = calYear - y;
     const currentYearDigits = sumDigits(calYear);
     const pyRaw = m + d + currentYearDigits;
     const { reduced: pyReduced } = reduceToSingleDigit(pyRaw, true);
 
     return {
-      lpFormatted: `Life Path ${lp.formatted}`,
+      lpFormatted: lp.formatted,
       zodiac,
       dayNumber: d,
       dayOfYear,
       weekOfYear,
       chineseZodiac: cz,
       age: Math.max(0, age),
-      personalYear: `${pyReduced}/${pyRaw} Personal Year (${calYear})`,
+      personalYear: `${pyReduced}/${pyRaw}`,
+      calYear,
     };
-  }, [birthDay, birthMonth, birthYear, isBirthdateEntered]);
+  }, [birthDay, birthMonth, birthYear, isBirthdateEntered, clientToday, currentYear]);
 
   const handlePrevMonth = () => {
     if (currentMonth === 1) {
@@ -444,11 +444,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                   );
                 }
 
-                const today = new Date();
-                const isRealToday =
-                  today.getFullYear() === currentYear &&
-                  today.getMonth() + 1 === currentMonth &&
-                  today.getDate() === cell.day;
+                const isRealToday = Boolean(
+                  clientToday &&
+                    clientToday.year === currentYear &&
+                    clientToday.month === currentMonth &&
+                    clientToday.day === cell.day
+                );
                 const isSelected = selectedDay === cell.day;
 
                 // Color styles
@@ -496,10 +497,10 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                         {t('todayBadge')}
                       </span>
                     )}
-                    <span className="text-[10px] font-bold leading-tight">
+                    <span className="text-[10px] font-bold leading-tight tabular-nums">
                       {cell.day}
                     </span>
-                    <span className={`text-[8px] font-mono leading-none ${subColor}`}>
+                    <span className={`text-[8px] font-mono tabular-nums leading-none ${subColor}`}>
                       {cell.formatted}
                     </span>
                   </div>
@@ -511,13 +512,13 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           {/* Selected Date Summary in Day / Month / Year format with High Contrast */}
           <div className="p-2.5 rounded-xl bg-white/90 dark:bg-neutral-900/95 border border-amber-400/50 dark:border-white/15 text-[11px] leading-tight flex flex-col gap-1 shadow-xs">
             <span className="text-[10px] font-semibold text-slate-600 dark:text-neutral-400">
-              Selected Date: (click any day in the grid)
+              {t('selectedDatePrefix')}
             </span>
             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
-              <span className="font-mono text-xs">{selectedDateInfo.dateStr}</span>
+              <span className="font-mono tabular-nums text-xs">{selectedDateInfo.dateStr}</span>
               {isSelectedToday && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold tracking-tight shadow-2xs">
-                  TODAY
+                  {t('todayBadge')}
                 </span>
               )}
               <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-950 dark:text-amber-200 font-extrabold font-mono text-[11px]">
@@ -534,7 +535,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
           {/* Header Bar */}
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-              Enter a birthdate
+              {language === 'tr' ? 'Doğum Tarihi Girin' : 'Enter a birthdate'}
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -548,10 +549,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 {savedSuccess ? (
                   <>
                     <Check className="w-2.5 h-2.5 text-emerald-600" />
-                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">Saved!</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                      {language === 'tr' ? 'Kaydedildi' : 'Saved!'}
+                    </span>
                   </>
                 ) : (
-                  <span>Save</span>
+                  <span>{language === 'tr' ? 'Kaydet' : 'Save'}</span>
                 )}
               </button>
               <button
@@ -563,9 +566,11 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 className="px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 text-[10px] font-medium text-amber-900 dark:text-neutral-200 border border-amber-300 dark:border-white/10 hover:bg-amber-50 cursor-pointer"
               >
                 {clearedSuccess ? (
-                  <span className="text-amber-700 dark:text-amber-400 font-bold">Cleared</span>
+                  <span className="text-amber-700 dark:text-amber-400 font-bold">
+                    {language === 'tr' ? 'Temizlendi' : 'Cleared'}
+                  </span>
                 ) : (
-                  <span>Clear</span>
+                  <span>{language === 'tr' ? 'Temizle' : 'Clear'}</span>
                 )}
               </button>
             </div>
@@ -573,13 +578,15 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
 
           {/* Life Path Banner */}
           <div className="p-1 rounded-xl bg-amber-200/80 dark:bg-amber-950/50 border border-amber-400/50 text-center">
-            <span className="text-sm font-extrabold font-mono text-amber-950 dark:text-amber-200 tracking-tight">
-              {readingInfo ? readingInfo.lpFormatted : 'Life Path — / —'}
+            <span className="text-sm font-extrabold font-mono text-amber-950 dark:text-amber-200 tracking-tight tabular-nums">
+              {readingInfo
+                ? `${language === 'tr' ? 'Yaşam Yolu' : 'Life Path'} ${readingInfo.lpFormatted}`
+                : `${language === 'tr' ? 'Yaşam Yolu' : 'Life Path'} — / —`}
             </span>
           </div>
 
           {/* Birthdate Input Box: DAY / MONTH / YEAR (DD / MM / YYYY) */}
-          <div className="p-1.5 rounded-xl bg-white dark:bg-neutral-950 border-2 border-amber-500/50 flex items-center justify-center gap-2 font-mono text-base font-bold text-slate-800 dark:text-white shadow-xs">
+          <div className="p-1.5 rounded-xl bg-white dark:bg-neutral-950 border-2 border-amber-500/50 flex items-center justify-center gap-2 font-mono text-base font-bold text-slate-800 dark:text-white shadow-xs tabular-nums">
             {/* Day (DD) */}
             <div className="flex flex-col items-center">
               <input
@@ -594,10 +601,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                     monthInputRef.current.focus();
                   }
                 }}
-                placeholder="DD"
+                placeholder={language === 'tr' ? 'GG' : 'DD'}
                 className="w-9 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
               />
-              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Day</span>
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">
+                {language === 'tr' ? 'Gün' : 'Day'}
+              </span>
             </div>
 
             <span className="text-amber-400 text-lg mb-2">/</span>
@@ -617,10 +626,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                     yearInputRef.current.focus();
                   }
                 }}
-                placeholder="MM"
+                placeholder={language === 'tr' ? 'AA' : 'MM'}
                 className="w-9 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
               />
-              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Month</span>
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">
+                {language === 'tr' ? 'Ay' : 'Month'}
+              </span>
             </div>
 
             <span className="text-amber-400 text-lg mb-2">/</span>
@@ -634,10 +645,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 value={birthYear}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ''))}
-                placeholder="YYYY"
+                placeholder={language === 'tr' ? 'YYYY' : 'YYYY'}
                 className="w-16 text-center bg-transparent focus:outline-none focus:text-amber-600 placeholder:text-neutral-400 placeholder:font-normal"
               />
-              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">Year</span>
+              <span className="text-[8px] text-neutral-400 font-sans font-normal -mt-0.5">
+                {language === 'tr' ? 'Yıl' : 'Year'}
+              </span>
             </div>
           </div>
 
@@ -657,14 +670,16 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
 
               {/* Card 2: Secondary Energy */}
               <div className="p-1.5 rounded-xl bg-amber-100/70 dark:bg-neutral-800/80 border border-amber-300/40 flex flex-col items-center justify-center">
-                <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
+                <span className="text-xs font-bold text-amber-900 dark:text-amber-300 tabular-nums">
                   {readingInfo.dayNumber}
                 </span>
                 <span className="text-[8px] font-semibold text-slate-700 dark:text-neutral-300 leading-tight">
-                  secondary energy
+                  {language === 'tr' ? 'ikincil enerji' : 'secondary energy'}
                 </span>
-                <span className="text-[7px] text-amber-800/70 dark:text-neutral-400 italic mt-0.5">
-                  Day {readingInfo.dayOfYear} • Week {readingInfo.weekOfYear}
+                <span className="text-[7px] text-amber-800/70 dark:text-neutral-400 italic mt-0.5 tabular-nums">
+                  {language === 'tr'
+                    ? `${readingInfo.dayOfYear}. Gün • ${readingInfo.weekOfYear}. Hft`
+                    : `Day ${readingInfo.dayOfYear} • Week ${readingInfo.weekOfYear}`}
                 </span>
               </div>
 
@@ -686,29 +701,45 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             <div className="grid grid-cols-3 gap-1 text-center py-2 opacity-60">
               <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
                 <span className="text-sm">✨</span>
-                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Zodiac</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
+                  {language === 'tr' ? 'Burç' : 'Zodiac'}
+                </span>
               </div>
               <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
                 <span className="text-sm">⚡</span>
-                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Secondary Energy</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
+                  {language === 'tr' ? 'İkincil Enerji' : 'Secondary Energy'}
+                </span>
               </div>
               <div className="p-2 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-dashed border-amber-300/40 flex flex-col items-center justify-center">
                 <span className="text-sm">🐉</span>
-                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">Chinese Zodiac</span>
+                <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
+                  {language === 'tr' ? 'Çin Burcu' : 'Chinese Zodiac'}
+                </span>
               </div>
             </div>
           )}
 
           {/* Bottom Insights Row */}
           {readingInfo ? (
-            <div className="p-1.5 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-amber-300/30 text-[9px] flex items-center justify-between text-amber-950 dark:text-amber-200 font-medium">
-              <span>{readingInfo.age} years old</span>
-              <span className="font-bold">{readingInfo.personalYear}</span>
-              <span>🐎 Horse, neutral sign</span>
+            <div className="p-1.5 rounded-xl bg-amber-100/40 dark:bg-neutral-800/40 border border-amber-300/30 text-[9px] flex items-center justify-between text-amber-950 dark:text-amber-200 font-medium gap-1 tabular-nums">
+              <span>{language === 'tr' ? `${readingInfo.age} yaş` : `${readingInfo.age} years old`}</span>
+              <span className="font-bold">
+                {readingInfo.personalYear}{' '}
+                {language === 'tr'
+                  ? `Kişisel Yıl (${readingInfo.calYear})`
+                  : `Personal Year (${readingInfo.calYear})`}
+              </span>
+              <span className="truncate">
+                {readingInfo.chineseZodiac.animal.symbol} {readingInfo.chineseZodiac.animal.name} (
+                {readingInfo.chineseZodiac.element.name})
+              </span>
             </div>
           ) : (
             <div className="p-1.5 rounded-xl bg-amber-100/30 dark:bg-neutral-800/30 text-[9px] text-center text-amber-900/60 dark:text-neutral-400">
-              Enter your birthdate to reveal your cosmic profile
+              {language === 'tr'
+                ? 'Kozmik profiliniz için doğum tarihinizi girin'
+                : 'Enter your birthdate to reveal your cosmic profile'}
             </div>
           )}
         </div>

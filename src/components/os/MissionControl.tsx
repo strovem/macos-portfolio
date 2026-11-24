@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useShallow } from 'zustand/react/shallow';
 import { LayoutGrid, X, Folder, Music, FileText, MessageSquare, Sparkles } from 'lucide-react';
 import { useMissionControlStore } from '@/stores/useMissionControlStore';
 import { useWindowStore } from '@/stores/useWindowStore';
@@ -9,30 +10,20 @@ import { AppIcon } from '@/components/dock/AppIcon';
 import { Z_INDEX } from '@/constants/zIndex';
 import { AppMetadata } from '@/data/apps';
 import { AppId, WindowState } from '@/types/os';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function MissionControl() {
+  const { language, t } = useTranslation();
   const isOpen = useMissionControlStore((state) => state.isOpen);
   const closeMissionControl = useMissionControlStore((state) => state.closeMissionControl);
 
-  const windows = useWindowStore((state) => state.windows);
-  const activeWindowId = useWindowStore((state) => state.activeWindowId);
+  const openWindows = useWindowStore(
+    useShallow((state) => (isOpen ? Object.values(state.windows).filter((w) => w.isOpen) : []))
+  );
+  const activeWindowId = useWindowStore((state) => (isOpen ? state.activeWindowId : null));
   const focusWindow = useWindowStore((state) => state.focusWindow);
   const closeWindow = useWindowStore((state) => state.closeWindow);
   const openWindow = useWindowStore((state) => state.openWindow);
-
-  // Close on Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeMissionControl();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, closeMissionControl]);
-
-  const openWindows = Object.values(windows).filter((w) => w.isOpen);
 
   const handleSelectWindow = (windowId: AppId) => {
     focusWindow(windowId);
@@ -49,6 +40,7 @@ export function MissionControl() {
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          data-modal="true"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -65,19 +57,19 @@ export function MissionControl() {
             <div className="flex items-center gap-2">
               <div className="liquid-glass px-3.5 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold text-white border border-white/25 shadow-lg">
                 <LayoutGrid className="w-3.5 h-3.5 text-blue-400" />
-                <span>Desktop 1</span>
+                <span>{language === 'tr' ? 'Masaüstü 1' : 'Desktop 1'}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-white/70 px-2.5 py-1 rounded-full liquid-glass border border-white/15">
-                Esc ile Çık
+                {language === 'tr' ? 'Esc ile Çık' : 'Press Esc to Exit'}
               </span>
               <button
                 type="button"
                 onClick={closeMissionControl}
                 className="w-7 h-7 rounded-full liquid-glass flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
-                title="Kapat"
+                title={language === 'tr' ? 'Kapat' : 'Close'}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -99,9 +91,13 @@ export function MissionControl() {
                 <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-4 text-white shadow-inner">
                   <LayoutGrid className="w-7 h-7 opacity-70" />
                 </div>
-                <h3 className="text-base font-bold text-white mb-1">Açık Pencere Yok</h3>
+                <h3 className="text-base font-bold text-white mb-1">
+                  {language === 'tr' ? 'Açık Pencere Yok' : 'No Open Windows'}
+                </h3>
                 <p className="text-xs text-white/70 max-w-xs mb-6">
-                  Şu an açık olan bir uygulama penceresi bulunmuyor. Aşağıdan hızlıca bir uygulama başlatabilirsiniz:
+                  {language === 'tr'
+                    ? 'Şu an açık olan bir uygulama penceresi bulunmuyor. Aşağıdan hızlıca bir uygulama başlatabilirsiniz:'
+                    : 'There are currently no open application windows. Quickly launch one below:'}
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 w-full">

@@ -16,12 +16,13 @@ export function ToneGeneratorApp() {
   const [volume, setVolume] = useState<number>(0.18);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [phase, setPhase] = useState<number>(0);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscRef = useRef<OscillatorNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const wavePathRef = useRef<SVGPathElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const stopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Web Audio Context
   const getAudioContext = useCallback(() => {
@@ -114,17 +115,19 @@ export function ToneGeneratorApp() {
 
   // Stop pure sine tone
   const stopTone = useCallback(() => {
+    if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
     if (gainRef.current && audioCtxRef.current) {
       const ctx = audioCtxRef.current;
       try {
         gainRef.current.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
-        setTimeout(() => {
+        stopTimerRef.current = setTimeout(() => {
           try {
             oscRef.current?.stop();
             oscRef.current?.disconnect();
             oscRef.current = null;
           } catch {}
           setIsPlaying(false);
+          stopTimerRef.current = null;
         }, 50);
       } catch {
         setIsPlaying(false);
@@ -145,6 +148,7 @@ export function ToneGeneratorApp() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
       try {
         oscRef.current?.stop();
         oscRef.current?.disconnect();
@@ -154,18 +158,55 @@ export function ToneGeneratorApp() {
     };
   }, []);
 
-  // Live Oscilloscope animation loop
+  const buildSinePath = useCallback(
+    (phaseVal: number, active: boolean) => {
+      const width = 360;
+      const height = 80;
+      const centerY = height / 2;
+      const amplitude = active ? 26 : 10;
+      const cycles = Math.min(10, Math.max(2, Math.log10(Math.max(20, frequency)) * 2.2));
+
+      let path = `M 0 ${centerY}`;
+      const step = 2;
+      for (let x = 0; x <= width; x += step) {
+        const angle = (x / width) * cycles * 2 * Math.PI + (active ? phaseVal : 0);
+        const y = centerY + Math.sin(angle) * amplitude;
+        path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+      }
+      return path;
+    },
+    [frequency]
+  );
+
+  // Live Oscilloscope animation loop via direct SVG DOM mutation (0 React re-renders)
   useEffect(() => {
     if (!isPlaying) {
+      if (wavePathRef.current) {
+        wavePathRef.current.setAttribute('d', buildSinePath(0, false));
+      }
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      return;
+    }
+
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      if (wavePathRef.current) {
+        wavePathRef.current.setAttribute('d', buildSinePath(0, true));
+      }
       return;
     }
 
     let curPhase = 0;
     const animate = () => {
-      const speed = Math.min(0.28, Math.max(0.05, (frequency / 440) * 0.12));
-      curPhase += speed;
-      setPhase(curPhase);
+      if (!document.hidden) {
+        const speed = Math.min(0.28, Math.max(0.05, (frequency / 440) * 0.12));
+        curPhase += speed;
+        if (wavePathRef.current) {
+          wavePathRef.current.setAttribute('d', buildSinePath(curPhase, true));
+        }
+      }
       animFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -173,25 +214,7 @@ export function ToneGeneratorApp() {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [isPlaying, frequency]);
-
-  // Generate SVG Sine Wave Path
-  const renderSineWavePath = () => {
-    const width = 360;
-    const height = 80;
-    const centerY = height / 2;
-    const amplitude = isPlaying ? 26 : 10;
-    const cycles = Math.min(10, Math.max(2, Math.log10(Math.max(20, frequency)) * 2.2));
-
-    let path = `M 0 ${centerY}`;
-    const step = 2;
-    for (let x = 0; x <= width; x += step) {
-      const angle = (x / width) * cycles * 2 * Math.PI + (isPlaying ? phase : 0);
-      const y = centerY + Math.sin(angle) * amplitude;
-      path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
-    }
-    return path;
-  };
+  }, [isPlaying, frequency, buildSinePath]);
 
   return (
     <div className="h-full w-full flex flex-col bg-neutral-900 text-white select-none overflow-y-auto custom-scrollbar font-sans">
@@ -247,7 +270,8 @@ export function ToneGeneratorApp() {
 
             <svg viewBox="0 0 360 80" className="w-full h-full relative z-10" fill="none">
               <path
-                d={renderSineWavePath()}
+                ref={wavePathRef}
+                d={buildSinePath(0, isPlaying)}
                 stroke={isPlaying ? 'url(#cyanSineGradApp)' : 'rgba(6, 182, 212, 0.4)'}
                 strokeWidth={isPlaying ? 2.5 : 1.5}
                 strokeLinecap="round"

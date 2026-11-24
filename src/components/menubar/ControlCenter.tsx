@@ -21,7 +21,9 @@ import {
 } from 'lucide-react';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export interface ControlCenterProps {
   isOpen: boolean;
@@ -30,31 +32,28 @@ export interface ControlCenterProps {
 
 export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const { t, language } = useTranslation();
 
-  const {
-    isDarkMode,
-    toggleDarkMode,
-    soundEnabled,
-    toggleSound,
-    bubblesEnabled,
-    toggleBubbles,
-    activeWallpaperId,
-    setWallpaper,
-    brightness,
-    setBrightness,
-    volume,
-    setVolume,
-    stageManagerEnabled,
-    toggleStageManager,
-  } = useSettingsStore();
+  const isDarkMode = useSettingsStore((s) => s.isDarkMode);
+  const toggleDarkMode = useSettingsStore((s) => s.toggleDarkMode);
+  const soundEnabled = useSettingsStore((s) => s.soundEnabled);
+  const toggleSound = useSettingsStore((s) => s.toggleSound);
+  const bubblesEnabled = useSettingsStore((s) => s.bubblesEnabled);
+  const toggleBubbles = useSettingsStore((s) => s.toggleBubbles);
+  const activeWallpaperId = useSettingsStore((s) => s.activeWallpaperId);
+  const setWallpaper = useSettingsStore((s) => s.setWallpaper);
+  const brightness = useSettingsStore((s) => s.brightness);
+  const setBrightness = useSettingsStore((s) => s.setBrightness);
+  const volume = useSettingsStore((s) => s.volume);
+  const setVolume = useSettingsStore((s) => s.setVolume);
+  const stageManagerEnabled = useSettingsStore((s) => s.stageManagerEnabled);
+  const toggleStageManager = useSettingsStore((s) => s.toggleStageManager);
 
-  const {
-    currentTrack,
-    isPlaying: isAudioPlaying,
-    togglePlay: toggleAudioPlay,
-    nextTrack: audioNextTrack,
-    prevTrack: audioPrevTrack,
-  } = useAudioStore();
+  const currentTrack = useAudioStore((s) => s.currentTrack);
+  const isAudioPlaying = useAudioStore((s) => s.isPlaying);
+  const toggleAudioPlay = useAudioStore((s) => s.togglePlay);
+  const audioNextTrack = useAudioStore((s) => s.nextTrack);
+  const audioPrevTrack = useAudioStore((s) => s.prevTrack);
 
   const [wifiConnected, setWifiConnected] = useState(true);
   const [bluetoothOn, setBluetoothOn] = useState(true);
@@ -75,18 +74,10 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
       }
     };
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
     document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -99,7 +90,8 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.98 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="fixed top-9 right-2 sm:right-3 w-[calc(100vw-1rem)] sm:w-[340px] max-w-[340px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3 rounded-2xl backdrop-blur-2xl bg-white/80 dark:bg-neutral-900/80 border border-black/10 dark:border-white/10 shadow-2xl z-50 select-none text-slate-800 dark:text-slate-100 flex flex-col gap-2.5 text-xs font-sans touch-pan-y"
+          style={{ zIndex: Z_INDEX.MENUBAR_POPOVER }}
+          className="fixed top-9 right-2 sm:right-3 w-[calc(100vw-1rem)] sm:w-[340px] max-w-[340px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3 rounded-2xl liquid-glass border border-black/10 dark:border-white/15 shadow-2xl select-none text-slate-800 dark:text-slate-100 flex flex-col gap-2.5 text-xs font-sans touch-pan-y"
         >
           {/* Top Section: Connectivity Card (Left) & Quick Toggles (Right) */}
           <div className="grid grid-cols-2 gap-2.5">
@@ -125,7 +117,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                     Wi-Fi
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
-                    {wifiConnected ? 'Studio-5G' : 'Disconnected'}
+                    {wifiConnected ? 'Studio-5G' : language === 'tr' ? 'Bağlı Değil' : 'Disconnected'}
                   </span>
                 </div>
               </button>
@@ -150,7 +142,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                     Bluetooth
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
-                    {bluetoothOn ? 'AirPods Pro' : 'Off'}
+                    {bluetoothOn ? 'AirPods Pro' : language === 'tr' ? 'Kapalı' : 'Off'}
                   </span>
                 </div>
               </button>
@@ -175,7 +167,13 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                     AirDrop
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-neutral-400 truncate">
-                    {airDropOn ? 'Contacts Only' : 'Off'}
+                    {airDropOn
+                      ? language === 'tr'
+                        ? 'Yalnızca Kişiler'
+                        : 'Contacts Only'
+                      : language === 'tr'
+                      ? 'Kapalı'
+                      : 'Off'}
                   </span>
                 </div>
               </button>
@@ -195,19 +193,27 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               >
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                    isDarkMode ? 'bg-white/20 text-white' : 'bg-black/10 text-slate-700'
+                    isDarkMode
+                      ? 'bg-white/20 text-white'
+                      : 'bg-black/10 dark:bg-white/10 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   {isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-[11px] leading-tight">Dark Mode</span>
+                  <span className="font-semibold text-[11px] leading-tight">{t('darkAppearance')}</span>
                   <span
                     className={`text-[10px] ${
                       isDarkMode ? 'text-white/80' : 'text-slate-500 dark:text-neutral-400'
                     }`}
                   >
-                    {isDarkMode ? 'On' : 'Off'}
+                    {isDarkMode
+                      ? language === 'tr'
+                        ? 'Açık'
+                        : 'On'
+                      : language === 'tr'
+                      ? 'Kapalı'
+                      : 'Off'}
                   </span>
                 </div>
               </button>
@@ -230,13 +236,19 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
                   <AppWindow className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-[11px] leading-tight">Stage Manager</span>
+                  <span className="font-semibold text-[11px] leading-tight">{t('stageManager')}</span>
                   <span
                     className={`text-[10px] ${
                       stageManagerEnabled ? 'text-white/80' : 'text-slate-500 dark:text-neutral-400'
                     }`}
                   >
-                    {stageManagerEnabled ? 'On' : 'Off'}
+                    {stageManagerEnabled
+                      ? language === 'tr'
+                        ? 'Açık'
+                        : 'On'
+                      : language === 'tr'
+                      ? 'Kapalı'
+                      : 'Off'}
                   </span>
                 </div>
               </button>
@@ -253,19 +265,29 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               >
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                    soundEnabled ? 'bg-white/20 text-white' : 'bg-black/10 text-slate-700'
+                    soundEnabled
+                      ? 'bg-white/20 text-white'
+                      : 'bg-black/10 dark:bg-white/10 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-[11px] leading-tight">System Audio</span>
+                  <span className="font-semibold text-[11px] leading-tight">
+                    {language === 'tr' ? 'Sistem Sesleri' : 'System Audio'}
+                  </span>
                   <span
                     className={`text-[10px] ${
                       soundEnabled ? 'text-white/80' : 'text-slate-500 dark:text-neutral-400'
                     }`}
                   >
-                    {soundEnabled ? 'Enabled' : 'Muted'}
+                    {soundEnabled
+                      ? language === 'tr'
+                        ? 'Etkin'
+                        : 'Enabled'
+                      : language === 'tr'
+                      ? 'Sessiz'
+                      : 'Muted'}
                   </span>
                 </div>
               </button>
@@ -282,19 +304,27 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               >
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                    bubblesEnabled ? 'bg-white/20 text-white' : 'bg-black/10 text-slate-700'
+                    bubblesEnabled
+                      ? 'bg-white/20 text-white'
+                      : 'bg-black/10 dark:bg-white/10 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-[11px] leading-tight">Glass Bubbles</span>
+                  <span className="font-semibold text-[11px] leading-tight">{t('ambientBubbles')}</span>
                   <span
                     className={`text-[10px] ${
                       bubblesEnabled ? 'text-white/80' : 'text-slate-500 dark:text-neutral-400'
                     }`}
                   >
-                    {bubblesEnabled ? 'Floating' : 'Hidden'}
+                    {bubblesEnabled
+                      ? language === 'tr'
+                        ? 'Açık'
+                        : 'Floating'
+                      : language === 'tr'
+                      ? 'Gizli'
+                      : 'Hidden'}
                   </span>
                 </div>
               </button>
@@ -305,7 +335,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
           <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex flex-col gap-2 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-[11px] text-slate-900 dark:text-white">
-                Wallpaper Theme
+                {t('tabWallpaper')}
               </span>
               <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-medium">
                 {WALLPAPERS.find((w) => w.id === activeWallpaperId)?.name || 'Default'}
@@ -351,8 +381,8 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
           {/* Interactive Display Brightness Slider */}
           <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex flex-col gap-1.5 shadow-sm">
             <div className="flex items-center justify-between text-[11px] font-semibold">
-              <span className="text-slate-900 dark:text-white">Display</span>
-              <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-normal">
+              <span className="text-slate-900 dark:text-white">{t('display')}</span>
+              <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-normal tabular-nums">
                 {brightness}%
               </span>
             </div>
@@ -381,9 +411,9 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
           {/* Interactive Volume Slider */}
           <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex flex-col gap-1.5 shadow-sm">
             <div className="flex items-center justify-between text-[11px] font-semibold">
-              <span className="text-slate-900 dark:text-white">Sound</span>
-              <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-normal">
-                {soundEnabled ? `${volume}%` : 'Muted'}
+              <span className="text-slate-900 dark:text-white">{t('sound')}</span>
+              <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-normal tabular-nums">
+                {soundEnabled ? `${volume}%` : language === 'tr' ? 'Sessiz' : 'Muted'}
               </span>
             </div>
             <div className="relative w-full h-7 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden flex items-center">
@@ -446,7 +476,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={audioPrevTrack}
-                title="Previous Track"
+                title={language === 'tr' ? 'Önceki Parça' : 'Previous Track'}
                 className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 transition-colors focus:outline-none text-slate-600 dark:text-slate-300"
               >
                 <SkipBack className="w-3 h-3 fill-current" />
@@ -454,7 +484,15 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={toggleAudioPlay}
-                title={isAudioPlaying ? 'Pause' : 'Play'}
+                title={
+                  isAudioPlaying
+                    ? language === 'tr'
+                      ? 'Duraklat'
+                      : 'Pause'
+                    : language === 'tr'
+                    ? 'Oynat'
+                    : 'Play'
+                }
                 className="w-7 h-7 rounded-full bg-black/10 dark:bg-white/15 flex items-center justify-center hover:bg-black/15 dark:hover:bg-white/25 transition-colors focus:outline-none text-slate-800 dark:text-white"
               >
                 {isAudioPlaying ? (
@@ -466,7 +504,7 @@ export const ControlCenter: React.FC<ControlCenterProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={audioNextTrack}
-                title="Next Track"
+                title={language === 'tr' ? 'Sonraki Parça' : 'Next Track'}
                 className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 transition-colors focus:outline-none text-slate-600 dark:text-slate-300"
               >
                 <SkipForward className="w-3 h-3 fill-current" />

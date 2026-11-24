@@ -68,13 +68,9 @@ export const WeatherPopover: React.FC = () => {
   const atmospherePreview = useSettingsStore((state) => state.atmospherePreview);
   const setAtmospherePreview = useSettingsStore((state) => state.setAtmospherePreview);
 
-  // Close on Escape or click outside
+  // Close on click outside (Escape is handled centrally by useKeyboardShortcuts)
   useEffect(() => {
     if (!isPopoverOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPopoverOpen(false);
-    };
 
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
@@ -85,10 +81,8 @@ export const WeatherPopover: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('mousedown', handleClickOutside);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isPopoverOpen, setPopoverOpen]);

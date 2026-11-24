@@ -41,7 +41,7 @@ interface SpotlightItem {
   id: string;
   title: string;
   subtitle: string;
-  category: 'Uygulamalar' | 'Projeler' | 'Müzik & Audio' | 'Sistem Komutları';
+  category: string;
   icon: React.ReactNode;
   action: () => void;
   keywords: string[];
@@ -61,22 +61,24 @@ function normalizeSearch(str: string): string {
 }
 
 export const SpotlightModal: React.FC = () => {
-  const { t } = useTranslation();
-  const { isOpen, closeSpotlight } = useSpotlightStore();
-  const { openWindow, minimizeAllWindows, resetWindows, openFinderToSection } = useWindowStore();
-  const {
-    isDarkMode,
-    toggleDarkMode,
-    activeWallpaperId,
-    setWallpaper,
-    soundEnabled,
-    toggleSound,
-    stageManagerEnabled,
-    toggleStageManager,
-    dynamicNotchEnabled,
-    toggleDynamicNotch,
-  } = useSettingsStore();
-  const { playTrack } = useAudioStore();
+  const { t, language } = useTranslation();
+  const isOpen = useSpotlightStore((s) => s.isOpen);
+  const closeSpotlight = useSpotlightStore((s) => s.closeSpotlight);
+  const openWindow = useWindowStore((s) => s.openWindow);
+  const minimizeAllWindows = useWindowStore((s) => s.minimizeAllWindows);
+  const resetWindows = useWindowStore((s) => s.resetWindows);
+  const openFinderToSection = useWindowStore((s) => s.openFinderToSection);
+  const isDarkMode = useSettingsStore((s) => s.isDarkMode);
+  const toggleDarkMode = useSettingsStore((s) => s.toggleDarkMode);
+  const activeWallpaperId = useSettingsStore((s) => s.activeWallpaperId);
+  const setWallpaper = useSettingsStore((s) => s.setWallpaper);
+  const soundEnabled = useSettingsStore((s) => s.soundEnabled);
+  const toggleSound = useSettingsStore((s) => s.toggleSound);
+  const stageManagerEnabled = useSettingsStore((s) => s.stageManagerEnabled);
+  const toggleStageManager = useSettingsStore((s) => s.toggleStageManager);
+  const dynamicNotchEnabled = useSettingsStore((s) => s.dynamicNotchEnabled);
+  const toggleDynamicNotch = useSettingsStore((s) => s.toggleDynamicNotch);
+  const playTrack = useAudioStore((s) => s.playTrack);
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -113,10 +115,16 @@ export const SpotlightModal: React.FC = () => {
       list.push({
         id: `app-${app.id}`,
         title: app.title,
-        subtitle: `${app.description} • Uygulama`,
-        category: 'Uygulamalar',
+        subtitle: `${app.description} • ${language === 'tr' ? 'Uygulama' : 'Application'}`,
+        category: t('appsCategory'),
         icon,
-        action: () => openWindow(app.id),
+        action: () => {
+          if (app.id === 'instagram') {
+            window.open('https://www.instagram.com/korumtashuseyin/', '_blank', 'noopener,noreferrer');
+          } else {
+            openWindow(app.id);
+          }
+        },
         keywords: [app.id, app.title, app.description, 'app', 'uygulama', 'program'],
       });
     });
@@ -125,8 +133,11 @@ export const SpotlightModal: React.FC = () => {
     list.push({
       id: 'app-tonegenerator',
       title: 'Tone Generator',
-      subtitle: 'Ses frekansı osilatörü ve ses test aracı • Uygulama',
-      category: 'Uygulamalar',
+      subtitle:
+        language === 'tr'
+          ? 'Ses frekansı osilatörü ve ses test aracı • Uygulama'
+          : 'Audio frequency oscillator & sine test lab • App',
+      category: t('appsCategory'),
       icon: <Volume2 className="w-4 h-4 text-indigo-400" />,
       action: () => openWindow('tonegenerator' as AppId),
       keywords: ['tone', 'generator', 'frekans', 'hertz', 'ses', 'sinus', 'sawtooth'],
@@ -138,7 +149,7 @@ export const SpotlightModal: React.FC = () => {
         id: `proj-${proj.id}`,
         title: proj.title,
         subtitle: `${proj.role} • ${proj.tags.join(', ')}`,
-        category: 'Projeler',
+        category: language === 'tr' ? 'Projeler' : 'Projects',
         icon: <Sparkles className="w-4 h-4 text-amber-500" />,
         action: () => openFinderToSection('documents'),
         keywords: [proj.title, proj.description, proj.role || '', ...proj.tags, 'proje', 'vaka'],
@@ -151,7 +162,7 @@ export const SpotlightModal: React.FC = () => {
         id: `music-${track.id}`,
         title: track.title,
         subtitle: `${track.genre} • ${track.bpm} BPM • ${track.album}`,
-        category: 'Müzik & Audio',
+        category: t('musicCategory'),
         icon: <Music2 className="w-4 h-4 text-indigo-500" />,
         action: () => {
           openWindow('studio');
@@ -164,9 +175,12 @@ export const SpotlightModal: React.FC = () => {
     // Studio MPC Beat Pad Special Entry
     list.push({
       id: 'studio-beatpad',
-      title: 'MPC Beat Pad & Ritim Sentezleyici',
-      subtitle: 'Prosedürel analog davul pedleri ile canlı ritim çal • Studio',
-      category: 'Müzik & Audio',
+      title: language === 'tr' ? 'MPC Beat Pad & Ritim Sentezleyici' : 'MPC Beat Pad & Drum Synthesizer',
+      subtitle:
+        language === 'tr'
+          ? 'Prosedürel analog davul pedleri ile canlı ritim çal • Studio'
+          : 'Procedural analog drum pads & live rhythm synth • Studio',
+      category: t('musicCategory'),
       icon: <Sliders className="w-4 h-4 text-purple-400" />,
       action: () => openWindow('studio'),
       keywords: ['beat pad', 'mpc', 'drum', 'kick', 'snare', 'hihat', 'ritim', 'studio', 'synth'],
@@ -175,9 +189,15 @@ export const SpotlightModal: React.FC = () => {
     // 4. System Commands & Toggles
     list.push({
       id: 'cmd-theme',
-      title: isDarkMode ? 'Açık Moda Geç (Light Mode)' : 'Koyu Moda Geç (Dark Mode)',
-      subtitle: 'Arayüz temasını anında değiştir',
-      category: 'Sistem Komutları',
+      title: isDarkMode
+        ? language === 'tr'
+          ? 'Açık Moda Geç (Light Mode)'
+          : 'Switch to Light Mode'
+        : language === 'tr'
+        ? 'Koyu Moda Geç (Dark Mode)'
+        : 'Switch to Dark Mode',
+      subtitle: language === 'tr' ? 'Arayüz temasını anında değiştir' : 'Switch appearance immediately',
+      category: t('actionsCategory'),
       icon: isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />,
       action: toggleDarkMode,
       keywords: ['tema', 'koyu mod', 'acik mod', 'dark mode', 'light mode', 'gorunum', 'renk'],
@@ -185,9 +205,12 @@ export const SpotlightModal: React.FC = () => {
 
     list.push({
       id: 'cmd-wallpaper',
-      title: 'Duvar Kağıdını Değiştir',
-      subtitle: 'Sonraki masaüstü duvar kağıdına geçiş yap',
-      category: 'Sistem Komutları',
+      title: language === 'tr' ? 'Duvar Kağıdını Değiştir' : 'Change Wallpaper',
+      subtitle:
+        language === 'tr'
+          ? 'Sonraki masaüstü duvar kağıdına geçiş yap'
+          : 'Cycle to next desktop wallpaper',
+      category: t('actionsCategory'),
       icon: <Sparkles className="w-4 h-4 text-emerald-400" />,
       action: () => {
         const currentIndex = WALLPAPERS.findIndex((w) => w.id === activeWallpaperId);
@@ -199,9 +222,12 @@ export const SpotlightModal: React.FC = () => {
 
     list.push({
       id: 'cmd-stage-manager',
-      title: stageManagerEnabled ? 'Stage Manager: Kapat' : 'Stage Manager: Aç',
-      subtitle: 'Masaüstü pencerelerini sol şeritte organize et (Alt+S)',
-      category: 'Sistem Komutları',
+      title: stageManagerEnabled ? t('disableStageManager') : t('enableStageManager'),
+      subtitle:
+        language === 'tr'
+          ? 'Masaüstü pencerelerini sol şeritte organize et (Alt+S)'
+          : 'Organize desktop windows on left strip (Alt+S)',
+      category: t('actionsCategory'),
       icon: <AppWindow className="w-4 h-4 text-blue-400" />,
       action: toggleStageManager,
       keywords: ['stage manager', 'sahne', 'pencere seridi', 'yonetici', 'coklu gorev', 'multitasking'],
@@ -209,9 +235,18 @@ export const SpotlightModal: React.FC = () => {
 
     list.push({
       id: 'cmd-dynamic-notch',
-      title: dynamicNotchEnabled ? 'Dinamik Çentik: Kapat' : 'Dinamik Çentik: Aç',
-      subtitle: 'MacBook dinamik ada ve medya kontrollerini aç/kapat',
-      category: 'Sistem Komutları',
+      title: dynamicNotchEnabled
+        ? language === 'tr'
+          ? 'Dinamik Çentik: Kapat'
+          : 'Dynamic Notch: Turn Off'
+        : language === 'tr'
+        ? 'Dinamik Çentik: Aç'
+        : 'Dynamic Notch: Turn On',
+      subtitle:
+        language === 'tr'
+          ? 'MacBook dinamik ada ve medya kontrollerini aç/kapat'
+          : 'Toggle MacBook live notch media island',
+      category: t('actionsCategory'),
       icon: <Sparkles className="w-4 h-4 text-purple-400" />,
       action: toggleDynamicNotch,
       keywords: ['centik', 'notch', 'dynamic notch', 'ada', 'island', 'kamera'],
@@ -219,9 +254,21 @@ export const SpotlightModal: React.FC = () => {
 
     list.push({
       id: 'cmd-sound',
-      title: soundEnabled ? 'Sistem Seslerini Kapat (Sessiz)' : 'Sistem Seslerini Aç',
-      subtitle: soundEnabled ? 'UI tıklama ve pencere ses efektlerini sustur' : 'UI ses efektlerini etkinleştir',
-      category: 'Sistem Komutları',
+      title: soundEnabled
+        ? language === 'tr'
+          ? 'Sistem Seslerini Kapat (Sessiz)'
+          : 'Mute System Sound Effects'
+        : language === 'tr'
+        ? 'Sistem Seslerini Aç'
+        : 'Enable System Sound Effects',
+      subtitle: soundEnabled
+        ? language === 'tr'
+          ? 'UI tıklama ve pencere ses efektlerini sustur'
+          : 'Mute UI clicks and window sound effects'
+        : language === 'tr'
+        ? 'UI ses efektlerini etkinleştir'
+        : 'Enable UI feedback sounds',
+      category: t('actionsCategory'),
       icon: soundEnabled ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />,
       action: toggleSound,
       keywords: ['ses', 'ses efektleri', 'mute', 'sound', 'hoparlor'],
@@ -229,9 +276,12 @@ export const SpotlightModal: React.FC = () => {
 
     list.push({
       id: 'cmd-minimize-all',
-      title: 'Tüm Pencereleri Küçült',
-      subtitle: 'Açık olan tüm pencereleri simge durumuna al ve masaüstünü göster',
-      category: 'Sistem Komutları',
+      title: t('minimizeAll'),
+      subtitle:
+        language === 'tr'
+          ? 'Açık olan tüm pencereleri simge durumuna al ve masaüstünü göster'
+          : 'Minimize all open windows and reveal desktop',
+      category: t('actionsCategory'),
       icon: <Maximize2 className="w-4 h-4 text-blue-400" />,
       action: minimizeAllWindows,
       keywords: ['kucult', 'minimize', 'masaustu', 'desktop', 'pencereler'],
@@ -239,9 +289,12 @@ export const SpotlightModal: React.FC = () => {
 
     list.push({
       id: 'cmd-reset-windows',
-      title: 'Pencereleri Varsayılan Konumlarına Sıfırla',
-      subtitle: 'Pencere konumlarını ve boyutlarını fabrika ayarlarına döndür',
-      category: 'Sistem Komutları',
+      title: t('resetWindows'),
+      subtitle:
+        language === 'tr'
+          ? 'Pencere konumlarını ve boyutlarını varsayılan düzene döndür'
+          : 'Restore window positions and sizes to defaults',
+      category: t('actionsCategory'),
       icon: <HelpCircle className="w-4 h-4 text-cyan-400" />,
       action: resetWindows,
       keywords: ['sifirla', 'reset', 'pencere duzeni', 'yerlesim'],
@@ -249,6 +302,8 @@ export const SpotlightModal: React.FC = () => {
 
     return list;
   }, [
+    t,
+    language,
     openWindow,
     openFinderToSection,
     playTrack,
@@ -304,20 +359,17 @@ export const SpotlightModal: React.FC = () => {
         target.action();
         closeSpotlight();
       }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      closeSpotlight();
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div
-        style={{ zIndex: Z_INDEX.SPOTLIGHT }}
-        className="fixed inset-0 flex justify-center items-start pt-[12vh] sm:pt-[15vh] px-3 sm:px-4"
-      >
+      {isOpen && (
+        <div
+          data-modal="true"
+          style={{ zIndex: Z_INDEX.SPOTLIGHT }}
+          className="fixed inset-0 flex justify-center items-start pt-[12vh] sm:pt-[15vh] px-3 sm:px-4"
+        >
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -436,15 +488,20 @@ export const SpotlightModal: React.FC = () => {
 
           {/* Bottom Keyboard Navigation Hints */}
           <div className="flex items-center justify-between px-3.5 py-2 border-t border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] text-slate-400 dark:text-neutral-500 font-mono">
-            <span>{filteredResults.length} sonuç</span>
+            <span>
+              {language === 'tr'
+                ? `${filteredResults.length} sonuç`
+                : `${filteredResults.length} results`}
+            </span>
             <div className="flex items-center gap-3">
-              <span>↑↓ Gezin</span>
-              <span>↵ Seç</span>
-              <span>esc Kapat</span>
+              <span>{language === 'tr' ? '↑↓ Gezin' : '↑↓ Navigate'}</span>
+              <span>{language === 'tr' ? '↵ Seç' : '↵ Select'}</span>
+              <span>{language === 'tr' ? 'esc Kapat' : 'esc Close'}</span>
             </div>
           </div>
         </motion.div>
-      </div>
+        </div>
+      )}
     </AnimatePresence>
   );
 };

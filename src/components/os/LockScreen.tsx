@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Unlock, Play, Pause, SkipBack, SkipForward, Music, Sparkles } from 'lucide-react';
+import { Lock, Unlock, Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
 import { useLockStore } from '@/stores/useLockStore';
 import { useAudioStore } from '@/stores/useAudioStore';
-import { Wallpaper } from '@/components/desktop/Wallpaper';
 import { playUnlockSound } from '@/utils/soundEffects';
 import { Z_INDEX } from '@/constants/zIndex';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,7 +16,11 @@ export function LockScreen() {
   const unlock = useLockStore((state) => state.unlock);
   const wake = useLockStore((state) => state.wake);
 
-  const { currentTrack, isPlaying, togglePlay, nextTrack, prevTrack } = useAudioStore();
+  const currentTrack = useAudioStore((state) => state.currentTrack);
+  const isPlaying = useAudioStore((state) => state.isPlaying);
+  const togglePlay = useAudioStore((state) => state.togglePlay);
+  const nextTrack = useAudioStore((state) => state.nextTrack);
+  const prevTrack = useAudioStore((state) => state.prevTrack);
 
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -99,6 +102,7 @@ export function LockScreen() {
       <AnimatePresence>
         {isLocked && (
           <motion.div
+            data-modal="true"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.06, filter: 'blur(10px)' }}
@@ -106,13 +110,8 @@ export function LockScreen() {
             style={{ zIndex: Z_INDEX.LOCK_SCREEN }}
             className="fixed inset-0 h-[100dvh] w-full flex flex-col justify-between items-center py-12 px-6 select-none overflow-hidden"
           >
-            {/* Blurred Dynamic Wallpaper Canvas */}
-            <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-              <div className="w-full h-full scale-110 filter blur-2xl brightness-75">
-                <Wallpaper />
-              </div>
-              <div className="absolute inset-0 bg-black/25 backdrop-blur-md" />
-            </div>
+            {/* Lightweight Frosted Scrim over the underlying Desktop Wallpaper */}
+            <div className="absolute inset-0 -z-10 bg-black/35 backdrop-blur-3xl saturate-150 pointer-events-none" />
 
             {/* Top Section: Date & Giant Thin Typography Clock */}
             <motion.div

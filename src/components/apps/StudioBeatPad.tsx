@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, Play, Sparkles, Disc, Radio, RotateCcw } from 'lucide-react';
-import { connectNodeToAnalyser } from '@/lib/audioAnalyser';
+import { getSharedAudioContext, connectNodeToAnalyser } from '@/lib/audioAnalyser';
+import { WindowContext } from '@/components/window/Window';
+import { useLockStore } from '@/stores/useLockStore';
+import { useSpotlightStore } from '@/stores/useSpotlightStore';
 
 interface PadSpec {
   id: string;
@@ -103,29 +106,37 @@ export const StudioBeatPad: React.FC = () => {
   const [activePadId, setActivePadId] = useState<string | null>(null);
   const [lastPlayedName, setLastPlayedName] = useState<string>('Ready • Tap a Pad');
   const [hitCount, setHitCount] = useState<number>(0);
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  const windowContext = useContext(WindowContext);
   const padMasterGainRef = useRef<GainNode | null>(null);
+  const hitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize or get Web Audio Context
+  // Initialize or reuse shared Web Audio Context so AnalyserNode FFT tracks Beat Pad hits
   const getAudioContext = useCallback(() => {
-    if (typeof window === 'undefined') return null;
-    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (AudioCtx) {
-        audioCtxRef.current = new AudioCtx();
-      }
+    const ctx = getSharedAudioContext();
+    if (!ctx) return null;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
-    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-    if (audioCtxRef.current && !padMasterGainRef.current) {
-      padMasterGainRef.current = audioCtxRef.current.createGain();
-      padMasterGainRef.current.connect(audioCtxRef.current.destination);
+    if (!padMasterGainRef.current || padMasterGainRef.current.context !== ctx) {
+      padMasterGainRef.current = ctx.createGain();
+      padMasterGainRef.current.connect(ctx.destination);
       connectNodeToAnalyser(padMasterGainRef.current);
     }
-    return audioCtxRef.current;
+    return ctx;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hitTimerRef.current) clearTimeout(hitTimerRef.current);
+      if (padMasterGainRef.current) {
+        try {
+          padMasterGainRef.current.disconnect();
+        } catch {
+          // ignore
+        }
+        padMasterGainRef.current = null;
+      }
+    };
   }, []);
 
   // Synthesize instant punchy club percussion sounds
@@ -322,23 +333,31 @@ export const StudioBeatPad: React.FC = () => {
     (pad: PadSpec) => {
       setActivePadId(pad.id);
       triggerSound(pad.type, pad.name);
-      setTimeout(() => {
+      if (hitTimerRef.current) clearTimeout(hitTimerRef.current);
+      hitTimerRef.current = setTimeout(() => {
         setActivePadId(null);
       }, 140);
     },
     [triggerSound]
   );
 
-  // Keyboard shortcut listener: Q, W, E, R, A, S, D, F
+  // Keyboard shortcut listener scoped to active Studio window
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in an input
+      if (!windowContext?.isActive) return;
+      const lockState = useLockStore.getState();
+      if (lockState.isLocked || lockState.isSleeping) return;
+      if (useSpotlightStore.getState().isOpen) return;
+
+      const target = e.target as HTMLElement | null;
       if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable
       ) {
         return;
       }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const upper = e.key.toUpperCase();
       const matched = PADS.find((p) => p.key === upper);
       if (matched) {
@@ -349,7 +368,7 @@ export const StudioBeatPad: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePadHit]);
+  }, [handlePadHit, windowContext?.isActive]);
 
   return (
     <div className="flex flex-col h-full w-full bg-[#0D0B14] text-white p-4 md:p-6 select-none overflow-y-auto custom-scrollbar font-sans">

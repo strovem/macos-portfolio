@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useOverlayStore } from '@/stores/useOverlayStore';
 import { ORIGINAL_TRACKS } from '@/data/music';
 
 interface PhotoItem {
@@ -144,7 +145,19 @@ export const PhotosApp: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'campaign' | 'gear' | 'sessions' | 'club'>('all');
   const [lightboxPhoto, setLightboxPhoto] = useState<PhotoItem | null>(null);
 
-  const { currentTrack, isPlaying, playTrack, togglePlay } = useAudioStore();
+  const currentTrack = useAudioStore((s) => s.currentTrack);
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const playTrack = useAudioStore((s) => s.playTrack);
+  const togglePlay = useAudioStore((s) => s.togglePlay);
+  const registerQuickLook = useOverlayStore((s) => s.registerQuickLook);
+  const unregisterQuickLook = useOverlayStore((s) => s.unregisterQuickLook);
+
+  React.useEffect(() => {
+    if (!lightboxPhoto) return;
+    const closer = () => setLightboxPhoto(null);
+    registerQuickLook(closer);
+    return () => unregisterQuickLook(closer);
+  }, [lightboxPhoto, registerQuickLook, unregisterQuickLook]);
 
   const filteredPhotos = PHOTOS.filter((p) => {
     if (selectedCategory === 'all') return true;
@@ -409,6 +422,7 @@ export const PhotosApp: React.FC = () => {
       <AnimatePresence>
         {lightboxPhoto && (
           <motion.div
+            data-modal="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

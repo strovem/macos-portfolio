@@ -24,6 +24,7 @@ import { useLockStore } from '@/stores/useLockStore';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useOverlayStore } from '@/stores/useOverlayStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { playDropSnapSound, playClickSound } from '@/utils/systemSounds';
 import { getFrequencyBars } from '@/lib/audioAnalyser';
@@ -49,41 +50,46 @@ function NotchFFTVisualizer({
   const bar3Ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    let animId: number;
+    let animId: number | null = null;
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const updateBars = () => {
-      const bars = getFrequencyBars(4, isPlaying);
+      if (!document.hidden || !isPlaying) {
+        const bars = getFrequencyBars(4, isPlaying && !reducedMotion);
 
-      if (bar0Ref.current) {
-        const h0 = isPlaying ? Math.max(3, Math.round(bars[0] * barHeight)) : 3;
-        bar0Ref.current.style.height = `${h0}px`;
-      }
-      if (bar1Ref.current) {
-        const h1 = isPlaying ? Math.max(4, Math.round(bars[1] * barHeight)) : 5;
-        bar1Ref.current.style.height = `${h1}px`;
-      }
-      if (bar2Ref.current) {
-        const h2 = isPlaying ? Math.max(3, Math.round(bars[2] * barHeight)) : 3;
-        bar2Ref.current.style.height = `${h2}px`;
-      }
-      if (bar3Ref.current) {
-        const h3 = isPlaying ? Math.max(4, Math.round(bars[3] * barHeight)) : 6;
-        bar3Ref.current.style.height = `${h3}px`;
+        if (bar0Ref.current) {
+          const h0 = isPlaying ? Math.max(3, Math.round((reducedMotion ? 0.5 : bars[0]) * barHeight)) : 3;
+          bar0Ref.current.style.height = `${h0}px`;
+        }
+        if (bar1Ref.current) {
+          const h1 = isPlaying ? Math.max(4, Math.round((reducedMotion ? 0.75 : bars[1]) * barHeight)) : 5;
+          bar1Ref.current.style.height = `${h1}px`;
+        }
+        if (bar2Ref.current) {
+          const h2 = isPlaying ? Math.max(3, Math.round((reducedMotion ? 0.45 : bars[2]) * barHeight)) : 3;
+          bar2Ref.current.style.height = `${h2}px`;
+        }
+        if (bar3Ref.current) {
+          const h3 = isPlaying ? Math.max(4, Math.round((reducedMotion ? 0.85 : bars[3]) * barHeight)) : 6;
+          bar3Ref.current.style.height = `${h3}px`;
+        }
       }
 
-      if (isPlaying) {
+      if (isPlaying && !reducedMotion) {
         animId = requestAnimationFrame(updateBars);
       }
     };
 
-    if (isPlaying) {
+    if (isPlaying && !reducedMotion) {
       animId = requestAnimationFrame(updateBars);
     } else {
       updateBars();
     }
 
     return () => {
-      if (animId) cancelAnimationFrame(animId);
+      if (animId !== null) cancelAnimationFrame(animId);
     };
   }, [isPlaying, barHeight]);
 
@@ -122,31 +128,43 @@ export function DynamicNotch() {
   const notchHudMessage = useSettingsStore((state) => state.notchHudMessage);
   const setNotchHudMessage = useSettingsStore((state) => state.setNotchHudMessage);
 
-  const {
-    currentTrack,
-    isPlaying,
-    togglePlay,
-    nextTrack,
-    prevTrack,
-    currentTime,
-    duration,
-    seek,
-    playTrack,
-  } = useAudioStore();
+  const currentTrack = useAudioStore((state) => state.currentTrack);
+  const isPlaying = useAudioStore((state) => state.isPlaying);
+  const togglePlay = useAudioStore((state) => state.togglePlay);
+  const nextTrack = useAudioStore((state) => state.nextTrack);
+  const prevTrack = useAudioStore((state) => state.prevTrack);
+  const currentTime = useAudioStore((state) => state.currentTime);
+  const duration = useAudioStore((state) => state.duration);
+  const seek = useAudioStore((state) => state.seek);
+  const playTrack = useAudioStore((state) => state.playTrack);
 
   const weather = useWeatherStore((state) => state.weather);
   const toggleWeatherPopover = useWeatherStore((state) => state.togglePopover);
   const lock = useLockStore((state) => state.lock);
   const openWindow = useWindowStore((state) => state.openWindow);
-  const { isDragging, dragItem, hoverTarget, setHoverTarget, endDrag } = useDragStore();
+  const isDragging = useDragStore((state) => state.isDragging);
+  const dragItem = useDragStore((state) => state.dragItem);
+  const hoverTarget = useDragStore((state) => state.hoverTarget);
+  const setHoverTarget = useDragStore((state) => state.setHoverTarget);
+  const endDrag = useDragStore((state) => state.endDrag);
   const pushNotification = useNotificationStore((state) => state.pushNotification);
+  const closeNotificationCenter = useNotificationStore((state) => state.closeCenter);
+  const setWeatherPopoverOpen = useWeatherStore((state) => state.setPopoverOpen);
+  const isExpanded = useOverlayStore((state) => state.isNotchExpanded);
+  const setIsExpanded = useOverlayStore((state) => state.setNotchExpanded);
   const { t, language } = useTranslation();
 
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hudTimerRef = useRef<NodeJS.Timeout | null>(null);
   const notchRef = useRef<HTMLDivElement>(null);
+
+  // Clean up hover intent timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
 
   // Auto-dismiss HUD message after 1.5 seconds
   useEffect(() => {
@@ -174,38 +192,21 @@ export function DynamicNotch() {
     return () => {
       document.removeEventListener('pointerdown', handlePointerDownOutside);
     };
-  }, [isExpanded]);
-
-  // Escape key collapses notch
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isExpanded) {
-        setIsExpanded(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExpanded]);
+  }, [isExpanded, setIsExpanded]);
 
   // Hover Intent management (~140ms in, ~260ms out)
   const handleMouseEnter = () => {
-    if (isDragging) {
-      if (dragItem?.type === 'music-track') {
-        setHoverTarget('notch');
-      }
-      return;
-    }
+    if (isDragging) return;
     setIsHovered(true);
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     hoverTimerRef.current = setTimeout(() => {
+      setWeatherPopoverOpen(false);
+      closeNotificationCenter();
       setIsExpanded(true);
     }, 140);
   };
 
   const handleMouseLeave = () => {
-    if (hoverTarget === 'notch') {
-      setHoverTarget(null);
-    }
     setIsHovered(false);
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     hoverTimerRef.current = setTimeout(() => {
@@ -213,17 +214,17 @@ export function DynamicNotch() {
     }, 260);
   };
 
-  // Drag-and-drop drop handler on Notch
+  // Drag-and-drop drop handler on Notch (fallback if pointerup reaches notch directly)
   const handleDropRelease = useCallback(() => {
     if (isDragging && dragItem?.track && hoverTarget === 'notch') {
       playDropSnapSound();
       playTrack(dragItem.track);
       pushNotification({
-        title: 'Studio',
+        title: 'Dynamic Notch',
         message:
           language === 'tr'
-            ? `${dragItem.track.title} yüklendi ve oynatılıyor.`
-            : `${dragItem.track.title} loaded and playing.`,
+            ? `"${dragItem.track.title}" yüklendi ve çalınıyor.`
+            : `"${dragItem.track.title}" loaded and playing.`,
         appId: 'studio',
         duration: 4000,
       });
@@ -276,6 +277,7 @@ export function DynamicNotch() {
   return (
     <div
       ref={notchRef}
+      data-drop-zone="notch"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onPointerUp={handleDropRelease}
@@ -325,7 +327,7 @@ export function DynamicNotch() {
             >
               <Disc3 className="w-4 h-4 animate-spin text-emerald-400" />
               <span>
-                {language === 'tr' ? "Studio'da Çalmak İçin Bırak" : 'Drop to Play in Studio'}
+                {language === 'tr' ? "Çentik'te Çalmak İçin Bırak" : 'Drop to Play on Notch'}
               </span>
             </motion.div>
           ) : /* STATE 2: Transient HUD Pulse */
@@ -444,7 +446,7 @@ export function DynamicNotch() {
                     </div>
 
                     {/* Mini Scrubber Bar */}
-                    <div className="flex-1 flex items-center gap-1.5 text-[9px] text-white/40 font-mono">
+                    <div className="flex-1 flex items-center gap-1.5 text-[9px] text-white/40 font-mono tabular-nums">
                       <span>{formatTime(currentTime)}</span>
                       <div
                         onClick={(e) => {
@@ -477,8 +479,10 @@ export function DynamicNotch() {
                   onClick={(e) => {
                     e.stopPropagation();
                     playClickSound();
-                    toggleWeatherPopover();
+                    closeNotificationCenter();
+                    useOverlayStore.getState().setActivePopover(null);
                     setIsExpanded(false);
+                    toggleWeatherPopover();
                   }}
                   className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors text-[11px]"
                 >

@@ -20,31 +20,28 @@ import {
   ExternalLink,
   Play,
   Pause,
-  SkipForward,
-  SkipBack,
   Volume2,
-  Sparkles,
-  Disc,
-  RotateCcw,
-  RotateCw,
   Folder,
   ArrowUpRight,
   AudioWaveform,
   Eye,
   Share2,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { TrafficLights } from '@/components/window/TrafficLights';
 import { WindowContext } from '@/components/window/Window';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
+import { useMissionControlStore } from '@/stores/useMissionControlStore';
+import { useContextMenuStore } from '@/stores/useContextMenuStore';
+import { useLockStore } from '@/stores/useLockStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useOverlayStore } from '@/stores/useOverlayStore';
 import { useContextMenu } from '@/components/os/ContextMenu';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { AppId } from '@/types/os';
-import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
 import { FinderQuickLookModal } from './FinderQuickLookModal';
-import { playDockClickSound, playTrashSound, playDropSnapSound, playTrashCrumpleSound } from '@/utils/soundEffects';
+import { playTrashSound, playDropSnapSound, playTrashCrumpleSound, playWindowCloseSound } from '@/utils/soundEffects';
 import { useDragStore } from '@/stores/useDragStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { copyPortfolioDeepLink } from '@/hooks/useUrlDeepLink';
@@ -396,28 +393,15 @@ const RedDocIcon: React.FC = () => (
   </svg>
 );
 
-const formatAudioTime = (sec: number): string => {
-  if (isNaN(sec) || sec < 0) return '0:00';
-  const mins = Math.floor(sec / 60);
-  const secs = Math.floor(sec % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-};
-
 export const FinderApp: React.FC = () => {
   const windowContext = useContext(WindowContext);
   const openWindow = useWindowStore((state) => state.openWindow);
+  const language = useSettingsStore((state) => state.language);
 
-  const {
-    currentTrack,
-    isPlaying: isAudioPlaying,
-    currentTime,
-    duration,
-    seek,
-    playTrack,
-    togglePlay,
-    nextTrack,
-    prevTrack,
-  } = useAudioStore();
+  const currentTrack = useAudioStore((state) => state.currentTrack);
+  const isAudioPlaying = useAudioStore((state) => state.isPlaying);
+  const playTrack = useAudioStore((state) => state.playTrack);
+  const togglePlay = useAudioStore((state) => state.togglePlay);
 
   const finderSection = useWindowStore((state) => state.finderSection);
   const [activeSection, setActiveSection] = useState<SidebarSection>(finderSection || 'documents');
@@ -436,7 +420,7 @@ export const FinderApp: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [sortAsc, setSortAsc] = useState(true);
-  const [previewFile, setPreviewFile] = useState<FinderFileItem | null>(null);
+  const [quickLookFile, setQuickLookFile] = useState<FinderFileItem | null>(null);
 
   const { handleContextMenu } = useContextMenu();
   const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
@@ -446,6 +430,21 @@ export const FinderApp: React.FC = () => {
   const setHoverTarget = useDragStore((state) => state.setHoverTarget);
   const endDrag = useDragStore((state) => state.endDrag);
   const pushNotification = useNotificationStore((state) => state.pushNotification);
+
+  const handleOpenFile = (file: FinderFileItem) => {
+    if (file.kind === 'Folder' || file.targetSection) {
+      selectSection(file.targetSection || 'music');
+      return;
+    }
+    if (file.targetAppId) {
+      openWindow(file.targetAppId);
+      return;
+    }
+    setQuickLookFile(file);
+    if (file.track && !(isAudioPlaying && currentTrack?.id === file.track.id)) {
+      playTrack(file.track);
+    }
+  };
 
   const handleFilePointerDown = (e: React.PointerEvent, file: FinderFileItem) => {
     if (e.button !== 0) return;
@@ -474,7 +473,12 @@ export const FinderApp: React.FC = () => {
       if (draggingInitiated) {
         updateCursor({ x: moveEvt.clientX, y: moveEvt.clientY });
         const el = document.elementFromPoint(moveEvt.clientX, moveEvt.clientY);
-        const dropZone = el?.closest('[data-drop-zone]')?.getAttribute('data-drop-zone') as 'studio' | 'trash' | null;
+        const rawDropZone = el?.closest('[data-drop-zone]')?.getAttribute('data-drop-zone') as
+          | 'studio'
+          | 'trash'
+          | 'notch'
+          | null;
+        const dropZone = rawDropZone === 'notch' && !file.track ? null : rawDropZone;
         setHoverTarget(dropZone);
       }
     };
@@ -495,15 +499,33 @@ export const FinderApp: React.FC = () => {
           openWindow('studio');
           pushNotification({
             title: 'Studio DAW',
-            message: `"${file.name}" Studio'ya yüklendi ve çalınıyor.`,
+            message:
+              language === 'tr'
+                ? `"${file.name}" Studio'ya yüklendi ve çalınıyor.`
+                : `Loaded "${file.name}" into Studio.`,
+            appId: 'studio',
+            duration: 4000,
+          });
+        } else if (dropZone === 'notch' && file.track) {
+          playDropSnapSound();
+          playTrack(file.track);
+          pushNotification({
+            title: 'Dynamic Notch',
+            message:
+              language === 'tr'
+                ? `"${file.name}" Çentik'te oynatılıyor.`
+                : `Playing "${file.name}" on Dynamic Notch.`,
             appId: 'studio',
             duration: 4000,
           });
         } else if (dropZone === 'trash') {
           playTrashCrumpleSound();
           pushNotification({
-            title: 'Çöp Sepeti',
-            message: `"${file.name}" çöp sepetine taşındı.`,
+            title: language === 'tr' ? 'Çöp Sepeti' : 'Trash',
+            message:
+              language === 'tr'
+                ? `"${file.name}" çöp sepetine taşındı.`
+                : `Moved "${file.name}" to Trash.`,
             appId: 'trash',
             duration: 3500,
           });
@@ -520,35 +542,37 @@ export const FinderApp: React.FC = () => {
     setSelectedFileId(file.id);
     handleContextMenu(e, [
       {
-        label: 'Hızlı Bakış (Space)',
+        label: language === 'tr' ? 'Hızlı Bakış (Space)' : 'Quick Look (Space)',
         shortcut: 'Space',
         icon: <Eye className="w-3.5 h-3.5 text-blue-500" />,
         onClick: () => {
-          setPreviewFile(file);
+          setQuickLookFile(file);
         },
       },
       {
-        label: file.kind === 'Folder' ? 'Klasörü Aç' : file.kind === 'Application' ? 'Uygulamayı Aç' : file.track ? 'Parçayı Çal' : 'Aç',
+        label:
+          file.kind === 'Folder'
+            ? language === 'tr'
+              ? 'Klasörü Aç'
+              : 'Open Folder'
+            : file.kind === 'Application'
+            ? language === 'tr'
+              ? 'Uygulamayı Aç'
+              : 'Open Application'
+            : file.track
+            ? language === 'tr'
+              ? 'Parçayı Çal'
+              : 'Play Track'
+            : language === 'tr'
+            ? 'Aç'
+            : 'Open',
         shortcut: '↵',
         icon: <ExternalLink className="w-3.5 h-3.5 text-slate-500" />,
-        onClick: () => {
-          if (file.kind === 'Folder' || file.targetSection) {
-            setActiveSection(file.targetSection || 'music');
-            return;
-          }
-          if (file.targetAppId) {
-            openWindow(file.targetAppId);
-            return;
-          }
-          setPreviewFile(file);
-          if (file.track) {
-            playTrack(file.track);
-          }
-        },
+        onClick: () => handleOpenFile(file),
       },
       { separator: true },
       {
-        label: 'Spotlight Ara...',
+        label: language === 'tr' ? 'Spotlight Ara...' : 'Search Spotlight...',
         shortcut: '⌘K',
         icon: <Search className="w-3.5 h-3.5 text-slate-400" />,
         onClick: openSpotlight,
@@ -612,52 +636,77 @@ export const FinderApp: React.FC = () => {
     });
   }, [sectionFiles, searchQuery, sortAsc]);
 
-  const [isQuickLookOpen, setIsQuickLookOpen] = useState(false);
-
   const selectedFile = useMemo(() => {
     return displayedFiles.find((f) => f.id === selectedFileId) || null;
   }, [displayedFiles, selectedFileId]);
 
-  // Space bar listener for Quick Look
+  // Active-window-scoped Space bar listener for unified Quick Look
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
-      if (e.code === 'Space' && selectedFile) {
-        e.preventDefault();
-        setIsQuickLookOpen((prev) => !prev);
+      if (!windowContext?.isActive) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)) {
+        return;
+      }
+
+      const lockState = useLockStore.getState();
+      if (lockState.isLocked || lockState.isSleeping) return;
+      if (useSpotlightStore.getState().isOpen) return;
+      if (useMissionControlStore.getState().isOpen) return;
+      if (useNotificationStore.getState().isCenterOpen) return;
+      if (useContextMenuStore.getState().isOpen) return;
+      if (useOverlayStore.getState().activePopover !== null) return;
+
+      if (e.code === 'Space') {
+        if (quickLookFile) {
+          e.preventDefault();
+          playWindowCloseSound();
+          setQuickLookFile(null);
+        } else if (selectedFile) {
+          e.preventDefault();
+          setQuickLookFile(selectedFile);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFile]);
+  }, [windowContext?.isActive, quickLookFile, selectedFile]);
 
   // Capitalized section title
   const currentTitle = useMemo(() => {
     switch (activeSection) {
       case 'recents':
-        return 'Recents';
+        return language === 'tr' ? 'Son Kullanılanlar' : 'Recents';
       case 'downloads':
-        return 'Downloads';
+        return language === 'tr' ? 'İndirilenler' : 'Downloads';
       case 'desktop':
-        return 'Desktop';
+        return language === 'tr' ? 'Masaüstü' : 'Desktop';
       case 'documents':
-        return 'Documents';
+        return language === 'tr' ? 'Belgeler' : 'Documents';
       case 'music':
-        return "My Music's";
+        return language === 'tr' ? 'Müziklerim' : "My Music's";
       case 'applications':
-        return 'Applications';
+        return language === 'tr' ? 'Uygulamalar' : 'Applications';
       case 'trash':
-        return 'Trash';
+        return language === 'tr' ? 'Çöp Sepeti' : 'Trash';
     }
-  }, [activeSection]);
+  }, [activeSection, language]);
 
-  // Drag handler for window top bar
+  // Drag & double-click handlers for window top bars
   const handleDragPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('button, input, a, tr')) {
       return;
     }
     windowContext?.onFocus?.();
     windowContext?.dragControls?.start(e);
+  };
+
+  const handleHeaderDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (windowContext?.isMobile) return;
+    if ((e.target as HTMLElement).closest('button, input, a, tr')) {
+      return;
+    }
+    windowContext?.onMaximize?.();
   };
 
   return (
@@ -669,24 +718,38 @@ export const FinderApp: React.FC = () => {
             {/* Top Bar of Sidebar: Traffic Lights & Sidebar Toggle */}
             <div
               onPointerDown={handleDragPointerDown}
+              onDoubleClick={handleHeaderDoubleClick}
               className="h-12 px-3.5 flex items-center justify-between cursor-default"
             >
               <TrafficLights
                 onClose={windowContext?.onClose}
                 onMinimize={windowContext?.onMinimize}
                 onMaximize={windowContext?.onMaximize}
+                onTile={windowContext?.onTile}
+                tilePosition={windowContext?.tilePosition}
                 isMaximized={windowContext?.isMaximized}
                 isActive={windowContext?.isActive}
               />
 
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                title="Hide Sidebar"
-              >
-                <PanelLeft className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  title={language === 'tr' ? 'Kenar Çubuğunu Gizle' : 'Hide Sidebar'}
+                >
+                  <PanelLeft className="w-3.5 h-3.5" />
+                </button>
+                {windowContext?.isMobile && windowContext.onClose && (
+                  <button
+                    type="button"
+                    onClick={windowContext.onClose}
+                    className="px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-[11px] font-medium text-slate-700 dark:text-neutral-200"
+                  >
+                    {language === 'tr' ? 'Bitti' : 'Done'}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Navigation Sections */}
@@ -821,7 +884,8 @@ export const FinderApp: React.FC = () => {
         {/* Top Header / Toolbar */}
         <div
           onPointerDown={handleDragPointerDown}
-          className="h-13 px-3 sm:px-6 flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-md shrink-0 cursor-default gap-2"
+          onDoubleClick={handleHeaderDoubleClick}
+          className="h-[52px] px-3 sm:px-6 flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-md shrink-0 cursor-default gap-2"
         >
           {/* Left: Folder Title & Optional Toggle if Sidebar is closed */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -831,6 +895,8 @@ export const FinderApp: React.FC = () => {
                   onClose={windowContext?.onClose}
                   onMinimize={windowContext?.onMinimize}
                   onMaximize={windowContext?.onMaximize}
+                  onTile={windowContext?.onTile}
+                  tilePosition={windowContext?.tilePosition}
                   isMaximized={windowContext?.isMaximized}
                   isActive={windowContext?.isActive}
                 />
@@ -838,13 +904,13 @@ export const FinderApp: React.FC = () => {
                   type="button"
                   onClick={() => setIsSidebarOpen(true)}
                   className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white"
-                  title="Show Sidebar"
+                  title={language === 'tr' ? 'Kenar Çubuğunu Göster' : 'Show Sidebar'}
                 >
                   <PanelLeft className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
-            <h1 className="text-base sm:text-lg font-bold text-slate-850 dark:text-white tracking-tight truncate">
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">
               {currentTitle}
             </h1>
           </div>
@@ -907,7 +973,7 @@ export const FinderApp: React.FC = () => {
               type="button"
               onClick={() => {
                 if (selectedFile) {
-                  setIsQuickLookOpen(true);
+                  setQuickLookFile(selectedFile);
                 }
               }}
               disabled={!selectedFile}
@@ -916,10 +982,12 @@ export const FinderApp: React.FC = () => {
                   ? 'bg-neutral-100 dark:bg-neutral-800/80 border-black/[0.04] dark:border-white/[0.06] text-slate-700 dark:text-neutral-200 hover:bg-neutral-200/80 dark:hover:bg-neutral-700 cursor-pointer shadow-2xs'
                   : 'opacity-40 cursor-not-allowed text-slate-400 border-transparent'
               }`}
-              title="Quick Look (Space)"
+              title={language === 'tr' ? 'Hızlı Bakış (Space)' : 'Quick Look (Space)'}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-medium hidden sm:inline">Preview</span>
+              <span className="text-[11px] font-medium hidden sm:inline">
+                {language === 'tr' ? 'Önizle' : 'Preview'}
+              </span>
             </button>
 
             {/* Search Button / Input */}
@@ -963,11 +1031,21 @@ export const FinderApp: React.FC = () => {
               type="button"
               onClick={() => copyPortfolioDeepLink('finder', activeSection)}
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 border border-black/[0.04] dark:border-white/[0.06] text-slate-600 dark:text-neutral-300 text-xs font-medium hover:bg-neutral-200/60 dark:hover:bg-neutral-700 transition-colors cursor-pointer shadow-2xs"
-              title="Bağlantıyı Kopyala (Deep Link)"
+              title={language === 'tr' ? 'Bağlantıyı Kopyala (Deep Link)' : 'Copy Deep Link'}
             >
               <Share2 className="w-3.5 h-3.5 text-[#007AFF]" />
-              <span className="text-[11px]">Paylaş</span>
+              <span className="text-[11px]">{language === 'tr' ? 'Paylaş' : 'Share'}</span>
             </button>
+
+            {windowContext?.isMobile && windowContext.onClose && (
+              <button
+                type="button"
+                onClick={windowContext.onClose}
+                className="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[11px] font-semibold text-slate-700 dark:text-neutral-200 border border-black/5 dark:border-white/10"
+              >
+                {language === 'tr' ? 'Bitti' : 'Done'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -1046,23 +1124,15 @@ export const FinderApp: React.FC = () => {
                   return (
                     <tr
                       key={file.id}
-                      onClick={() => setSelectedFileId(file.id)}
-                      onPointerDown={(e) => handleFilePointerDown(e, file)}
-                      onContextMenu={(e) => onFileContextMenu(e, file)}
-                      onDoubleClick={() => {
-                        if (file.kind === 'Folder' || file.targetSection) {
-                          setActiveSection(file.targetSection || 'music');
-                          return;
-                        }
-                        if (file.targetAppId) {
-                          openWindow(file.targetAppId);
-                          return;
-                        }
-                        setPreviewFile(file);
-                        if (file.track && !isThisTrackPlaying) {
-                          playTrack(file.track);
+                      onClick={() => {
+                        setSelectedFileId(file.id);
+                        if (windowContext?.isMobile) {
+                          handleOpenFile(file);
                         }
                       }}
+                      onPointerDown={(e) => handleFilePointerDown(e, file)}
+                      onContextMenu={(e) => onFileContextMenu(e, file)}
+                      onDoubleClick={() => handleOpenFile(file)}
                       className={`cursor-pointer transition-colors group ${
                         isSelected
                           ? 'bg-[#E8F0FE] dark:bg-[#007AFF]/25 text-[#0066CC] dark:text-[#38BDF8] rounded-md'
@@ -1151,23 +1221,15 @@ export const FinderApp: React.FC = () => {
                 return (
                   <div
                     key={file.id}
-                    onClick={() => setSelectedFileId(file.id)}
-                    onPointerDown={(e) => handleFilePointerDown(e, file)}
-                    onContextMenu={(e) => onFileContextMenu(e, file)}
-                    onDoubleClick={() => {
-                      if (file.kind === 'Folder' || file.targetSection) {
-                        setActiveSection(file.targetSection || 'music');
-                        return;
-                      }
-                      if (file.targetAppId) {
-                        openWindow(file.targetAppId);
-                        return;
-                      }
-                      setPreviewFile(file);
-                      if (file.track && !isThisTrackPlaying) {
-                        playTrack(file.track);
+                    onClick={() => {
+                      setSelectedFileId(file.id);
+                      if (windowContext?.isMobile) {
+                        handleOpenFile(file);
                       }
                     }}
+                    onPointerDown={(e) => handleFilePointerDown(e, file)}
+                    onContextMenu={(e) => onFileContextMenu(e, file)}
+                    onDoubleClick={() => handleOpenFile(file)}
                     className={`flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer relative group ${
                       isSelected
                         ? 'bg-[#E8F0FE] dark:bg-[#007AFF]/20 border-[#007AFF]/40 ring-1 ring-[#007AFF]/30'
@@ -1230,18 +1292,13 @@ export const FinderApp: React.FC = () => {
                     <button
                       key={file.id}
                       type="button"
-                      onClick={() => setSelectedFileId(file.id)}
-                      onDoubleClick={() => {
-                        if (file.kind === 'Folder' || file.targetSection) {
-                          setActiveSection(file.targetSection || 'music');
-                          return;
+                      onClick={() => {
+                        setSelectedFileId(file.id);
+                        if (windowContext?.isMobile) {
+                          handleOpenFile(file);
                         }
-                        if (file.targetAppId) {
-                          openWindow(file.targetAppId);
-                          return;
-                        }
-                        setPreviewFile(file);
                       }}
+                      onDoubleClick={() => handleOpenFile(file)}
                       className={`w-full flex items-center justify-between p-2 rounded-lg text-xs text-left transition-colors ${
                         isSelected
                           ? 'bg-[#007AFF] text-white'
@@ -1319,10 +1376,10 @@ export const FinderApp: React.FC = () => {
                         ) : (
                           <button
                             type="button"
-                            onClick={() => setPreviewFile(activeFile)}
+                            onClick={() => setQuickLookFile(activeFile)}
                             className="mt-2 px-4 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium hover:bg-blue-600 transition-colors cursor-pointer"
                           >
-                            Quick Look
+                            {language === 'tr' ? 'Hızlı Bakış' : 'Quick Look'}
                           </button>
                         )}
                       </div>
@@ -1343,349 +1400,11 @@ export const FinderApp: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Look Preview Modal on Double-click */}
-      {previewFile && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setPreviewFile(null)}
-        >
-          <div
-            className="w-full max-w-xl rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top Bar of Quick Look */}
-            <div className="h-10 px-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-neutral-100/70 dark:bg-neutral-800/70">
-              <div className="flex items-center gap-2 min-w-0">
-                {previewFile.targetAppId === 'tonegenerator' ? (
-                  <Volume2 className="w-3.5 h-3.5 text-cyan-500" />
-                ) : previewFile.track && previewFile.kind.includes('audio') ? (
-                  <Music2 className="w-3.5 h-3.5 text-indigo-500" />
-                ) : (
-                  <RedDocIcon />
-                )}
-                <span className="text-xs font-semibold text-slate-800 dark:text-white truncate">
-                  {previewFile.name} — Quick Look
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreviewFile(null)}
-                className="p-1 rounded text-slate-400 hover:text-slate-800 dark:hover:text-white"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {previewFile.targetAppId === 'tonegenerator' ? (
-              <div className="h-[520px] flex flex-col bg-neutral-900">
-                <ToneGeneratorApp />
-              </div>
-            ) : previewFile.track && previewFile.kind.includes('audio') ? (
-              /* INTERACTIVE MUSIC TRACK PLAYER VIEW */
-              <div className="p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                  {/* Rotating Vinyl Record Artwork */}
-                  <div className="relative w-32 h-32 shrink-0 flex items-center justify-center">
-                    <motion.div
-                      animate={
-                        isAudioPlaying && currentTrack?.id === previewFile.track.id
-                          ? { rotate: 360 }
-                          : { rotate: 0 }
-                      }
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      className={`w-32 h-32 rounded-full bg-gradient-to-tr ${previewFile.track.coverGradient} shadow-xl p-1.5 flex items-center justify-center`}
-                    >
-                      <div className="w-full h-full rounded-full border border-white/20 flex items-center justify-center bg-black/40">
-                        <div className="w-11 h-11 rounded-full bg-neutral-900 border-2 border-white/40 flex items-center justify-center shadow-inner">
-                          <Disc className="w-5 h-5 text-white/80" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* Metadata and Controls */}
-                  <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left gap-1.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold uppercase tracking-wider">
-                        {previewFile.track.genre}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {previewFile.track.bpm} BPM
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {previewFile.track.year}
-                      </span>
-                    </div>
-
-                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                      {previewFile.track.title}
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-neutral-400">
-                      {previewFile.track.artist} · <span className="italic">{previewFile.track.album}</span>
-                    </p>
-
-                    {/* Interactive Audio Scrubbing Bar & Timeline */}
-                    <div className="w-full flex flex-col gap-1.5 my-2">
-                      <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-neutral-400 select-none">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-800 dark:text-white font-semibold">
-                            {formatAudioTime(
-                              currentTrack?.id === previewFile.track.id ? currentTime : 0
-                            )}
-                          </span>
-                          {isAudioPlaying && currentTrack?.id === previewFile.track.id && (
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#007AFF] animate-ping" />
-                          )}
-                        </div>
-
-                        {/* Equalizer animation mini bars */}
-                        <div className="flex items-center gap-0.5 h-3">
-                          {[4, 12, 18, 10, 22, 14, 8, 20, 16, 12, 6, 18, 14, 22, 10, 6].map((h, i) => (
-                            <motion.div
-                              key={i}
-                              className="w-0.5 rounded-full bg-gradient-to-t from-indigo-500 to-[#007AFF]"
-                              animate={
-                                isAudioPlaying && currentTrack?.id === previewFile.track!.id
-                                  ? { height: ['20%', `${Math.min(100, h * 5)}%`, '20%'] }
-                                  : { height: '25%' }
-                              }
-                              transition={{
-                                duration: 0.35,
-                                repeat:
-                                  isAudioPlaying && currentTrack?.id === previewFile.track!.id
-                                    ? Infinity
-                                    : 0,
-                                delay: i * 0.04,
-                              }}
-                              style={{ minHeight: '3px' }}
-                            />
-                          ))}
-                        </div>
-
-                        <span>
-                          {formatAudioTime(
-                            currentTrack?.id === previewFile.track.id && duration > 0
-                              ? duration
-                              : previewFile.track.durationSeconds || 180
-                          )}
-                        </span>
-                      </div>
-
-                      {/* Interactive Scrubbing Slider Bar */}
-                      <div className="relative w-full h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden flex items-center group cursor-pointer hover:h-2.5 transition-all">
-                        {/* Progress Fill */}
-                        <div
-                          className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-500 to-[#007AFF] rounded-full transition-all duration-75 pointer-events-none"
-                          style={{
-                            width: `${
-                              currentTrack?.id === previewFile.track.id && duration > 0
-                                ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
-                                : 0
-                            }%`,
-                          }}
-                        />
-
-                        {/* Transparent range input for smooth seeking / scrubbing */}
-                        <input
-                          type="range"
-                          min={0}
-                          max={
-                            currentTrack?.id === previewFile.track.id && duration > 0
-                              ? duration
-                              : previewFile.track.durationSeconds || 180
-                          }
-                          step={0.5}
-                          value={currentTrack?.id === previewFile.track.id ? currentTime : 0}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (currentTrack?.id !== previewFile.track!.id) {
-                              playTrack(previewFile.track!);
-                            }
-                            seek(val);
-                          }}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                          title="Scrub track backward / forward"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Audio Controls */}
-                    <div className="flex items-center gap-2 mt-1">
-                      <button
-                        type="button"
-                        onClick={prevTrack}
-                        title="Previous Track"
-                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
-                      >
-                        <SkipBack className="w-4 h-4 fill-current" />
-                      </button>
-
-                      {/* Rewind -10s */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (currentTrack?.id === previewFile.track!.id) {
-                            seek(Math.max(0, currentTime - 10));
-                          }
-                        }}
-                        title="Rewind 10s"
-                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors flex items-center justify-center"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isAudioPlaying && currentTrack?.id === previewFile.track!.id) {
-                            togglePlay();
-                          } else {
-                            playTrack(previewFile.track!);
-                          }
-                        }}
-                        className="px-4 py-1.5 rounded-full bg-[#007AFF] hover:bg-blue-600 text-white font-medium text-xs flex items-center gap-1.5 shadow-md transition-all"
-                      >
-                        {isAudioPlaying && currentTrack?.id === previewFile.track.id ? (
-                          <>
-                            <Pause className="w-3.5 h-3.5 fill-white" />
-                            <span>Pause</span>
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
-                            <span>Play & Listen</span>
-                          </>
-                        )}
-                      </button>
-
-                      {/* Fast-Forward +10s */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (currentTrack?.id === previewFile.track!.id) {
-                            seek(Math.min(duration || 9999, currentTime + 10));
-                          }
-                        }}
-                        title="Fast Forward 10s"
-                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors flex items-center justify-center"
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={nextTrack}
-                        title="Next Track"
-                        className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-white transition-colors"
-                      >
-                        <SkipForward className="w-4 h-4 fill-current" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description & Production Notes */}
-                <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
-                  <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
-                    Composition & Sound Design Notes
-                  </h4>
-                  <p>{previewFile.track.description}</p>
-                </div>
-
-                {/* Info Note on Adding Personal Songs */}
-                <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-300">
-                  <span className="font-bold">📁 Custom Audio Files: </span>
-                  You can drop your audio tracks into the <code className="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 font-mono">public/music/</code> directory to play them instantly. Even if files are missing, the built-in Web Audio synthesizer generates live procedural sound!
-                </div>
-              </div>
-            ) : (
-              /* CREATIVE PRODUCER BLUEPRINT VIEW */
-              <div className="p-6 text-xs text-slate-700 dark:text-neutral-300 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
-                <div className="flex items-center gap-3 pb-3 border-b border-black/5 dark:border-white/5">
-                  <RedDocIcon />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] font-semibold">
-                        {previewFile.category || 'Production Document'}
-                      </span>
-                      {previewFile.tags?.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-[9px] text-slate-500 dark:text-neutral-400 font-mono"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
-                      {previewFile.name}
-                    </h3>
-                    <p className="text-[11px] text-slate-400">
-                      {previewFile.kind} • {previewFile.size} • {previewFile.dateModified}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Embedded audio player if document is linked to music */}
-                {previewFile.track && (
-                  <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-indigo-500 text-white">
-                        <Music2 className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-xs text-slate-900 dark:text-white">
-                          {previewFile.track.title}
-                        </div>
-                        <div className="text-[10px] text-slate-500 dark:text-neutral-400">
-                          {previewFile.track.genre} • {previewFile.track.bpm} BPM
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (isAudioPlaying && currentTrack?.id === previewFile.track!.id) {
-                          togglePlay();
-                        } else {
-                          playTrack(previewFile.track!);
-                        }
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-[#007AFF] text-white text-xs font-medium flex items-center gap-1.5 hover:bg-blue-600 transition-colors"
-                    >
-                      {isAudioPlaying && currentTrack?.id === previewFile.track.id ? (
-                        <>
-                          <Pause className="w-3 h-3 fill-white" />
-                          <span>Durdur</span>
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3 h-3 fill-white ml-0.5" />
-                          <span>Stem Dinle</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 font-sans text-xs whitespace-pre-wrap leading-relaxed">
-                  {previewFile.content ||
-                    `Document details and production blueprint for ${previewFile.name}. Prepared by Hüseyin Korumtaş.`}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {/* Quick Look macOS Preview Modal */}
+      {/* Unified macOS Quick Look Preview Modal */}
       <FinderQuickLookModal
-        file={selectedFile}
-        isOpen={isQuickLookOpen}
-        onClose={() => setIsQuickLookOpen(false)}
+        file={quickLookFile}
+        isOpen={Boolean(quickLookFile)}
+        onClose={() => setQuickLookFile(null)}
       />
     </div>
   );

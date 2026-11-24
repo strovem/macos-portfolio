@@ -6,6 +6,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useLockStore } from '@/stores/useLockStore';
+import { useOverlayStore } from '@/stores/useOverlayStore';
 import { PROJECTS } from '@/data/projects';
 import { SKILL_CATEGORIES } from '@/data/skills';
 import { ORIGINAL_TRACKS } from '@/data/music';
@@ -32,6 +33,7 @@ const ALL_COMMANDS = [
   'lang',
   'notify',
   'play',
+  'music',
   'pause',
   'theme',
   'contact',
@@ -122,11 +124,17 @@ export const TerminalApp: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const matrixCanvasRef = useRef<HTMLCanvasElement>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
+  const sudoTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (sudoTimerRef.current) clearTimeout(sudoTimerRef.current);
+    };
+  }, []);
 
   // Zustand Store Selectors
   const openWindow = useWindowStore((state) => state.openWindow);
   const closeWindow = useWindowStore((state) => state.closeWindow);
-  const windows = useWindowStore((state) => state.windows);
   const toggleDarkMode = useSettingsStore((state) => state.toggleDarkMode);
   const isDarkMode = useSettingsStore((state) => state.isDarkMode);
   const language = useSettingsStore((state) => state.language);
@@ -140,7 +148,9 @@ export const TerminalApp: React.FC = () => {
   const lockSystem = useLockStore((state) => state.lock);
 
   // Virtual Filesystem Content Map
-  const virtualFS = useMemo(() => {
+  const virtualFS = useMemo<
+    Record<string, { directories: string[]; files: Record<string, string> }>
+  >(() => {
     return {
       '~': {
         directories: ['Desktop', 'Projects', 'Music'],
@@ -172,7 +182,7 @@ Tip: Run 'open notes' or visit Notes.app to read full creative journal.`,
                   'Synthesis & Mixing',
                 ],
                 frontendEngineering: [
-                  'Next.js 15 App Router',
+                  'Next.js 14 App Router',
                   'TypeScript',
                   'Tailwind CSS',
                   'Framer Motion',
@@ -217,7 +227,7 @@ Real-time 60 FPS FFT frequency analyzer and tactile 6-pad drum machine.`,
           'analog-modular.md': `# Modular Soundscapes
 Analog synth explorations recorded through tape saturation and stereo chorus processing.`,
           'macos-portfolio.md': `# macOS Web OS Architecture
-Next.js 15 App Router, Web Audio FFT Engine, Sequoia Window Tiling, Liquid Glass physics.`,
+Next.js 14 App Router, Web Audio FFT Engine, Sequoia Window Tiling, Liquid Glass physics.`,
         },
       },
       '~/Music': {
@@ -254,6 +264,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
     const drops = Array(columns).fill(1);
 
     const interval = setInterval(() => {
+      if (document.hidden) return;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -271,8 +282,11 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
       }
     }, 33);
 
+    const closer = () => setIsMatrixMode(false);
+    useOverlayStore.getState().registerMatrixMode(closer);
+
     const handleExit = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'q' || (e.ctrlKey && e.key === 'c')) {
+      if (e.key === 'q' || (e.ctrlKey && e.key === 'c')) {
         setIsMatrixMode(false);
       }
     };
@@ -281,6 +295,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
     return () => {
       clearInterval(interval);
       window.removeEventListener('keydown', handleExit);
+      useOverlayStore.getState().unregisterMatrixMode(closer);
     };
   }, [isMatrixMode]);
 
@@ -316,6 +331,10 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
       const elapsed = Date.now() - startTime;
       if (elapsed > 2800) {
         setIsConfettiActive(false);
+        return;
+      }
+      if (document.hidden) {
+        animId = requestAnimationFrame(loop);
         return;
       }
 
@@ -418,7 +437,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
         break;
 
       case 'neofetch': {
-        const openAppNames = Object.values(windows)
+        const openAppNames = Object.values(useWindowStore.getState().windows)
           .filter((w) => w.isOpen && !w.isMinimized)
           .map((w) => w.title)
           .join(', ') || 'None';
@@ -462,7 +481,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
                 <div><span className="text-amber-400 font-semibold">Resolution:</span> {screenRes}</div>
                 <div><span className="text-amber-400 font-semibold">Active Windows:</span> <span className="text-cyan-300">{openAppNames}</span></div>
                 <div><span className="text-amber-400 font-semibold">Now Playing:</span> <span className="text-emerald-300">{currentTrack ? `${currentTrack.title} (${currentTrack.genre})` : 'Idle / Paused'}</span></div>
-                <div><span className="text-amber-400 font-semibold">Stack:</span> Next.js 15, TypeScript, Tailwind, Web Audio FFT, Zustand</div>
+                <div><span className="text-amber-400 font-semibold">Stack:</span> Next.js 14, TypeScript, Tailwind, Web Audio FFT, Zustand</div>
                 <div><span className="text-amber-400 font-semibold">Memory:</span> 16,420 MiB / 65,536 MiB</div>
                 <div className="flex gap-1.5 mt-2">
                   <span className="w-3.5 h-3 bg-red-500 rounded-xs" />
@@ -493,7 +512,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
 
       // Virtual Filesystem: ls
       case 'ls': {
-        const cur = (virtualFS as any)[currentPath];
+        const cur = virtualFS[currentPath];
         if (!cur) {
           newLines.push({ id: Math.random().toString(), type: 'error', text: 'ls: directory not found.' });
         } else {
@@ -548,7 +567,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
         if (!targetFile) {
           newLines.push({ id: Math.random().toString(), type: 'error', text: 'usage: cat <file>' });
         } else {
-          const cur = (virtualFS as any)[currentPath];
+          const cur = virtualFS[currentPath];
           if (cur?.directories?.includes(targetFile)) {
             newLines.push({ id: Math.random().toString(), type: 'error', text: `cat: ${targetFile}: Is a directory` });
           } else if (cur?.files?.[targetFile]) {
@@ -608,7 +627,7 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
             text: 'Usage: close <app|all> (e.g. close studio, close all)',
           });
         } else if (target === 'all') {
-          Object.values(windows).forEach((w) => {
+          Object.values(useWindowStore.getState().windows).forEach((w) => {
             if (w.isOpen && w.id !== 'terminal') {
               closeWindow(w.id);
             }
@@ -687,6 +706,44 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
             text: '✓ Dispatched macOS notification banner.',
           });
         }
+        break;
+      }
+
+      // Audio Control: music (catalog alias) & play [track]
+      case 'music': {
+        newLines.push({
+          id: Math.random().toString(),
+          type: 'output',
+          elements: (
+            <div className="my-1.5 p-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-300">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-amber-400 font-bold">
+                  Studio Discography ({ORIGINAL_TRACKS.length} Original Productions):
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openWindow('studio')}
+                  className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/35 border border-indigo-400/30 cursor-pointer"
+                >
+                  Open Studio DAW ↗
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
+                {ORIGINAL_TRACKS.map((t) => (
+                  <div key={t.id} className="text-slate-300">
+                    <span
+                      className="text-cyan-400 font-bold cursor-pointer hover:underline"
+                      onClick={() => handleCommand(`play ${t.id}`)}
+                    >
+                      play {t.id}
+                    </span>{' '}
+                    — {t.title} <span className="text-emerald-400">({t.bpm} BPM)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ),
+        });
         break;
       }
 
@@ -820,8 +877,10 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
           });
 
           // Delay opening Messages.app for dramatic effect
-          setTimeout(() => {
+          if (sudoTimerRef.current) clearTimeout(sudoTimerRef.current);
+          sudoTimerRef.current = setTimeout(() => {
             openWindow('messages');
+            sudoTimerRef.current = null;
           }, 1000);
         } else if (fullArgs.includes('rm -rf')) {
           newLines.push({
@@ -1061,14 +1120,14 @@ Status:   ${isAudioPlaying ? 'Streaming (60 FPS FFT Active)' : 'Paused'}`
             setInputVal(`${subCmd} ${matches[0]}`);
           }
         } else if (subCmd === 'cd') {
-          const cur = (virtualFS as any)[currentPath];
+          const cur = virtualFS[currentPath];
           const dirs = cur?.directories || [];
           const matches = dirs.filter((d: string) => d.toLowerCase().startsWith(prefix));
           if (matches.length === 1) {
             setInputVal(`cd ${matches[0]}`);
           }
         } else if (subCmd === 'cat') {
-          const cur = (virtualFS as any)[currentPath];
+          const cur = virtualFS[currentPath];
           const files = Object.keys(cur?.files || {});
           const matches = files.filter((f) => f.toLowerCase().startsWith(prefix));
           if (matches.length === 1) {

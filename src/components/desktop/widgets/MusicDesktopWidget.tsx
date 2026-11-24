@@ -13,19 +13,17 @@ interface MusicDesktopWidgetProps {
 }
 
 export function MusicDesktopWidget({ item, onOpenApp }: MusicDesktopWidgetProps) {
-  const {
-    currentTrack,
-    isPlaying,
-    playTrack,
-    togglePlay,
-    nextTrack,
-    prevTrack,
-  } = useAudioStore();
+  const currentTrack = useAudioStore((s) => s.currentTrack);
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const playTrack = useAudioStore((s) => s.playTrack);
+  const togglePlay = useAudioStore((s) => s.togglePlay);
+  const nextTrack = useAudioStore((s) => s.nextTrack);
+  const prevTrack = useAudioStore((s) => s.prevTrack);
 
   const activeTrack = currentTrack || ORIGINAL_TRACKS[0];
 
   return (
-    <div className="relative w-68 p-4 rounded-2xl backdrop-blur-2xl bg-white/90 dark:bg-neutral-900/90 border border-black/10 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 group">
+    <div className="relative w-[272px] p-4 rounded-2xl backdrop-blur-2xl bg-white/90 dark:bg-neutral-900/90 border border-black/10 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 group">
       {/* Top Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">

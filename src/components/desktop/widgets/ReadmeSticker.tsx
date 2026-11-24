@@ -32,7 +32,7 @@ export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
           </span>
         </div>
         <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/10 text-neutral-800">
-          {item.metadata?.tag || t('readmeTag')}
+          {t('readmeTag')}
         </span>
       </div>
 
@@ -65,7 +65,7 @@ export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
           }}
           className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-full bg-neutral-900 text-yellow-200 hover:bg-neutral-800 active:scale-95 transition-all shadow-sm cursor-pointer"
         >
-          <span>{item.metadata?.callToAction || t('readmeCta')}</span>
+          <span>{t('readmeCta')}</span>
           <ArrowUpRight className="w-2.5 h-2.5" />
         </button>
 

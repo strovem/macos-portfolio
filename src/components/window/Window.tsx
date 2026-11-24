@@ -67,11 +67,22 @@ export function Window({
   const windowData = propWindow || storeWindow;
 
   const [isResizing, setIsResizing] = useState(false);
+  const [isWideDesktop, setIsWideDesktop] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
   const resizeCleanupRef = useRef<(() => void) | null>(null);
   const dragControls = useDragControls();
   const isMobile = useIsMobile();
 
   const isWindowInStage = !stageManagerEnabled || isMobile || stageWindowIds.includes(id);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const sync = () => setIsWideDesktop(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   // Safely clean up any active resize listeners when window unmounts
   useEffect(() => {
@@ -96,13 +107,14 @@ export function Window({
       posX.set(0);
       posY.set(0);
     } else if (isMaximized) {
-      posX.set(12);
+      const leftOffset = stageManagerEnabled && isWideDesktop ? 172 : 12;
+      posX.set(leftOffset);
       posY.set(32);
     } else {
       posX.set(windowData.position.x);
       posY.set(windowData.position.y);
     }
-  }, [isMobile, isMaximized, windowData?.position.x, windowData?.position.y, posX, posY]);
+  }, [isMobile, isMaximized, stageManagerEnabled, isWideDesktop, windowData?.position.x, windowData?.position.y, posX, posY]);
 
   if (!windowData || !windowData.isOpen) {
     return null;
@@ -124,10 +136,12 @@ export function Window({
   const handleDrag = (_: MouseEvent | TouchEvent | PointerEvent, info: { point: { x: number; y: number } }) => {
     if (isMobile) return;
     const winWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const isStageActive = stageManagerEnabled && winWidth >= 1024;
+    const leftSnapEdge = isStageActive ? 184 : 16;
     const { x, y } = info.point;
 
     let zone: 'left' | 'right' | 'top' | null = null;
-    if (x <= 16) {
+    if (x <= leftSnapEdge) {
       zone = 'left';
     } else if (x >= winWidth - 16) {
       zone = 'right';
@@ -155,11 +169,12 @@ export function Window({
 
     const winWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const winHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const isStageActive = stageManagerEnabled && winWidth >= 1024;
 
     // Viewport clamp bounds:
     // Window header must remain below top Menubar (y >= 32px)
-    // Window must stay reasonably within horizontal boundaries
-    const minX = -windowData.size.width + 120;
+    // In Stage Manager mode, keep window clear of the 164px left strip
+    const minX = isStageActive ? 172 : -windowData.size.width + 120;
     const maxX = winWidth - 120;
     const minY = 32;
     const maxY = winHeight - 90;
@@ -203,10 +218,20 @@ export function Window({
     const startPosX = posX.get();
     const startPosY = posY.get();
 
+    const winWidth = typeof window !== 'undefined' ? window.innerWidth : 1600;
+    const winHeight = typeof window !== 'undefined' ? window.innerHeight : 1000;
+    const isStageActive = stageManagerEnabled && winWidth >= 1024;
+    const minPosX = isStageActive ? 172 : 0;
+
     const minWidth = 360;
     const minHeight = 240;
-    const maxWidth = typeof window !== 'undefined' ? window.innerWidth - 24 : 1600;
-    const maxHeight = typeof window !== 'undefined' ? window.innerHeight - 60 : 1000;
+    const maxWidth = isStageActive ? Math.max(minWidth, winWidth - 184) : Math.max(minWidth, winWidth - 24);
+    const maxHeight = Math.max(minHeight, winHeight - 60);
+
+    let latestWidth = startWidth;
+    let latestHeight = startHeight;
+    let latestPosX = startPosX;
+    let latestPosY = startPosY;
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       const deltaX = moveEvent.clientX - startX;
@@ -219,15 +244,23 @@ export function Window({
 
       // Horizontal resize
       if (dir === 'e' || dir === 'ne' || dir === 'se') {
-        newWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, startWidth + deltaX)));
+        const rightLimitWidth = Math.min(maxWidth, winWidth - startPosX - 12);
+        newWidth = Math.round(Math.max(minWidth, Math.min(Math.max(minWidth, rightLimitWidth), startWidth + deltaX)));
       } else if (dir === 'w' || dir === 'nw' || dir === 'sw') {
         const potentialWidth = startWidth - deltaX;
-        if (potentialWidth >= minWidth && potentialWidth <= maxWidth) {
+        const potentialPosX = startPosX + deltaX;
+        if (potentialPosX < minPosX) {
+          newPosX = minPosX;
+          newWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, startPosX + startWidth - minPosX)));
+        } else if (potentialWidth >= minWidth && potentialWidth <= maxWidth) {
           newWidth = Math.round(potentialWidth);
-          newPosX = Math.round(startPosX + deltaX);
+          newPosX = Math.round(potentialPosX);
         } else if (potentialWidth < minWidth) {
           newWidth = minWidth;
           newPosX = Math.round(startPosX + (startWidth - minWidth));
+        } else {
+          newWidth = maxWidth;
+          newPosX = Math.round(startPosX + (startWidth - maxWidth));
         }
       }
 
@@ -242,18 +275,28 @@ export function Window({
           newPosY = Math.round(potentialPosY);
         } else if (potentialPosY < 28) {
           const allowedDeltaY = 28 - startPosY;
-          newHeight = Math.round(startHeight - allowedDeltaY);
+          newHeight = Math.round(Math.max(minHeight, Math.min(maxHeight, startHeight - allowedDeltaY)));
           newPosY = 28;
         } else if (potentialHeight < minHeight) {
           newHeight = minHeight;
           newPosY = Math.round(startPosY + (startHeight - minHeight));
+        } else {
+          newHeight = maxHeight;
+          newPosY = Math.round(startPosY + (startHeight - maxHeight));
         }
       }
 
+      latestWidth = newWidth;
+      latestHeight = newHeight;
+      latestPosX = newPosX;
+      latestPosY = newPosY;
+
       posX.set(newPosX);
       posY.set(newPosY);
-      updatePosition(id, { x: newPosX, y: newPosY });
-      updateSize(id, { width: newWidth, height: newHeight });
+      if (containerRef.current) {
+        containerRef.current.style.width = `${newWidth}px`;
+        containerRef.current.style.height = `${newHeight}px`;
+      }
     };
 
     const cleanup = () => {
@@ -268,6 +311,12 @@ export function Window({
     };
 
     const onPointerUp = () => {
+      if (latestPosX !== startPosX || latestPosY !== startPosY) {
+        updatePosition(id, { x: latestPosX, y: latestPosY });
+      }
+      if (latestWidth !== startWidth || latestHeight !== startHeight) {
+        updateSize(id, { width: latestWidth, height: latestHeight });
+      }
       cleanup();
     };
 
@@ -280,13 +329,18 @@ export function Window({
     window.addEventListener('pointerup', onPointerUp);
   };
 
+  const maximizedWidth = stageManagerEnabled && isWideDesktop ? 'calc(100vw - 184px)' : 'calc(100vw - 24px)';
+
   return (
     <motion.div
+      ref={containerRef}
       drag={!isMaximized && !isMobile}
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
       dragElastic={0}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       onPointerDown={handlePointerDown}
       style={
@@ -310,7 +364,7 @@ export function Window({
               top: 0,
               x: posX,
               y: posY,
-              width: isMaximized ? 'calc(100vw - 24px)' : windowData.size.width,
+              width: isMaximized ? maximizedWidth : windowData.size.width,
               height: isMaximized ? 'calc(100vh - 116px)' : windowData.size.height,
               zIndex: windowData.zIndex,
             }

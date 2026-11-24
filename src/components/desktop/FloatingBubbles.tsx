@@ -198,20 +198,24 @@ export const FloatingBubbles: React.FC = () => {
     };
   }, []);
 
-  // Real-time Audio-Reactive FFT Bass Modulation (60 FPS, CSS Custom Property, zero state re-render)
+  // Real-time Audio-Reactive FFT Bass Modulation (60 FPS CSS custom property, paused when tab hidden)
   useEffect(() => {
-    if (!isPlaying || !audioReactiveAmbience || !isTabVisible) {
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!isPlaying || !audioReactiveAmbience || !isTabVisible || reducedMotion) {
       if (containerRef.current) {
         containerRef.current.style.setProperty('--audio-bass', '0');
       }
       return;
     }
 
-    let animId: number;
+    let animId: number | null = null;
 
     const update = () => {
       if (document.hidden) {
-        animId = requestAnimationFrame(update);
+        animId = null;
         return;
       }
 
@@ -225,7 +229,7 @@ export const FloatingBubbles: React.FC = () => {
 
     animId = requestAnimationFrame(update);
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId !== null) cancelAnimationFrame(animId);
       if (containerRef.current) {
         containerRef.current.style.setProperty('--audio-bass', '0');
       }
@@ -257,7 +261,7 @@ export const FloatingBubbles: React.FC = () => {
           {activeBubbles.map((bubble) => (
             <motion.div
               key={bubble.id}
-              className="absolute rounded-full pointer-events-none select-none will-change-transform"
+              className="absolute rounded-full pointer-events-none select-none"
               style={{
                 width: isMobile ? Math.min(bubble.size, 70) : bubble.size,
                 height: isMobile ? Math.min(bubble.size, 70) : bubble.size,

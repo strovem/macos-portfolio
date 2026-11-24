@@ -59,7 +59,17 @@ export const SafariApp: React.FC = () => {
   const [externalTitle, setExternalTitle] = useState('');
   const [externalDesc, setExternalDesc] = useState('');
 
-  const { isPlaying, currentTrack, playTrack, togglePlay } = useAudioStore();
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const currentTrack = useAudioStore((s) => s.currentTrack);
+  const playTrack = useAudioStore((s) => s.playTrack);
+  const togglePlay = useAudioStore((s) => s.togglePlay);
+  const navTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    };
+  }, []);
 
   const handleNavigate = (url: string, title?: string, desc?: string) => {
     setIsLoading(true);
@@ -74,12 +84,14 @@ export const SafariApp: React.FC = () => {
       setExternalDesc(desc || 'External link preview.');
     }
 
-    setTimeout(() => setIsLoading(false), 300);
+    if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    navTimerRef.current = setTimeout(() => setIsLoading(false), 300);
   };
 
   const handleReload = () => {
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 400);
+    if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    navTimerRef.current = setTimeout(() => setIsLoading(false), 400);
   };
 
   const handleSubmitUrl = (e: React.FormEvent) => {

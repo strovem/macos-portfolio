@@ -1,6 +1,7 @@
 import React from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useAudioStore } from './useAudioStore';
 
 export type AuraIntensity = 'subtle' | 'vibrant' | 'max';
 export type AtmospherePreviewMode = 'auto' | 'dawn' | 'day' | 'sunset' | 'night' | 'rain' | 'snow';
@@ -74,14 +75,21 @@ export const useSettingsStore = create<SettingsState>()(
       stageManagerEnabled: false,
       notchHudMessage: null,
       setHasHydrated: (val: boolean) => set({ _hasHydrated: val }),
-      setLanguage: (lang: 'tr' | 'en') =>
+      setLanguage: (lang: 'tr' | 'en') => {
+        if (typeof document !== 'undefined') {
+          document.documentElement.lang = lang;
+        }
         set({
           language: lang,
           notchHudMessage: { icon: 'globe', text: lang === 'tr' ? 'Türkçe' : 'English' },
-        }),
+        });
+      },
       toggleLanguage: () =>
         set((state) => {
           const next = state.language === 'tr' ? 'en' : 'tr';
+          if (typeof document !== 'undefined') {
+            document.documentElement.lang = next;
+          }
           return {
             language: next,
             notchHudMessage: { icon: 'globe', text: next === 'tr' ? 'Türkçe' : 'English' },
@@ -114,11 +122,14 @@ export const useSettingsStore = create<SettingsState>()(
           brightness: val,
           notchHudMessage: { icon: 'sun', text: `${val}%`, value: val },
         }),
-      setVolume: (val: number) =>
+      setVolume: (val: number) => {
+        const clamped = Math.max(0, Math.min(100, val));
+        useAudioStore.getState().setVolume(clamped / 100);
         set({
-          volume: val,
-          notchHudMessage: { icon: 'volume', text: `${val}%`, value: val },
-        }),
+          volume: clamped,
+          notchHudMessage: { icon: 'volume', text: `${clamped}%`, value: clamped },
+        });
+      },
       setAuraIntensity: (val: AuraIntensity) => set({ auraIntensity: val }),
       toggleTapeWarmth: () => set((state) => ({ tapeWarmth: !state.tapeWarmth })),
     }),
@@ -131,8 +142,12 @@ export const useSettingsStore = create<SettingsState>()(
       },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
-        if (state && typeof document !== 'undefined') {
-          document.documentElement.classList.toggle('dark', state.isDarkMode);
+        if (state) {
+          useAudioStore.getState().setVolume(state.volume / 100);
+          if (typeof document !== 'undefined') {
+            document.documentElement.classList.toggle('dark', state.isDarkMode);
+            document.documentElement.lang = state.language;
+          }
         }
       },
     }

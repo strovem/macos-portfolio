@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence } from 'framer-motion';
+import { useShallow } from 'zustand/react/shallow';
 import { Wallpaper } from '@/components/desktop/Wallpaper';
 import { WeatherAtmosphere } from '@/components/os/WeatherAtmosphere';
 import { FloatingBubbles } from '@/components/desktop/FloatingBubbles';
@@ -83,12 +84,37 @@ const LockScreen = dynamic(() => import('@/components/os/LockScreen').then((m) =
 });
 
 export default function Home() {
+  const desktopMainRef = React.useRef<HTMLElement>(null);
   const brightness = useSettingsStore((state) => state.brightness);
   const stageManagerEnabled = useSettingsStore((state) => state.stageManagerEnabled);
-  const windows = useWindowStore((state) => state.windows);
-  const activeWindowId = useWindowStore((state) => state.activeWindowId);
+  const openWindowIds = useWindowStore(
+    useShallow((state) =>
+      Object.values(state.windows)
+        .filter((win) => win.isOpen && !win.isMinimized)
+        .map((win) => win.id)
+    )
+  );
+  const activeAppName = useWindowStore((state) => {
+    const activeWin = state.activeWindowId ? state.windows[state.activeWindowId] : null;
+    if (activeWin && activeWin.isOpen && !activeWin.isMinimized && state.activeWindowId) {
+      return (
+        activeWin.title ||
+        state.activeWindowId.charAt(0).toUpperCase() + state.activeWindowId.slice(1)
+      );
+    }
+    return 'Finder';
+  });
   const toggleDesktopPeek = useWindowStore((state) => state.toggleDesktopPeek);
+  const isLocked = useLockStore((state) => state.isLocked);
+  const isSleeping = useLockStore((state) => state.isSleeping);
   const isMobile = useIsMobile();
+
+  // Make background OS surface non-interactive (keyboard/focus trapped) when locked or sleeping
+  useEffect(() => {
+    if (desktopMainRef.current) {
+      desktopMainRef.current.inert = isLocked || isSleeping;
+    }
+  }, [isLocked, isSleeping]);
 
   // Global keyboard shortcuts (Cmd+K, Alt+W, Alt+M, Alt+Tab, Esc)
   useKeyboardShortcuts();
@@ -164,6 +190,7 @@ export default function Home() {
       target.closest('header') ||
       target.closest('[data-context-menu]') ||
       target.closest('[data-modal]') ||
+      target.closest('[data-drop-zone="notch"]') ||
       target.closest('aside')
     ) {
       return;
@@ -281,18 +308,6 @@ export default function Home() {
     });
   };
 
-  // Synchronize menubar activeAppName with activeWindowId
-  const activeWindow = activeWindowId ? windows[activeWindowId] : null;
-  const isTargetActive = Boolean(activeWindow && activeWindow.isOpen && !activeWindow.isMinimized && activeWindowId);
-  const activeAppName = isTargetActive && activeWindow && activeWindowId
-    ? activeWindow.title || (activeWindowId.charAt(0).toUpperCase() + activeWindowId.slice(1))
-    : 'Finder';
-
-  // Filter windows that are open and unminimized for rendering with AnimatePresence
-  const openWindows = Object.values(windows).filter(
-    (win) => win.isOpen && !win.isMinimized
-  );
-
   const renderAppContent = (id: AppId) => {
     switch (id) {
       case 'finder':
@@ -329,11 +344,13 @@ export default function Home() {
   };
 
   return (
-    <main
-      onContextMenu={handleContextMenu}
-      onPointerDown={handleDesktopPointerDown}
-      className="relative w-full h-full overflow-hidden select-none"
-    >
+    <>
+      <main
+        ref={desktopMainRef}
+        onContextMenu={handleContextMenu}
+        onPointerDown={handleDesktopPointerDown}
+        className="relative w-full h-full overflow-hidden select-none"
+      >
       {/* Dynamic Wallpaper Canvas */}
       <Wallpaper />
 
@@ -406,9 +423,9 @@ export default function Home() {
         {/* Open Windows Render Canvas */}
         <div className="flex-1 relative pointer-events-none">
           <AnimatePresence>
-            {openWindows.map((win) => (
-              <Window key={win.id} id={win.id} hideHeader={win.id === 'finder'}>
-                {renderAppContent(win.id)}
+            {openWindowIds.map((winId) => (
+              <Window key={winId} id={winId} hideHeader={winId === 'finder'}>
+                {renderAppContent(winId)}
               </Window>
             ))}
           </AnimatePresence>
@@ -430,10 +447,11 @@ export default function Home() {
       <SpotlightModal />
       <AppSwitcherHUD />
       <MissionControl />
-      <NotificationStack />
-      <NotificationCenter />
+        <NotificationStack />
+        <NotificationCenter />
+        <DragPillOverlay />
+      </main>
       <LockScreen />
-      <DragPillOverlay />
-    </main>
+    </>
   );
 }

@@ -27,7 +27,7 @@ export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetPr
         <div className="flex items-center gap-2">
           {/* Avatar with initials or gradient */}
           <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold shadow-sm">
-            <span>SJ</span>
+            <span>HK</span>
             <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-white dark:border-neutral-900" />
           </div>
           <div>
@@ -79,7 +79,7 @@ export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetPr
           }}
           className="inline-flex items-center gap-1 text-[10px] text-[#007AFF] hover:text-blue-600 dark:hover:text-sky-400 font-semibold cursor-pointer transition-colors"
         >
-          <span>{item.metadata?.callToAction || t('messageCta')}</span>
+          <span>{t('messageCta')}</span>
           <ArrowUpRight className="w-2.5 h-2.5" />
         </button>
       </div>

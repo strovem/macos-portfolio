@@ -142,7 +142,7 @@ export function NotificationStack() {
   return (
     <div
       style={{ zIndex: Z_INDEX.NOTIFICATION_STACK }}
-      className="fixed top-10 right-4 sm:right-6 flex flex-col gap-2.5 pointer-events-auto max-w-sm w-[calc(100vw-2rem)] sm:w-88"
+      className="fixed top-10 right-4 sm:right-6 flex flex-col gap-2.5 pointer-events-auto max-w-sm w-[calc(100vw-2rem)] sm:w-[352px]"
     >
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (

@@ -50,6 +50,8 @@ export const PRESET_CITIES: WeatherCity[] = [
 export interface WeatherData {
   cityId: string;
   cityName: string;
+  latitude?: number;
+  longitude?: number;
   temperature: number;
   apparentTemperature: number;
   weatherCode: number;
@@ -160,7 +162,7 @@ export function getCachedWeather(cityId: string): WeatherData | null {
 }
 
 export function setCachedWeather(cityId: string, data: WeatherData): void {
-  if (typeof window === 'undefined') return null as any;
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(`${CACHE_KEY_PREFIX}${cityId}`, JSON.stringify(data));
   } catch {
@@ -226,6 +228,8 @@ export async function fetchCityWeather(city: WeatherCity, forceRefresh = false):
     const result: WeatherData = {
       cityId: city.id,
       cityName: city.name,
+      latitude: city.latitude,
+      longitude: city.longitude,
       temperature: temp,
       apparentTemperature: apparent,
       weatherCode: code,

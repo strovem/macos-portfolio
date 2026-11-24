@@ -62,11 +62,11 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('korumtas-os-settings');if(s){var p=JSON.parse(s);if(p&&p.state&&p.state.isDarkMode){document.documentElement.classList.add('dark');}}}catch(e){}})()`,
+            __html: `(function(){try{var s=localStorage.getItem('korumtas-os-settings');if(s){var p=JSON.parse(s);if(p&&p.state){if(p.state.isDarkMode){document.documentElement.classList.add('dark');}if(p.state.language==='tr'||p.state.language==='en'){document.documentElement.lang=p.state.language;}}}}catch(e){}})()`,
           }}
         />
       </head>
-      <body className="antialiased w-screen h-screen h-[100dvh] overflow-hidden select-none bg-[#F5F7FA] text-slate-800">
+      <body className="antialiased w-screen h-screen h-[100dvh] overflow-hidden select-none bg-[#F5F7FA] dark:bg-black text-slate-800 dark:text-neutral-100">
         {children}
       </body>
     </html>

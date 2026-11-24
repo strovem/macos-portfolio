@@ -20,12 +20,13 @@ const PRESET_FREQUENCIES = [
 export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps) {
   const [frequency, setFrequency] = useState<number>(440);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [phase, setPhase] = useState<number>(0);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscRef = useRef<OscillatorNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const wavePathRef = useRef<SVGPathElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const stopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize or get Web Audio Context
   const getAudioContext = useCallback(() => {
@@ -104,17 +105,19 @@ export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps)
 
   // Stop sine tone
   const stopTone = useCallback(() => {
+    if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
     if (gainRef.current && audioCtxRef.current) {
       const ctx = audioCtxRef.current;
       try {
         gainRef.current.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
-        setTimeout(() => {
+        stopTimerRef.current = setTimeout(() => {
           try {
             oscRef.current?.stop();
             oscRef.current?.disconnect();
             oscRef.current = null;
           } catch {}
           setIsPlaying(false);
+          stopTimerRef.current = null;
         }, 50);
       } catch {
         setIsPlaying(false);
@@ -146,19 +149,62 @@ export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps)
     };
   }, []);
 
-  // Oscilloscope Sine Wave Animation Loop
+  const buildSinePath = useCallback(
+    (phaseVal: number, active: boolean) => {
+      const width = 230;
+      const height = 48;
+      const centerY = height / 2;
+      const amplitude = active ? 16 : 8;
+      const cycles = Math.min(8, Math.max(2, Math.log10(Math.max(20, frequency)) * 2));
+
+      let path = `M 0 ${centerY}`;
+      const step = 3;
+      for (let x = 0; x <= width; x += step) {
+        const angle = (x / width) * cycles * 2 * Math.PI + (active ? phaseVal : 0);
+        const y = centerY + Math.sin(angle) * amplitude;
+        path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+      }
+      return path;
+    },
+    [frequency]
+  );
+
+  // Clean up stop timeout & AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
+    };
+  }, []);
+
+  // Visual oscilloscope animation loop via direct SVG path mutation (0 React re-renders)
   useEffect(() => {
     if (!isPlaying) {
+      if (wavePathRef.current) {
+        wavePathRef.current.setAttribute('d', buildSinePath(0, false));
+      }
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      return;
+    }
+
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      if (wavePathRef.current) {
+        wavePathRef.current.setAttribute('d', buildSinePath(0, true));
+      }
       return;
     }
 
     let curPhase = 0;
     const animate = () => {
-      // Visual oscillation speed
-      const speed = Math.min(0.28, Math.max(0.05, (frequency / 440) * 0.12));
-      curPhase += speed;
-      setPhase(curPhase);
+      if (!document.hidden) {
+        const speed = Math.min(0.28, Math.max(0.05, (frequency / 440) * 0.12));
+        curPhase += speed;
+        if (wavePathRef.current) {
+          wavePathRef.current.setAttribute('d', buildSinePath(curPhase, true));
+        }
+      }
       animFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -166,27 +212,7 @@ export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps)
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [isPlaying, frequency]);
-
-  // Generate SVG Sine Wave Path
-  const renderSineWavePath = () => {
-    const width = 230;
-    const height = 48;
-    const centerY = height / 2;
-    const amplitude = isPlaying ? 16 : 8;
-
-    // Visual cycle count based on log frequency (2 to 8 cycles)
-    const cycles = Math.min(8, Math.max(2, Math.log10(Math.max(20, frequency)) * 2));
-
-    let path = `M 0 ${centerY}`;
-    const step = 3;
-    for (let x = 0; x <= width; x += step) {
-      const angle = (x / width) * cycles * 2 * Math.PI + (isPlaying ? phase : 0);
-      const y = centerY + Math.sin(angle) * amplitude;
-      path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
-    }
-    return path;
-  };
+  }, [isPlaying, frequency, buildSinePath]);
 
   return (
     <div className="relative w-72 p-3.5 rounded-2xl backdrop-blur-2xl bg-white/90 dark:bg-neutral-900/90 border border-black/10 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200">
@@ -242,7 +268,8 @@ export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps)
 
           <svg viewBox="0 0 230 48" className="w-full h-full relative z-10" fill="none">
             <path
-              d={renderSineWavePath()}
+              ref={wavePathRef}
+              d={buildSinePath(0, isPlaying)}
               stroke={isPlaying ? 'url(#cyanSineGlow)' : 'rgba(6, 182, 212, 0.4)'}
               strokeWidth={isPlaying ? 2.2 : 1.5}
               strokeLinecap="round"
@@ -298,7 +325,7 @@ export function ProjectPreviewCard({ item, onOpenApp }: ProjectPreviewCardProps)
                 const val = parseFloat(e.target.value);
                 if (!isNaN(val)) updateFrequency(val);
               }}
-              className="w-18 text-right font-mono font-bold text-sm bg-transparent text-cyan-300 focus:outline-none"
+              className="w-[72px] text-right font-mono tabular-nums font-bold text-sm bg-transparent text-cyan-300 focus:outline-none"
             />
             <span className="text-xs font-mono font-bold text-neutral-400">Hz</span>
           </div>

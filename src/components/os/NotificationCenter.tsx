@@ -33,18 +33,6 @@ export function NotificationCenter() {
     setCurrentDateStr(formatter.format(now));
   }, [language]);
 
-  // Close on Escape key
-  useEffect(() => {
-    if (!isCenterOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeCenter();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isCenterOpen, closeCenter]);
-
   const handleItemClick = (item: NotificationItem) => {
     if (item.onAction) {
       item.onAction();
@@ -71,6 +59,7 @@ export function NotificationCenter() {
         <>
           {/* Subtle click-outside backdrop */}
           <motion.div
+            data-modal="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -87,7 +76,8 @@ export function NotificationCenter() {
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             style={{ zIndex: Z_INDEX.NOTIFICATION_CENTER }}
-            className="fixed top-7 right-0 bottom-0 w-84 sm:w-96 liquid-glass border-l border-white/20 dark:border-white/10 shadow-2xl flex flex-col select-none overflow-hidden"
+            data-modal="true"
+            className="fixed top-7 right-0 bottom-0 w-full sm:w-96 liquid-glass border-l border-white/20 dark:border-white/10 shadow-2xl flex flex-col select-none overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 pb-3 border-b border-black/5 dark:border-white/10 flex items-center justify-between">
@@ -122,7 +112,7 @@ export function NotificationCenter() {
                   type="button"
                   onClick={closeCenter}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Kapat (Esc)"
+                  title={language === 'tr' ? 'Kapat (Esc)' : 'Close (Esc)'}
                 >
                   <X className="w-4 h-4" />
                 </button>

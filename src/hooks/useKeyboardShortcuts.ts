@@ -9,6 +9,8 @@ import { useMissionControlStore } from '@/stores/useMissionControlStore';
 import { useLockStore } from '@/stores/useLockStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useOverlayStore } from '@/stores/useOverlayStore';
+import { useWeatherStore } from '@/stores/useWeatherStore';
 import { AppId } from '@/types/os';
 
 export function useKeyboardShortcuts() {
@@ -42,8 +44,11 @@ export function useKeyboardShortcuts() {
     if (typeof window === 'undefined') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // If system is sleeping or locked, do not intercept desktop shortcuts
-      if (isSleeping || isLocked) return;
+      // If system is sleeping or locked, block desktop shortcuts and swallow Escape
+      if (isSleeping || isLocked) {
+        if (e.key === 'Escape') e.preventDefault();
+        return;
+      }
 
       const target = e.target as HTMLElement | null;
       const isInput =
@@ -55,7 +60,7 @@ export function useKeyboardShortcuts() {
 
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
 
-      // 1. Esc Key — Close modals in priority order: Spotlight > ContextMenu > Switcher > MissionControl > NotificationCenter
+      // 1. Centralized Esc Priority Waterfall (Closes ONLY the topmost active layer)
       if (e.key === 'Escape') {
         if (isSpotlightOpen) {
           e.preventDefault();
@@ -82,6 +87,33 @@ export function useKeyboardShortcuts() {
           closeCenter();
           return;
         }
+        const overlayState = useOverlayStore.getState();
+        if (overlayState.isNotchExpanded) {
+          e.preventDefault();
+          overlayState.setNotchExpanded(false);
+          return;
+        }
+        const weatherState = useWeatherStore.getState();
+        if (weatherState.isPopoverOpen) {
+          e.preventDefault();
+          weatherState.setPopoverOpen(false);
+          return;
+        }
+        if (overlayState.activePopover !== null) {
+          e.preventDefault();
+          overlayState.setActivePopover(null);
+          return;
+        }
+        if (overlayState.quickLookCloser) {
+          e.preventDefault();
+          overlayState.quickLookCloser();
+          return;
+        }
+        if (overlayState.matrixCloser) {
+          e.preventDefault();
+          overlayState.matrixCloser();
+          return;
+        }
       }
 
       // 2. Mission Control: F3 OR Alt/Ctrl + ArrowUp (without Shift)
@@ -98,13 +130,6 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      // 3.1 Stage Manager Toggle: Alt + S
-      if (e.altKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        useSettingsStore.getState().toggleStageManager();
-        return;
-      }
-
       // 4. Spotlight: Cmd/Ctrl + K OR Cmd/Ctrl + Space
       if (isCmdOrCtrl && (e.key === 'k' || e.key === 'K' || e.code === 'Space')) {
         e.preventDefault();
@@ -114,6 +139,15 @@ export function useKeyboardShortcuts() {
 
       // If user is actively typing in an input/textarea/contenteditable, skip remaining window shortcuts
       if (isInput) return;
+
+      // 4.1 Stage Manager Toggle (Desktop >= 1024px): Alt + S
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        if (window.innerWidth >= 1024) {
+          e.preventDefault();
+          useSettingsStore.getState().toggleStageManager();
+        }
+        return;
+      }
 
       const { activeWindowId, windows, closeWindow, minimizeWindow } = useWindowStore.getState();
 
@@ -135,8 +169,8 @@ export function useKeyboardShortcuts() {
         }
       }
 
-      // 6.1 Sequoia Window Tiling: Alt + ArrowLeft (Tile Left), Alt + ArrowRight (Tile Right), Alt + Shift + ArrowUp (Fill/Restore)
-      if (e.altKey && activeWindowId && windows[activeWindowId]?.isOpen) {
+      // 6.1 Sequoia Window Tiling (Desktop >= 768px)
+      if (e.altKey && window.innerWidth >= 768 && activeWindowId && windows[activeWindowId]?.isOpen) {
         const { tileWindow } = useWindowStore.getState();
         if (e.shiftKey && e.key === 'ArrowUp') {
           e.preventDefault();

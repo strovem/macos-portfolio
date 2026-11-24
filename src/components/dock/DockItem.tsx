@@ -11,7 +11,6 @@ import {
 import { AppMetadata } from '@/data/apps';
 import { AppId } from '@/types/os';
 import { AppIcon } from './AppIcon';
-import { playDockClickSound } from '@/utils/soundEffects';
 import { useDragStore } from '@/stores/useDragStore';
 
 export interface DockItemProps {
@@ -53,7 +52,6 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
   const isHoveredTarget = hoverTarget === app.id;
 
   const handleClick = () => {
-    playDockClickSound();
     if (!isBouncing && !isMobile) {
       setIsBouncing(true);
     }
@@ -92,7 +90,7 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
         onClick={handleClick}
         whileTap={{ scale: 0.88 }}
         style={{ width, height: width }}
-        className={`relative flex items-center justify-center rounded-2xl cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-blue-400 active:opacity-90 transition-all duration-150 ${
+        className={`relative flex items-center justify-center rounded-2xl cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-blue-400 active:opacity-90 transition-[box-shadow,transform] duration-150 ${
           isHoveredTarget
             ? app.id === 'studio'
               ? 'ring-4 ring-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.6)] scale-110'

@@ -61,75 +61,88 @@ body {
     linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+/* Glassmorphism & Liquid Glass Components */
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .dark .glass-panel {
+    background: rgba(30, 30, 30, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* Liquid Glass System — macOS Optical Edge Sheen & Deep Saturation */
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+      inset 0 1px 0.5px rgba(255, 255, 255, 0.65),
+      inset 0 -1px 0.5px rgba(255, 255, 255, 0.12),
+      0 20px 45px -12px rgba(0, 0, 0, 0.28);
+    position: relative;
+  }
+
+  /* Optical Micro Film Grain on Liquid Glass to eliminate gradient banding */
+  .liquid-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    z-index: 0;
+  }
+
+  .dark .liquid-glass {
+    background: rgba(24, 24, 27, 0.78);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0.5px rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0.5px rgba(0, 0, 0, 0.45),
+      0 22px 50px -12px rgba(0, 0, 0, 0.65);
+  }
+
+  .liquid-glass-subtle {
+    background: rgba(255, 255, 255, 0.58);
+    backdrop-filter: blur(20px) saturate(175%);
+    -webkit-backdrop-filter: blur(20px) saturate(175%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+      inset 0 1px 0.5px rgba(255, 255, 255, 0.45),
+      0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+
+  .dark .liquid-glass-subtle {
+    background: rgba(30, 30, 32, 0.68);
+    backdrop-filter: blur(20px) saturate(175%);
+    -webkit-backdrop-filter: blur(20px) saturate(175%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      inset 0 1px 0.5px rgba(255, 255, 255, 0.15),
+      0 10px 25px -5px rgba(0, 0, 0, 0.45);
+  }
 }
 
-.dark .glass-panel {
-  background: rgba(30, 30, 30, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* Liquid Glass System — macOS Optical Edge Sheen & Deep Saturation */
-.liquid-glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.65), 
-    inset 0 -1px 0.5px rgba(255, 255, 255, 0.12), 
-    0 20px 45px -12px rgba(0, 0, 0, 0.28);
-  position: relative;
-}
-
-/* Optical Micro Film Grain on Liquid Glass to eliminate gradient banding */
-.liquid-glass::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  z-index: 1;
-}
-
-.dark .liquid-glass {
-  background: rgba(24, 24, 27, 0.78);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.22), 
-    inset 0 -1px 0.5px rgba(0, 0, 0, 0.45), 
-    0 22px 50px -12px rgba(0, 0, 0, 0.65);
-}
-
-.liquid-glass-subtle {
-  background: rgba(255, 255, 255, 0.58);
-  backdrop-filter: blur(20px) saturate(175%);
-  -webkit-backdrop-filter: blur(20px) saturate(175%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.45), 
-    0 10px 25px -5px rgba(0, 0, 0, 0.15);
-}
-
-.dark .liquid-glass-subtle {
-  background: rgba(30, 30, 32, 0.68);
-  backdrop-filter: blur(20px) saturate(175%);
-  -webkit-backdrop-filter: blur(20px) saturate(175%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.15), 
-    0 10px 25px -5px rgba(0, 0, 0, 0.45);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Prevent unwanted drag / highlight on OS chrome */

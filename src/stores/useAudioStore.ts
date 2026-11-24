@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
-import { connectAudioElementToAnalyser, connectNodeToAnalyser } from '@/lib/audioAnalyser';
+import {
+  getSharedAudioContext,
+  connectAudioElementToAnalyser,
+  connectNodeToAnalyser,
+} from '@/lib/audioAnalyser';
 
 interface AudioStoreState {
   currentTrack: MusicTrack | null;
@@ -22,19 +26,18 @@ interface AudioStoreState {
   setDuration: (val: number) => void;
 }
 
-// Global Web Audio synth node references for procedural playback
-let globalAudioCtx: AudioContext | null = null;
+// Shared Web Audio synth node references for procedural playback
 let currentOscillators: OscillatorNode[] = [];
 let masterGainNode: GainNode | null = null;
 let currentHtmlAudio: HTMLAudioElement | null = null;
 let proceduralTimer: NodeJS.Timeout | null = null;
+let audioRequestSeq = 0;
 
 // Ambient soundscape nodes
 let ambientOscillators: OscillatorNode[] = [];
 let ambientGainNode: GainNode | null = null;
-let ambientFilterNode: BiquadFilterNode | null = null;
 
-function startAmbientSound(vol: number, isMusicActive: boolean) {
+function startAmbientSound(_vol: number, _isMusicActive: boolean) {
   stopAmbientSound();
 }
 
@@ -51,13 +54,14 @@ function stopAmbientSound() {
 }
 
 function updateAmbientDucking(isMusicActive: boolean) {
-  if (!ambientGainNode || !globalAudioCtx) return;
+  const ctx = getSharedAudioContext();
+  if (!ambientGainNode || !ctx) return;
   const { isAmbientPlaying, ambientVolume } = useAudioStore.getState();
   if (!isAmbientPlaying) return;
 
   const targetGain = isMusicActive ? 0.005 : ambientVolume * 0.08;
-  ambientGainNode.gain.cancelScheduledValues(globalAudioCtx.currentTime);
-  ambientGainNode.gain.linearRampToValueAtTime(targetGain, globalAudioCtx.currentTime + 0.6);
+  ambientGainNode.gain.cancelScheduledValues(ctx.currentTime);
+  ambientGainNode.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.6);
 }
 
 function stopCurrentSynthOnly() {
@@ -77,6 +81,7 @@ function stopCurrentSynthOnly() {
 }
 
 function stopAllAudio() {
+  audioRequestSeq += 1;
   stopCurrentSynthOnly();
   if (currentHtmlAudio) {
     try {
@@ -96,26 +101,35 @@ function playProceduralTrack(track: MusicTrack, volume: number) {
   if (track.src) {
     try {
       stopAllAudio();
+      const requestId = ++audioRequestSeq;
       const audio = new Audio(track.src);
       audio.crossOrigin = 'anonymous';
       audio.volume = Math.max(0, Math.min(1, volume));
       connectAudioElementToAnalyser(audio);
 
       audio.onloadedmetadata = () => {
+        if (requestId !== audioRequestSeq) return;
         useAudioStore.getState().setDuration(audio.duration || track.durationSeconds);
       };
 
       audio.ontimeupdate = () => {
+        if (requestId !== audioRequestSeq) return;
         useAudioStore.getState().setCurrentTime(audio.currentTime);
       };
 
       audio.onended = () => {
+        if (requestId !== audioRequestSeq) return;
         useAudioStore.getState().nextTrack();
       };
 
       audio.play().then(() => {
+        if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) {
+          audio.pause();
+          return;
+        }
         currentHtmlAudio = audio;
       }).catch(() => {
+        if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) return;
         // Fallback to Web Audio synthesis if file not found
         fallbackSynth(track, volume);
       });
@@ -130,42 +144,35 @@ function playProceduralTrack(track: MusicTrack, volume: number) {
 
 function fallbackSynth(track: MusicTrack, volume: number) {
   try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
 
-    if (!globalAudioCtx) {
-      globalAudioCtx = new AudioCtx();
-    }
-
-    if (globalAudioCtx.state === 'suspended') {
-      globalAudioCtx.resume();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
 
     stopCurrentSynthOnly();
 
-    if (!masterGainNode) {
-      masterGainNode = globalAudioCtx.createGain();
-      masterGainNode.connect(globalAudioCtx.destination);
+    if (!masterGainNode || masterGainNode.context !== ctx) {
+      masterGainNode = ctx.createGain();
+      masterGainNode.connect(ctx.destination);
       connectNodeToAnalyser(masterGainNode);
     }
-    masterGainNode.gain.setValueAtTime(volume * 0.15, globalAudioCtx.currentTime);
+    masterGainNode.gain.setValueAtTime(Math.max(0, Math.min(1, volume)) * 0.15, ctx.currentTime);
 
     // Create lush multi-oscillator chord / arpeggio for ambient preview
     const freqs = track.synthFrequencies || [220, 261.63, 329.63, 392];
     freqs.forEach((freq, idx) => {
-      if (!globalAudioCtx) return;
-      const osc = globalAudioCtx.createOscillator();
-      const gain = globalAudioCtx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
       osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
-      osc.frequency.setValueAtTime(freq, globalAudioCtx.currentTime);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
       // Subtle vibrato/detune for organic warmth
-      osc.detune.setValueAtTime((idx - 1) * 4, globalAudioCtx.currentTime);
+      osc.detune.setValueAtTime((idx - 1) * 4, ctx.currentTime);
 
-      gain.gain.setValueAtTime(0.08 / freqs.length, globalAudioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08 / freqs.length, ctx.currentTime);
 
       osc.connect(gain);
       gain.connect(masterGainNode!);
@@ -225,6 +232,7 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
   togglePlay: () => {
     const { isPlaying, currentTrack, volume } = get();
     if (isPlaying) {
+      audioRequestSeq += 1;
       if (currentHtmlAudio) {
         currentHtmlAudio.pause();
       }
@@ -234,9 +242,14 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
     } else {
       updateAmbientDucking(true);
       if (currentHtmlAudio && currentTrack) {
+        const requestId = ++audioRequestSeq;
+        set({ isPlaying: true });
         currentHtmlAudio.play().then(() => {
-          set({ isPlaying: true });
+          if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) {
+            currentHtmlAudio?.pause();
+          }
         }).catch(() => {
+          if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) return;
           playProceduralTrack(currentTrack, volume);
         });
       } else {
@@ -248,6 +261,7 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
   },
 
   pause: () => {
+    audioRequestSeq += 1;
     if (currentHtmlAudio) {
       currentHtmlAudio.pause();
     }
@@ -279,12 +293,14 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
   },
 
   setVolume: (val: number) => {
-    set({ volume: val });
+    const clamped = Math.max(0, Math.min(1, val));
+    set({ volume: clamped });
     if (currentHtmlAudio) {
-      currentHtmlAudio.volume = Math.max(0, Math.min(1, val));
+      currentHtmlAudio.volume = clamped;
     }
-    if (masterGainNode && globalAudioCtx) {
-      masterGainNode.gain.setValueAtTime(val * 0.15, globalAudioCtx.currentTime);
+    const ctx = getSharedAudioContext();
+    if (masterGainNode && ctx) {
+      masterGainNode.gain.setValueAtTime(clamped * 0.15, ctx.currentTime);
     }
   },
 

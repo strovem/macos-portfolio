@@ -12,14 +12,12 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     defaultPosition: { x: 50, y: 70 },
     rotation: -1.5,
     metadata: {
-      tag: 'PINNED',
       author: 'Hüseyin Korumtaş',
       lines: [
         '💡 Ideas into experiences',
         '🎬 Creative Production & Direction',
         '🎵 Sound, Tactile Media & Web Spaces',
       ],
-      callToAction: 'Open Notes ↗',
     },
   },
   {
@@ -33,7 +31,6 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
     metadata: {
       sender: 'Hüseyin Korumtaş',
       handle: 'Creative Producer & Audio Lead',
-      time: 'Just now',
       bubbles: [
         {
           text: 'Hey there! Welcome to my creative space. 👋\nFeel free to send a direct message for music production, commercial jingles, or new creative projects.',
@@ -44,7 +41,6 @@ export const DESKTOP_ITEMS: DesktopCardItem[] = [
           isSender: false,
         },
       ],
-      callToAction: 'Reply in Messages ↗',
     },
   },
   {

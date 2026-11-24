@@ -9,17 +9,23 @@ import { AppIcon } from '@/components/dock/AppIcon';
 import { Z_INDEX } from '@/constants/zIndex';
 
 export const AppSwitcherHUD: React.FC = () => {
-  const { isOpen, openApps, selectedIndex } = useAppSwitcherStore();
-  const windows = useWindowStore((state) => state.windows);
-
-  if (!isOpen || openApps.length === 0) return null;
+  const isOpen = useAppSwitcherStore((s) => s.isOpen);
+  const openApps = useAppSwitcherStore((s) => s.openApps);
+  const selectedIndex = useAppSwitcherStore((s) => s.selectedIndex);
+  const activeTitle = useWindowStore((state) => {
+    if (!isOpen || openApps.length === 0) return '';
+    const activeId = openApps[selectedIndex];
+    return activeId ? state.windows[activeId]?.title || activeId : '';
+  });
 
   return (
     <AnimatePresence>
-      <div
-        style={{ zIndex: Z_INDEX.APP_SWITCHER }}
-        className="fixed inset-0 flex items-center justify-center pointer-events-none select-none"
-      >
+      {isOpen && openApps.length > 0 && (
+        <div
+          data-modal="true"
+          style={{ zIndex: Z_INDEX.APP_SWITCHER }}
+          className="fixed inset-0 flex items-center justify-center pointer-events-none select-none"
+        >
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -53,10 +59,11 @@ export const AppSwitcherHUD: React.FC = () => {
 
           {/* Active App Title */}
           <div className="text-xs font-semibold text-slate-800 dark:text-white px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10">
-            {windows[openApps[selectedIndex]]?.title || openApps[selectedIndex]}
+            {activeTitle}
           </div>
         </motion.div>
-      </div>
+        </div>
+      )}
     </AnimatePresence>
   );
 };

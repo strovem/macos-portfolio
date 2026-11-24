@@ -4,7 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TilePosition } from '@/types/os';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { playDropSnapSound } from '@/utils/systemSounds';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export interface TrafficLightsProps {
   onClose?: () => void;
@@ -28,6 +30,7 @@ export function TrafficLights({
   className = '',
 }: TrafficLightsProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const openTimerRef = useRef<NodeJS.Timeout | null>(null);
   const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -40,6 +43,7 @@ export function TrafficLights({
   }, []);
 
   const handleGreenMouseEnter = () => {
+    if (isMobile) return;
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -184,7 +188,7 @@ export function TrafficLights({
 
         {/* macOS Sequoia Window Tiling Popover */}
         <AnimatePresence>
-          {isMenuOpen && (
+          {!isMobile && isMenuOpen && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -192,8 +196,8 @@ export function TrafficLights({
               transition={{ duration: 0.15, ease: 'easeOut' }}
               onMouseEnter={handleMenuMouseEnter}
               onMouseLeave={handleMenuMouseLeave}
-              className="absolute left-0 top-6 w-52 rounded-xl liquid-glass border border-white/20 dark:border-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.28)] p-1.5 z-[999] backdrop-blur-2xl"
-              style={{ pointerEvents: 'auto' }}
+              className="absolute left-0 top-6 w-52 rounded-xl liquid-glass border border-white/20 dark:border-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.28)] p-1.5 backdrop-blur-2xl"
+              style={{ pointerEvents: 'auto', zIndex: Z_INDEX.MENUBAR_POPOVER }}
             >
               {/* Fill / Restore Action */}
               <button

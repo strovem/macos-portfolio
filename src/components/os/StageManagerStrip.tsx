@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Disc3, Folder, Terminal, Compass, MessageSquare, FileText, Settings, Image as ImageIcon } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
+import { X, Disc3, Folder, Terminal, Compass } from 'lucide-react';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { playClickSound } from '@/utils/systemSounds';
-import { AppId, WindowState } from '@/types/os';
+import { AppId } from '@/types/os';
 import { APPS } from '@/data/apps';
 import { AppIcon } from '@/components/dock/AppIcon';
 import { Z_INDEX } from '@/constants/zIndex';
@@ -90,108 +91,101 @@ function MiniWindowContent({ id }: { id: AppId }) {
 
 export function StageManagerStrip() {
   const stageManagerEnabled = useSettingsStore((state) => state.stageManagerEnabled);
-  const windows = useWindowStore((state) => state.windows);
-  const stageWindowIds = useWindowStore((state) => state.stageWindowIds);
+  const displayWindows = useWindowStore(
+    useShallow((state) =>
+      Object.values(state.windows)
+        .filter((win) => win.isOpen && !win.isMinimized && !state.stageWindowIds.includes(win.id))
+        .slice(0, 5)
+        .map((win) => ({ id: win.id, title: win.title }))
+    )
+  );
   const switchStageTo = useWindowStore((state) => state.switchStageTo);
   const addWindowToStage = useWindowStore((state) => state.addWindowToStage);
   const closeWindow = useWindowStore((state) => state.closeWindow);
   const { language } = useTranslation();
 
-  // Find all open, non-minimized windows that are NOT in the active stage
-  const inactiveOpenWindows = Object.values(windows).filter(
-    (win) => win.isOpen && !win.isMinimized && !stageWindowIds.includes(win.id)
-  );
-
-  if (!stageManagerEnabled || inactiveOpenWindows.length === 0) {
-    return null;
-  }
-
-  // Display at most 5 items in the vertical strip
-  const displayWindows = inactiveOpenWindows.slice(0, 5);
+  const isVisible = stageManagerEnabled && displayWindows.length > 0;
 
   return (
-    <aside
-      aria-label="Stage Manager Strip"
-      style={{ zIndex: Z_INDEX.STAGE_MANAGER_STRIP }}
-      className="hidden lg:flex fixed left-3 top-1/2 -translate-y-1/2 flex-col gap-3 select-none pointer-events-auto"
-    >
-      <AnimatePresence>
-        {displayWindows.map((win) => {
-          const appMeta = APPS.find((a) => a.id === win.id);
+    <AnimatePresence>
+      {isVisible && (
+        <aside
+          aria-label="Stage Manager Strip"
+          style={{ zIndex: Z_INDEX.STAGE_MANAGER_STRIP }}
+          className="hidden lg:flex fixed left-3 top-1/2 -translate-y-1/2 flex-col gap-3 select-none pointer-events-auto"
+        >
+          {displayWindows.map((win) => {
+            const appMeta = APPS.find((a) => a.id === win.id);
 
-          return (
-            <motion.div
-              key={win.id}
-              layout
-              initial={{ opacity: 0, x: -50, scale: 0.85 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -50, scale: 0.85 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              style={{
-                transformPerspective: 900,
-                transformStyle: 'preserve-3d',
-              }}
-              whileHover={{
-                rotateY: 0,
-                scale: 1.05,
-                transition: { duration: 0.18, ease: 'easeOut' },
-              }}
-              className="relative group cursor-pointer"
-              onClick={(e) => {
-                playClickSound();
-                if (e.shiftKey) {
-                  addWindowToStage(win.id);
-                } else {
-                  switchStageTo(win.id);
-                }
-              }}
-            >
-              {/* Close Button on Hover */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  playClickSound();
-                  closeWindow(win.id);
-                }}
-                title={language === 'tr' ? 'Kapat' : 'Close'}
-                className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-md z-20"
-              >
-                <X className="w-2.5 h-2.5" />
-              </button>
-
-              {/* 3D Angled Glass Preview Card */}
+            return (
               <motion.div
-                initial={{ rotateY: 16 }}
-                whileHover={{ rotateY: 0 }}
-                transition={{ duration: 0.2 }}
-                className="w-36 h-24 rounded-xl border border-white/20 bg-[#0a0a0c]/60 backdrop-blur-xl p-2 flex flex-col justify-between shadow-[0_8px_24px_rgba(0,0,0,0.35)] group-hover:border-white/40 group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.5)] transition-colors duration-200"
+                key={win.id}
+                layout
+                initial={{ opacity: 0, x: -50, scale: 0.85, rotateY: 16 }}
+                animate={{ opacity: 1, x: 0, scale: 1, rotateY: 16 }}
+                exit={{ opacity: 0, x: -50, scale: 0.85 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                style={{
+                  transformPerspective: 900,
+                  transformStyle: 'preserve-3d',
+                }}
+                whileHover={{
+                  rotateY: 0,
+                  scale: 1.05,
+                  transition: { duration: 0.18, ease: 'easeOut' },
+                }}
+                className="relative group cursor-pointer"
+                onClick={(e) => {
+                  playClickSound();
+                  if (e.shiftKey) {
+                    addWindowToStage(win.id);
+                  } else {
+                    switchStageTo(win.id);
+                  }
+                }}
               >
-                {/* Header: App icon + Title */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  {appMeta && (
-                    <div className="w-3.5 h-3.5 shrink-0">
-                      <AppIcon iconType={appMeta.iconType} />
-                    </div>
-                  )}
-                  <span className="text-[10px] font-medium text-white/90 truncate leading-tight">
-                    {win.title}
-                  </span>
+                {/* Close Button on Hover */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playClickSound();
+                    closeWindow(win.id);
+                  }}
+                  title={language === 'tr' ? 'Kapat' : 'Close'}
+                  className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-md z-20"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+
+                {/* 3D Angled Glass Preview Card */}
+                <div className="w-36 h-24 rounded-xl border border-white/20 bg-[#0a0a0c]/60 backdrop-blur-xl p-2 flex flex-col justify-between shadow-[0_8px_24px_rgba(0,0,0,0.35)] group-hover:border-white/40 group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.5)] transition-colors duration-200">
+                  {/* Header: App icon + Title */}
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {appMeta && (
+                      <div className="w-3.5 h-3.5 shrink-0">
+                        <AppIcon iconType={appMeta.iconType} />
+                      </div>
+                    )}
+                    <span className="text-[10px] font-medium text-white/90 truncate leading-tight">
+                      {win.title}
+                    </span>
+                  </div>
+
+                  {/* Body: Symbolic Application Content Preview */}
+                  <div className="w-full flex-1 mt-1.5 overflow-hidden">
+                    <MiniWindowContent id={win.id} />
+                  </div>
                 </div>
 
-                {/* Body: Symbolic Application Content Preview */}
-                <div className="w-full flex-1 mt-1.5 overflow-hidden">
-                  <MiniWindowContent id={win.id} />
+                {/* Shift-click tooltip indicator on hover */}
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-black/80 text-[9px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-lg backdrop-blur-md">
+                  {language === 'tr' ? 'Shift + Tık: Sahneye Ekle' : 'Shift + Click: Add to Stage'}
                 </div>
               </motion.div>
-
-              {/* Shift-click tooltip indicator on hover */}
-              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-black/80 text-[9px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-lg backdrop-blur-md">
-                {language === 'tr' ? 'Shift + Tık: Sahneye Ekle' : 'Shift + Click: Add to Stage'}
-              </div>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-    </aside>
+            );
+          })}
+        </aside>
+      )}
+    </AnimatePresence>
   );
 }

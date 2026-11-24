@@ -19,7 +19,9 @@ import {
 } from 'lucide-react';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
+import { Z_INDEX } from '@/constants/zIndex';
 
 export interface NowPlayingPopoverProps {
   isOpen: boolean;
@@ -36,20 +38,19 @@ function formatTime(seconds: number): string {
 export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, onClose }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const { language, t } = useTranslation();
 
-  const {
-    currentTrack,
-    isPlaying,
-    volume,
-    currentTime,
-    duration,
-    togglePlay,
-    playTrack,
-    nextTrack,
-    prevTrack,
-    seek,
-    setVolume,
-  } = useAudioStore();
+  const currentTrack = useAudioStore((s) => s.currentTrack);
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const volume = useAudioStore((s) => s.volume);
+  const currentTime = useAudioStore((s) => s.currentTime);
+  const duration = useAudioStore((s) => s.duration);
+  const togglePlay = useAudioStore((s) => s.togglePlay);
+  const playTrack = useAudioStore((s) => s.playTrack);
+  const nextTrack = useAudioStore((s) => s.nextTrack);
+  const prevTrack = useAudioStore((s) => s.prevTrack);
+  const seek = useAudioStore((s) => s.seek);
+  const setVolume = useAudioStore((s) => s.setVolume);
 
   const openWindow = useWindowStore((state) => state.openWindow);
 
@@ -71,18 +72,10 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
       }
     };
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
     document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -108,7 +101,8 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
           transition={{ duration: 0.16, ease: 'easeOut' }}
-          className="fixed top-9 right-2 sm:right-28 w-[calc(100vw-1rem)] sm:w-[320px] max-w-[320px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3.5 rounded-2xl liquid-glass border border-white/25 dark:border-white/10 shadow-2xl z-50 select-none text-slate-800 dark:text-slate-100 flex flex-col gap-3 font-sans text-xs touch-pan-y"
+          style={{ zIndex: Z_INDEX.MENUBAR_POPOVER }}
+          className="fixed top-9 right-2 sm:right-28 w-[calc(100vw-1rem)] sm:w-[320px] max-w-[320px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3.5 rounded-2xl liquid-glass border border-white/25 dark:border-white/10 shadow-2xl select-none text-slate-800 dark:text-slate-100 flex flex-col gap-3 font-sans text-xs touch-pan-y"
         >
           {/* Header Row */}
           <div className="flex items-center justify-between border-b border-black/5 dark:border-white/10 pb-2">
@@ -120,7 +114,11 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isPlaying ? 'bg-indigo-500' : 'bg-slate-400'}`} />
               </span>
               <span className="tracking-wide uppercase text-[10px] text-slate-500 dark:text-neutral-400">
-                {isPlaying ? 'Now Playing' : 'Audio Player'}
+                {isPlaying
+                  ? t('nowPlaying')
+                  : language === 'tr'
+                  ? 'Ses Oynatıcı'
+                  : 'Audio Player'}
               </span>
             </div>
 
@@ -128,7 +126,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               <button
                 type="button"
                 onClick={handleOpenStudio}
-                title="Open DAW Studio"
+                title={t('openInStudio')}
                 className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-medium transition-colors focus:outline-none"
               >
                 <Sliders className="w-3 h-3" />
@@ -138,7 +136,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               <button
                 type="button"
                 onClick={onClose}
-                title="Close"
+                title={language === 'tr' ? 'Kapat' : 'Close'}
                 className="w-5 h-5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors focus:outline-none"
               >
                 <X className="w-3.5 h-3.5" />
@@ -219,7 +217,11 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               }`}
             >
               <ListMusic className="w-4 h-4" />
-              <span>Tracks ({ORIGINAL_TRACKS.length})</span>
+              <span>
+                {language === 'tr'
+                  ? `Parçalar (${ORIGINAL_TRACKS.length})`
+                  : `Tracks (${ORIGINAL_TRACKS.length})`}
+              </span>
               {showPlaylist ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
 
@@ -227,7 +229,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               <button
                 type="button"
                 onClick={prevTrack}
-                title="Previous Track"
+                title={language === 'tr' ? 'Önceki Parça' : 'Previous Track'}
                 className="w-7 h-7 rounded-full hover:bg-black/10 dark:hover:bg-white/15 flex items-center justify-center transition-colors text-slate-700 dark:text-slate-200 focus:outline-none"
               >
                 <SkipBack className="w-4 h-4 fill-current" />
@@ -236,7 +238,15 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               <button
                 type="button"
                 onClick={togglePlay}
-                title={isPlaying ? 'Pause' : 'Play'}
+                title={
+                  isPlaying
+                    ? language === 'tr'
+                      ? 'Duraklat'
+                      : 'Pause'
+                    : language === 'tr'
+                    ? 'Oynat'
+                    : 'Play'
+                }
                 className="w-9 h-9 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all shadow-md hover:scale-105 active:scale-95 focus:outline-none"
               >
                 {isPlaying ? (
@@ -249,7 +259,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               <button
                 type="button"
                 onClick={nextTrack}
-                title="Next Track"
+                title={language === 'tr' ? 'Sonraki Parça' : 'Next Track'}
                 className="w-7 h-7 rounded-full hover:bg-black/10 dark:hover:bg-white/15 flex items-center justify-center transition-colors text-slate-700 dark:text-slate-200 focus:outline-none"
               >
                 <SkipForward className="w-4 h-4 fill-current" />
@@ -262,7 +272,15 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
             <button
               type="button"
               onClick={() => setVolume(volume > 0 ? 0 : 0.8)}
-              title={volume > 0 ? 'Mute' : 'Unmute'}
+              title={
+                volume > 0
+                  ? language === 'tr'
+                    ? 'Sessize Al'
+                    : 'Mute'
+                  : language === 'tr'
+                  ? 'Sesi Aç'
+                  : 'Unmute'
+              }
               className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors focus:outline-none"
             >
               {volume > 0 ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -279,11 +297,11 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
                 step="0.01"
                 value={volume}
                 onChange={(e) => setVolume(Number(e.target.value))}
-                aria-label="Volume Slider"
+                aria-label={t('sound')}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-neutral-400 font-mono w-7 text-right">
+            <span className="text-[10px] text-slate-400 dark:text-neutral-400 font-mono tabular-nums w-7 text-right">
               {Math.round(volume * 100)}%
             </span>
           </div>
@@ -295,7 +313,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
             className="w-full py-1.5 px-3 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 shadow-xs"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Studio DAW'da Aç ve Karıştır ↗</span>
+            <span>{t('openInStudio')}</span>
           </button>
 
           {/* Expandable Tracklist Dropdown */}

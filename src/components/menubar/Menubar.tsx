@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import {
   Wifi,
   Volume2,
@@ -29,6 +30,7 @@ import { Z_INDEX } from '@/constants/zIndex';
 import { useMissionControlStore } from '@/stores/useMissionControlStore';
 import { useLockStore } from '@/stores/useLockStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useOverlayStore } from '@/stores/useOverlayStore';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { AppId } from '@/types/os';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -95,21 +97,35 @@ interface MenubarProps {
   onOpenApp?: (appId: string) => void;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) => {
   const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
-  const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
-  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [showAboutMac, setShowAboutMac] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const languageMenuRef = React.useRef<HTMLDivElement>(null);
+
+  const activePopover = useOverlayStore((state) => state.activePopover);
+  const setActivePopover = useOverlayStore((state) => state.setActivePopover);
+  const toggleOverlayPopover = useOverlayStore((state) => state.togglePopover);
+  const closeAllPopovers = useOverlayStore((state) => state.closeAllPopovers);
+  const registerQuickLook = useOverlayStore((state) => state.registerQuickLook);
+  const unregisterQuickLook = useOverlayStore((state) => state.unregisterQuickLook);
+
+  const isControlCenterOpen = activePopover === 'controlCenter';
+  const isNowPlayingOpen = activePopover === 'nowPlaying';
+  const isLanguageMenuOpen = activePopover === 'language';
 
   // Listen for PWA installation prompt
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -122,7 +138,14 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         setDeferredPrompt(null);
       });
     } else {
-      alert('macOS / Mobil Kurulum: Tarayıcınızın Paylaş (Share) veya Adres çubuğu menüsünden "Uygulama Olarak Yükle" ya da "Ana Ekrana Ekle"yi seçebilirsiniz.');
+      useNotificationStore.getState().pushNotification({
+        title: language === 'tr' ? 'Uygulama Olarak Yükle' : 'Install Web OS App',
+        message:
+          language === 'tr'
+            ? 'Tarayıcınızın Paylaş veya adres çubuğu menüsünden "Uygulama Olarak Yükle" ya da "Ana Ekrana Ekle"yi seçebilirsiniz.'
+            : 'Choose "Install App" or "Add to Home Screen" from your browser share or address bar menu.',
+        duration: 5500,
+      });
     }
   };
   // Live Open-Meteo Weather Store Integration
@@ -145,14 +168,24 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     const next = !isWeatherOpen;
     toggleWeatherPopover();
     if (next) {
-      setIsControlCenterOpen(false);
-      setIsNowPlayingOpen(false);
-      setIsLanguageMenuOpen(false);
+      closeAllPopovers();
+      setActiveMenuId(null);
+      useNotificationStore.getState().closeCenter();
     }
   };
 
-  const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper, stageManagerEnabled, toggleStageManager } = useSettingsStore();
-  const { isPlaying: isAudioPlaying, currentTrack } = useAudioStore();
+  const isDarkMode = useSettingsStore((s) => s.isDarkMode);
+  const toggleDarkMode = useSettingsStore((s) => s.toggleDarkMode);
+  const soundEnabled = useSettingsStore((s) => s.soundEnabled);
+  const toggleSound = useSettingsStore((s) => s.toggleSound);
+  const volume = useSettingsStore((s) => s.volume);
+  const activeWallpaperId = useSettingsStore((s) => s.activeWallpaperId);
+  const setWallpaper = useSettingsStore((s) => s.setWallpaper);
+  const stageManagerEnabled = useSettingsStore((s) => s.stageManagerEnabled);
+  const toggleStageManager = useSettingsStore((s) => s.toggleStageManager);
+
+  const isAudioPlaying = useAudioStore((s) => s.isPlaying);
+  const currentTrack = useAudioStore((s) => s.currentTrack);
 
   const openWindow = useWindowStore((state) => state.openWindow);
   const closeWindow = useWindowStore((state) => state.closeWindow);
@@ -163,44 +196,65 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const centerActiveWindow = useWindowStore((state) => state.centerActiveWindow);
   const bringAllToFront = useWindowStore((state) => state.bringAllToFront);
   const minimizeAllWindows = useWindowStore((state) => state.minimizeAllWindows);
-  const focusWindow = useWindowStore((state) => state.focusWindow);
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
-  const windows = useWindowStore((state) => state.windows);
+  const activeWindow = useWindowStore((state) =>
+    state.activeWindowId ? state.windows[state.activeWindowId] : null
+  );
 
   const { t, language, setLanguage } = useTranslation();
 
   const toggleMissionControl = useMissionControlStore((state) => state.toggleMissionControl);
-  const { lock, sleep } = useLockStore();
+  const lock = useLockStore((state) => state.lock);
+  const sleep = useLockStore((state) => state.sleep);
   const toggleCenter = useNotificationStore((state) => state.toggleCenter);
 
-  // Close menus when Escape key is pressed
+  // Sync local activeMenuId when overlay store clears menu popover (e.g. Esc or another popover opening)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setActiveMenuId(null);
-        setIsControlCenterOpen(false);
-        setIsNowPlayingOpen(false);
-        setIsLanguageMenuOpen(false);
-      }
+    if (activePopover !== 'menu' && activeMenuId !== null) {
+      setActiveMenuId(null);
+    }
+  }, [activePopover, activeMenuId]);
+
+  // Register About This Mac / Shortcuts Modal Escape closer
+  useEffect(() => {
+    if (!showAboutMac && !showShortcutsModal) return;
+    const closer = () => {
+      setShowAboutMac(false);
+      setShowShortcutsModal(false);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    registerQuickLook(closer);
+    return () => unregisterQuickLook(closer);
+  }, [showAboutMac, showShortcutsModal, registerQuickLook, unregisterQuickLook]);
 
   // Click outside listener for language menu
   useEffect(() => {
     if (!isLanguageMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (languageMenuRef.current && !languageMenuRef.current.contains(e.target as Node)) {
-        setIsLanguageMenuOpen(false);
+        setActivePopover(null);
       }
     };
     window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
-  }, [isLanguageMenuOpen]);
+  }, [isLanguageMenuOpen, setActivePopover]);
+
+  const closeMenuDropdown = () => {
+    setActiveMenuId(null);
+    if (useOverlayStore.getState().activePopover === 'menu') {
+      setActivePopover(null);
+    }
+  };
 
   const handleMenuClick = (menuId: string) => {
-    setActiveMenuId((prev) => (prev === menuId ? null : menuId));
+    const next = activeMenuId === menuId ? null : menuId;
+    setActiveMenuId(next);
+    if (next) {
+      setWeatherOpen(false);
+      useNotificationStore.getState().closeCenter();
+      setActivePopover('menu');
+    } else if (activePopover === 'menu') {
+      setActivePopover(null);
+    }
   };
 
   const handleMenuHover = (menuId: string) => {
@@ -212,7 +266,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // Apple Menu Items
   const appleMenuItems: MenuItem[] = [
     {
-      label: 'Portfolyoyu Uygulama Olarak Yükle ',
+      label: language === 'tr' ? 'Portfolyoyu Uygulama Olarak Yükle' : 'Install Portfolio as App',
       action: handleInstallPWA,
     },
     { isDivider: true },
@@ -238,8 +292,8 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       action: minimizeAllWindows,
     },
     {
-      label: 'App Store...',
-      action: () => window.open('https://github.com', '_blank'),
+      label: language === 'tr' ? 'Uygulamalar (Finder)' : 'Applications Folder...',
+      action: () => useWindowStore.getState().openFinderToSection('applications'),
     },
     { isDivider: true },
     {
@@ -276,12 +330,12 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // Active App Menu Items
   const appMenuItems: MenuItem[] = [
     {
-      label: `About ${activeAppName}`,
+      label: language === 'tr' ? `${activeAppName} Hakkında` : `About ${activeAppName}`,
       action: () => setShowAboutMac(true),
     },
     { isDivider: true },
     {
-      label: 'Settings...',
+      label: t('systemSettings'),
       shortcut: '⌘,',
       action: () => openWindow('settings'),
     },
@@ -289,12 +343,12 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     ...(activeAppName === 'Finder'
       ? [
           {
-            label: 'Empty Trash...',
+            label: t('emptyTrash'),
             shortcut: '⇧⌘⌫',
             action: () => {
               useNotificationStore.getState().pushNotification({
-                title: 'Çöp Sepeti Boşaltıldı',
-                message: 'Tüm silinmiş sistem öğeleri ve önbellek temizlendi.',
+                title: t('emptyTrashSuccessTitle'),
+                message: t('emptyTrashSuccessMessage'),
                 appId: 'trash',
               });
             },
@@ -303,17 +357,18 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         ]
       : []),
     {
-      label: `Hide ${activeAppName}`,
+      label: t('hideApp').replace('{app}', activeAppName),
       shortcut: '⌘H',
       action: () => {
         if (activeWindowId) minimizeWindow(activeWindowId);
       },
     },
     {
-      label: 'Hide Others',
+      label: language === 'tr' ? 'Diğerlerini Gizle' : 'Hide Others',
       shortcut: '⌥⌘H',
       action: () => {
-        Object.values(windows).forEach((w) => {
+        const allWins = useWindowStore.getState().windows;
+        Object.values(allWins).forEach((w) => {
           if (w.isOpen && w.id !== activeWindowId) {
             minimizeWindow(w.id);
           }
@@ -321,7 +376,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       },
     },
     {
-      label: 'Show All',
+      label: language === 'tr' ? 'Tümünü Göster' : 'Show All',
       action: bringAllToFront,
     },
   ];
@@ -329,26 +384,26 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // File Menu Items
   const fileMenuItems: MenuItem[] = [
     {
-      label: 'New Finder Window',
+      label: language === 'tr' ? 'Yeni Finder Penceresi' : 'New Finder Window',
       shortcut: '⌘N',
       action: () => openWindow('finder'),
     },
     {
-      label: 'New Note',
+      label: language === 'tr' ? 'Yeni Not' : 'New Note',
       shortcut: '⇧⌘N',
       action: () => openWindow('notes'),
     },
     {
-      label: 'New Message',
+      label: language === 'tr' ? 'Yeni Mesaj' : 'New Message',
       action: () => openWindow('messages'),
     },
     {
-      label: 'Open Studio (DAW)',
+      label: language === 'tr' ? "Studio (DAW)'ı Aç" : 'Open Studio (DAW)',
       action: () => openWindow('studio'),
     },
     { isDivider: true },
     {
-      label: 'Close Window',
+      label: language === 'tr' ? 'Pencereyi Kapat' : 'Close Window',
       shortcut: '⌘W',
       disabled: !activeWindowId,
       action: () => {
@@ -360,30 +415,30 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // Edit Menu Items
   const editMenuItems: MenuItem[] = [
     {
-      label: 'Undo',
+      label: language === 'tr' ? 'Geri Al' : 'Undo',
       shortcut: '⌘Z',
       disabled: true,
     },
     {
-      label: 'Redo',
+      label: language === 'tr' ? 'Yinele' : 'Redo',
       shortcut: '⇧⌘Z',
       disabled: true,
     },
     { isDivider: true },
     {
-      label: 'Cut',
+      label: language === 'tr' ? 'Kes' : 'Cut',
       shortcut: '⌘X',
     },
     {
-      label: 'Copy',
+      label: language === 'tr' ? 'Kopyala' : 'Copy',
       shortcut: '⌘C',
     },
     {
-      label: 'Paste',
+      label: language === 'tr' ? 'Yapıştır' : 'Paste',
       shortcut: '⌘V',
     },
     {
-      label: 'Select All',
+      label: language === 'tr' ? 'Tümünü Seç' : 'Select All',
       shortcut: '⌘A',
     },
   ];
@@ -391,12 +446,12 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // View Menu Items
   const viewMenuItems: MenuItem[] = [
     {
-      label: 'Toggle Dark Mode',
+      label: t('toggleAppearance'),
       shortcut: '⌃⌘D',
       action: toggleDarkMode,
     },
     {
-      label: 'Next Wallpaper',
+      label: language === 'tr' ? 'Sonraki Duvar Kağıdı' : 'Next Wallpaper',
       shortcut: '⌥W',
       action: () => {
         const currentIndex = WALLPAPERS.findIndex((w) => w.id === activeWallpaperId);
@@ -406,7 +461,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
     { isDivider: true },
     {
-      label: 'Enter Full Screen',
+      label: t('fullScreen'),
       shortcut: '⌃⌘F',
       action: () => {
         if (!document.fullscreenElement) {
@@ -418,8 +473,14 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
   ];
 
-  // Window Menu Items
-  const openWindowList = Object.values(windows).filter((w) => w.isOpen);
+  const openWindowList = useWindowStore(
+    useShallow((state) =>
+      Object.values(state.windows)
+        .filter((w) => w.isOpen)
+        .map((w) => ({ id: w.id, title: w.title }))
+    )
+  );
+  const focusWindow = useWindowStore((state) => state.focusWindow);
   const windowMenuItems: MenuItem[] = [
     {
       label: t('tileLeft'),
@@ -504,18 +565,23 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   // Help Menu Items
   const helpMenuItems: MenuItem[] = [
     {
-      label: 'macOS Portfolio Help',
+      label: language === 'tr' ? 'macOS Portfolyo Yardım' : 'macOS Portfolio Help',
       action: () => setShowAboutMac(true),
     },
     {
-      label: 'Keyboard Shortcuts Guide',
+      label: language === 'tr' ? 'Klavye Kısayolları Rehberi' : 'Keyboard Shortcuts Guide',
       shortcut: '⌘/',
-      action: () => alert('Shortcuts:\n⌘, : Settings\n⌘M : Minimize\n⌃⌘F : Fullscreen\n⌃⌘Q : Lock Screen'),
+      action: () => setShowShortcutsModal(true),
     },
     { isDivider: true },
     {
-      label: 'Visit Developer GitHub',
-      action: () => window.open('https://github.com', '_blank'),
+      label: language === 'tr' ? 'Yapımcı LinkedIn Profili' : 'Producer LinkedIn Profile',
+      action: () =>
+        window.open(
+          'https://www.linkedin.com/in/h%C3%BCseyin-korumta%C5%9F-05379128a/',
+          '_blank',
+          'noopener,noreferrer'
+        ),
     },
   ];
 
@@ -547,7 +613,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </button>
             <MenuDropdown
               isOpen={activeMenuId === 'apple'}
-              onClose={() => setActiveMenuId(null)}
+              onClose={closeMenuDropdown}
               items={appleMenuItems}
             />
           </div>
@@ -569,7 +635,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </button>
             <MenuDropdown
               isOpen={activeMenuId === 'app'}
-              onClose={() => setActiveMenuId(null)}
+              onClose={closeMenuDropdown}
               items={appMenuItems}
             />
           </div>
@@ -593,7 +659,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'file'}
-                onClose={() => setActiveMenuId(null)}
+                onClose={closeMenuDropdown}
                 items={fileMenuItems}
               />
             </div>
@@ -615,7 +681,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'edit'}
-                onClose={() => setActiveMenuId(null)}
+                onClose={closeMenuDropdown}
                 items={editMenuItems}
               />
             </div>
@@ -637,7 +703,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'view'}
-                onClose={() => setActiveMenuId(null)}
+                onClose={closeMenuDropdown}
                 items={viewMenuItems}
               />
             </div>
@@ -659,7 +725,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'window'}
-                onClose={() => setActiveMenuId(null)}
+                onClose={closeMenuDropdown}
                 items={windowMenuItems}
               />
             </div>
@@ -681,7 +747,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               </button>
               <MenuDropdown
                 isOpen={activeMenuId === 'help'}
-                onClose={() => setActiveMenuId(null)}
+                onClose={closeMenuDropdown}
                 items={helpMenuItems}
               />
             </div>
@@ -696,11 +762,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             data-now-playing-trigger
             onClick={() => {
               const next = !isNowPlayingOpen;
-              setIsNowPlayingOpen(next);
+              toggleOverlayPopover('nowPlaying');
               if (next) {
-                setIsControlCenterOpen(false);
                 setWeatherOpen(false);
-                setIsLanguageMenuOpen(false);
+                setActiveMenuId(null);
+                useNotificationStore.getState().closeCenter();
               }
             }}
             title={
@@ -801,11 +867,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             data-control-center-trigger
             onClick={() => {
               const next = !isControlCenterOpen;
-              setIsControlCenterOpen(next);
+              toggleOverlayPopover('controlCenter');
               if (next) {
-                setIsNowPlayingOpen(false);
                 setWeatherOpen(false);
-                setIsLanguageMenuOpen(false);
+                setActiveMenuId(null);
+                useNotificationStore.getState().closeCenter();
               }
             }}
             title="Control Center"
@@ -831,11 +897,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               type="button"
               onClick={() => {
                 const next = !isLanguageMenuOpen;
-                setIsLanguageMenuOpen(next);
+                toggleOverlayPopover('language');
                 if (next) {
-                  setIsControlCenterOpen(false);
-                  setIsNowPlayingOpen(false);
                   setWeatherOpen(false);
+                  setActiveMenuId(null);
+                  useNotificationStore.getState().closeCenter();
                 }
               }}
               title={t('language')}
@@ -851,7 +917,8 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             {/* Input Source Popover Menu */}
             {isLanguageMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-1.5 w-44 rounded-xl liquid-glass border border-white/20 dark:border-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.28)] p-1 z-50 backdrop-blur-2xl"
+                style={{ zIndex: Z_INDEX.MENUBAR_POPOVER }}
+                className="absolute right-0 top-full mt-1.5 w-44 rounded-xl liquid-glass border border-white/20 dark:border-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.28)] p-1 backdrop-blur-2xl"
               >
                 <div className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-neutral-500">
                   {t('language')}
@@ -860,7 +927,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                   type="button"
                   onClick={() => {
                     setLanguage('tr');
-                    setIsLanguageMenuOpen(false);
+                    setActivePopover(null);
                     playClickSound();
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-medium transition-colors cursor-pointer ${
@@ -876,7 +943,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                   type="button"
                   onClick={() => {
                     setLanguage('en');
-                    setIsLanguageMenuOpen(false);
+                    setActivePopover(null);
                     playClickSound();
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-medium transition-colors cursor-pointer ${
@@ -893,20 +960,35 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
           </div>
 
           {/* Real-time Hydration-safe Clock & Notification Center Trigger */}
-          <Clock onClick={toggleCenter} />
+          <Clock
+            onClick={() => {
+              closeAllPopovers();
+              setWeatherOpen(false);
+              setActiveMenuId(null);
+              toggleCenter();
+            }}
+          />
         </div>
       </header>
 
       {/* Control Center Panel */}
       <ControlCenter
         isOpen={isControlCenterOpen}
-        onClose={() => setIsControlCenterOpen(false)}
+        onClose={() => {
+          if (useOverlayStore.getState().activePopover === 'controlCenter') {
+            setActivePopover(null);
+          }
+        }}
       />
 
       {/* Now Playing MiniPlayer Popover */}
       <NowPlayingPopover
         isOpen={isNowPlayingOpen}
-        onClose={() => setIsNowPlayingOpen(false)}
+        onClose={() => {
+          if (useOverlayStore.getState().activePopover === 'nowPlaying') {
+            setActivePopover(null);
+          }
+        }}
       />
 
       {/* Live macOS Weather Popover */}
@@ -915,6 +997,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       {/* "About This Mac" Modal */}
       {showAboutMac && (
         <div
+          data-modal="true"
           style={{ zIndex: Z_INDEX.SPOTLIGHT }}
           className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm select-none p-4"
         >
@@ -957,7 +1040,52 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
               onClick={() => setShowAboutMac(false)}
               className="px-5 py-1.5 rounded-lg bg-[#007AFF] hover:bg-blue-600 text-white font-medium text-xs transition-colors shadow-sm focus:outline-none"
             >
-              OK
+              {language === 'tr' ? 'Tamam' : 'OK'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Guide Modal */}
+      {showShortcutsModal && (
+        <div
+          data-modal="true"
+          style={{ zIndex: Z_INDEX.SPOTLIGHT }}
+          onClick={() => setShowShortcutsModal(false)}
+          className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm select-none p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-[380px] max-w-full p-5 rounded-2xl liquid-glass shadow-2xl border border-black/10 dark:border-white/15 flex flex-col gap-3 text-xs"
+          >
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white text-center">
+              {language === 'tr' ? 'Klavye Kısayolları' : 'Keyboard Shortcuts'}
+            </h2>
+            <div className="bg-black/5 dark:bg-white/5 rounded-xl p-3 flex flex-col gap-2 border border-black/5 dark:border-white/5">
+              {[
+                { key: '⌘ K / ⌘ Space', label: language === 'tr' ? 'Spotlight Arama' : 'Spotlight Search' },
+                { key: 'F3 / ⌥ ↑', label: 'Mission Control' },
+                { key: '⌥ Tab', label: language === 'tr' ? 'Uygulama Değiştirici' : 'App Switcher HUD' },
+                { key: '⌥ ← / ⌥ →', label: language === 'tr' ? 'Sola / Sağa Yasla' : 'Tile Window Left / Right' },
+                { key: '⌥ ⇧ ↑', label: language === 'tr' ? 'Tam Ekran / Geri Yükle' : 'Fill / Restore Window' },
+                { key: '⌥ S', label: 'Stage Manager' },
+                { key: '⌥ L / ⌃⌘Q', label: language === 'tr' ? 'Ekranı Kilitle' : 'Lock Screen' },
+                { key: 'Space (Finder)', label: language === 'tr' ? 'Hızlı Bakış' : 'Quick Look Preview' },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between gap-2">
+                  <span className="text-slate-700 dark:text-slate-200">{item.label}</span>
+                  <kbd className="px-2 py-0.5 rounded bg-white/80 dark:bg-black/40 border border-black/10 dark:border-white/15 font-mono text-[10px] font-semibold text-slate-800 dark:text-neutral-200">
+                    {item.key}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowShortcutsModal(false)}
+              className="mx-auto px-5 py-1.5 rounded-lg bg-[#007AFF] hover:bg-blue-600 text-white font-medium text-xs transition-colors shadow-sm focus:outline-none cursor-pointer"
+            >
+              {language === 'tr' ? 'Tamam' : 'Done'}
             </button>
           </div>
         </div>

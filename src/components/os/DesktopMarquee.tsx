@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { Z_INDEX } from '@/constants/zIndex';
 
 interface DesktopMarqueeProps {
   onSelectionChange?: (selectedIds: string[]) => void;
@@ -34,6 +35,8 @@ export const DesktopMarquee: React.FC<DesktopMarqueeProps> = ({
         target.closest('[data-desktop-item]') ||
         target.closest('[data-context-menu]') ||
         target.closest('[data-modal]') ||
+        target.closest('[data-drop-zone="notch"]') ||
+        target.closest('aside') ||
         target.closest('header') ||
         target.closest('button') ||
         target.closest('input')
@@ -147,7 +150,7 @@ export const DesktopMarquee: React.FC<DesktopMarqueeProps> = ({
         backgroundColor: 'rgba(0, 122, 255, 0.16)',
         borderRadius: '4px',
         pointerEvents: 'none',
-        zIndex: 40,
+        zIndex: Z_INDEX.DESKTOP_CANVAS + 2,
         boxShadow: '0 0 12px rgba(0, 122, 255, 0.25)',
       }}
     />

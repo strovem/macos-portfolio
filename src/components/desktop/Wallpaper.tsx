@@ -69,7 +69,8 @@ const DEFAULT_AURA: TrackAuraConfig = {
 export const Wallpaper: React.FC = () => {
   const activeWallpaperId = useSettingsStore((state) => state.activeWallpaperId);
   const auraIntensity = useSettingsStore((state) => state.auraIntensity);
-  const { currentTrack, isPlaying } = useAudioStore();
+  const currentTrack = useAudioStore((state) => state.currentTrack);
+  const isPlaying = useAudioStore((state) => state.isPlaying);
 
   const currentWallpaper: WallpaperOption =
     WALLPAPERS.find((w) => w.id === activeWallpaperId) || WALLPAPERS[0];
@@ -182,7 +183,7 @@ export const Wallpaper: React.FC = () => {
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="absolute inset-0 w-full h-full will-change-transform"
+              className="absolute inset-0 w-full h-full"
               style={{
                 transform: 'translateZ(0)',
                 background: `

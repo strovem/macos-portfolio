@@ -99,6 +99,13 @@ export const MessagesApp: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const replyTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (replyTimerRef.current) clearTimeout(replyTimerRef.current);
+    };
+  }, []);
 
   const activeThread = threads.find((t) => t.id === activeThreadId) || threads[0];
 
@@ -177,7 +184,8 @@ export const MessagesApp: React.FC = () => {
         // Show typing indicator
         setIsTyping(true);
 
-        setTimeout(() => {
+        if (replyTimerRef.current) clearTimeout(replyTimerRef.current);
+        replyTimerRef.current = setTimeout(() => {
           setIsTyping(false);
           const autoReply: ChatMessage = {
             id: 'reply-' + Date.now(),
@@ -193,6 +201,7 @@ export const MessagesApp: React.FC = () => {
                 : t
             )
           );
+          replyTimerRef.current = null;
         }, 1200);
       }
     } catch (err) {
@@ -431,7 +440,7 @@ export const MessagesApp: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting || !messageText.trim()}
-              className="w-8.5 h-8.5 rounded-full bg-[#007AFF] hover:bg-[#007AFF]/90 disabled:opacity-40 disabled:hover:bg-[#007AFF] text-white flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer"
+              className="w-9 h-9 rounded-full bg-[#007AFF] hover:bg-[#007AFF]/90 disabled:opacity-40 disabled:hover:bg-[#007AFF] text-white flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer"
             >
               {isSubmitting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

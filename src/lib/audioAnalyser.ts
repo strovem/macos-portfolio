@@ -8,8 +8,8 @@
 
 let sharedAudioCtx: AudioContext | null = null;
 let sharedAnalyser: AnalyserNode | null = null;
-let freqDataBuffer: Uint8Array | null = null;
-let timeDataBuffer: Uint8Array | null = null;
+let freqDataBuffer: Uint8Array<ArrayBuffer> | null = null;
+let timeDataBuffer: Uint8Array<ArrayBuffer> | null = null;
 
 // WeakMap guards to guarantee createMediaElementSource is called exactly once per HTMLAudioElement
 const connectedMediaElements = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
@@ -125,7 +125,7 @@ export function getAudioMetrics(isPlaying = false): AudioMetrics {
     return { bass: 0, mid: 0, treble: 0, energy: 0, rawBuffer: null };
   }
 
-  analyser.getByteFrequencyData(freqDataBuffer as any);
+  analyser.getByteFrequencyData(freqDataBuffer);
 
   // Calculate sum of energies across bands
   let totalSum = 0;
@@ -183,7 +183,7 @@ export function getFrequencyBars(barCount = 32, isPlaying = false): number[] {
     return bars;
   }
 
-  analyser.getByteFrequencyData(freqDataBuffer as any);
+  analyser.getByteFrequencyData(freqDataBuffer);
 
   let isSilent = true;
   const binCount = freqDataBuffer.length;
@@ -215,10 +215,10 @@ export function getFrequencyBars(barCount = 32, isPlaying = false): number[] {
 /**
  * Returns raw time-domain (waveform) data for oscilloscope rendering.
  */
-export function getTimeDomainData(): Uint8Array | null {
+export function getTimeDomainData(): Uint8Array<ArrayBuffer> | null {
   const analyser = getSharedAnalyser();
   if (!analyser || !timeDataBuffer) return null;
-  analyser.getByteTimeDomainData(timeDataBuffer as any);
+  analyser.getByteTimeDomainData(timeDataBuffer);
   return timeDataBuffer;
 }
 

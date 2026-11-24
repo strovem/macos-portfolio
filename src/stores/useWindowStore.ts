@@ -424,6 +424,8 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
           [id]: {
             ...target,
             size: size,
+            tilePosition: null,
+            previousBounds: undefined,
           },
         },
       };
@@ -460,6 +462,10 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
   },
 
   resetWindows: () => {
+    const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const isStageActive = useSettingsStore.getState().stageManagerEnabled && winW >= 1024;
+    const minLeft = isStageActive ? 176 : 0;
+
     set((state) => {
       const updated = { ...state.windows };
       Object.keys(updated).forEach((key) => {
@@ -468,10 +474,15 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
         if (defaultWin) {
           updated[appId] = {
             ...updated[appId],
-            position: { ...defaultWin.position },
+            position: {
+              x: Math.max(minLeft, defaultWin.position.x),
+              y: defaultWin.position.y,
+            },
             size: { ...defaultWin.size },
             isMaximized: false,
             isMinimized: false,
+            tilePosition: null,
+            previousBounds: undefined,
           };
         }
       });
@@ -484,14 +495,20 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     const openWins = Object.values(windows).filter((w) => w.isOpen && !w.isMinimized);
     if (openWins.length === 0) return;
 
+    const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const isStageActive = useSettingsStore.getState().stageManagerEnabled && winW >= 1024;
+    const baseLeft = isStageActive ? 188 : 50;
+
     const updated = { ...windows };
     openWins.forEach((w, idx) => {
-      const newX = 50 + idx * 34;
+      const newX = baseLeft + idx * 34;
       const newY = 46 + idx * 34;
       updated[w.id] = {
         ...w,
         position: { x: newX, y: newY },
         isMaximized: false,
+        tilePosition: null,
+        previousBounds: undefined,
       };
     });
     set({ windows: updated });
@@ -505,8 +522,11 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
 
     const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const isStageActive = useSettingsStore.getState().stageManagerEnabled && winW >= 1024;
+    const leftOffset = isStageActive ? 172 : 12;
+    const usableW = isStageActive ? winW - 172 : winW;
 
-    const newX = Math.max(20, Math.round((winW - target.size.width) / 2));
+    const newX = Math.max(leftOffset, Math.round(leftOffset + (usableW - target.size.width) / 2));
     const newY = Math.max(34, Math.round((winH - target.size.height) / 2));
 
     set({
@@ -516,6 +536,8 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
           ...target,
           position: { x: newX, y: newY },
           isMaximized: false,
+          tilePosition: null,
+          previousBounds: undefined,
         },
       },
     });
@@ -548,6 +570,9 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
   clampAllWindowsToViewport: (viewportWidth: number, viewportHeight: number) => {
     const menubarHeight = 32;
     const dockHeight = 70;
+    const isStageActive = useSettingsStore.getState().stageManagerEnabled && viewportWidth >= 1024;
+    const leftEdge = isStageActive ? 172 : 12;
+
     set((state) => {
       let changed = false;
       const nextWindows = { ...state.windows };
@@ -556,36 +581,38 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
         const win = nextWindows[key];
         if (!win.isOpen || win.isMinimized || win.isMaximized) continue;
 
+        let winChanged = false;
         let { x, y } = win.position;
         let { width, height } = win.size;
 
-        const maxWidth = Math.max(320, viewportWidth - 24);
+        const maxWidth = Math.max(320, viewportWidth - leftEdge - 12);
         if (width > maxWidth) {
           width = maxWidth;
-          changed = true;
+          winChanged = true;
         }
 
         const maxHeight = Math.max(240, viewportHeight - menubarHeight - dockHeight - 20);
         if (height > maxHeight) {
           height = maxHeight;
-          changed = true;
+          winChanged = true;
         }
 
-        const maxX = Math.max(12, viewportWidth - width - 12);
-        const clampedX = Math.min(Math.max(12, x), maxX);
+        const maxX = Math.max(leftEdge, viewportWidth - width - 12);
+        const clampedX = Math.min(Math.max(leftEdge, x), maxX);
         if (clampedX !== x) {
           x = clampedX;
-          changed = true;
+          winChanged = true;
         }
 
         const maxY = Math.max(menubarHeight + 6, viewportHeight - dockHeight - height);
         const clampedY = Math.min(Math.max(menubarHeight + 6, y), maxY);
         if (clampedY !== y) {
           y = clampedY;
-          changed = true;
+          winChanged = true;
         }
 
-        if (changed) {
+        if (winChanged) {
+          changed = true;
           nextWindows[key] = {
             ...win,
             position: { x, y },
@@ -614,10 +641,10 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     const availableHeight = winHeight - menubarHeight - dockMargin - 10;
     const targetY = menubarHeight + 6;
 
-    const stageManagerEnabled = useSettingsStore.getState().stageManagerEnabled;
+    const stageActive = useSettingsStore.getState().stageManagerEnabled && winWidth >= 1024;
     const STAGE_STRIP_WIDTH = 164;
-    const leftOffset = stageManagerEnabled ? STAGE_STRIP_WIDTH + 8 : 8;
-    const usableWidth = stageManagerEnabled ? winWidth - STAGE_STRIP_WIDTH : winWidth;
+    const leftOffset = stageActive ? STAGE_STRIP_WIDTH + 8 : 8;
+    const usableWidth = stageActive ? winWidth - STAGE_STRIP_WIDTH : winWidth;
 
     set((state) => {
       const win = state.windows[id];
@@ -631,12 +658,13 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
 
       if (tile === 'restore') {
         if (win.previousBounds) {
+          const restoredX = Math.max(leftOffset, Math.min(win.previousBounds.position.x, Math.max(leftOffset, winWidth - win.previousBounds.size.width - 12)));
           return {
             windows: {
               ...state.windows,
               [id]: {
                 ...win,
-                position: win.previousBounds.position,
+                position: { x: restoredX, y: win.previousBounds.position.y },
                 size: win.previousBounds.size,
                 isMaximized: false,
                 tilePosition: null,

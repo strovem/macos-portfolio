@@ -24,15 +24,17 @@ export function Dock({
   const mouseX = useMotionValue(Infinity);
   const isMobile = useIsMobile();
 
-  const windows = useWindowStore((state) => state.windows);
+  const openAppIdsKey = useWindowStore((state) =>
+    Object.values(state.windows)
+      .filter((w) => w.isOpen && !w.isMinimized)
+      .map((w) => w.id)
+      .join(',')
+  );
   const toggleWindow = useWindowStore((state) => state.toggleWindow);
 
   // Active indicator dots in Dock match isOpen && !isMinimized from store or props
   const effectiveOpenAppIds =
-    openAppIds ??
-    Object.values(windows)
-      .filter((w) => w.isOpen && !w.isMinimized)
-      .map((w) => w.id);
+    openAppIds ?? (openAppIdsKey ? (openAppIdsKey.split(',') as AppId[]) : []);
 
   const handleAppClick = (appId: AppId) => {
     playDockClickSound();
