@@ -208,14 +208,11 @@ export function MissionControl() {
 
                       {/* Mockup Preview Body */}
                       <div className="h-44 sm:h-48 p-4 flex flex-col items-center justify-center text-center bg-black/20 dark:bg-black/35">
-                        <div className="w-12 h-12 mb-3 drop-shadow-md transition-transform group-hover:scale-110">
+                        <div className="w-20 h-20 mb-3 drop-shadow-xl transition-transform group-hover:scale-110">
                           <AppIcon iconType={win.icon as AppMetadata['iconType']} />
                         </div>
-                        <span className="text-xs font-semibold text-white mb-0.5">
+                        <span className="text-sm font-semibold text-white">
                           {win.title}
-                        </span>
-                        <span className="text-[10px] text-white/60 font-mono">
-                          {win.size.width} × {win.size.height}
                         </span>
                       </div>
                     </motion.div>

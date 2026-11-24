@@ -80,8 +80,8 @@ export function DesktopItem({
   };
 
   const handleClick = () => {
-    // Single tap to open on mobile
-    if (isMobile) {
+    // Single tap on mobile, or click without drag on desktop
+    if (isMobile || dragDistanceRef.current < 6) {
       handleOpenApp();
     }
   };

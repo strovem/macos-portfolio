@@ -59,6 +59,7 @@ export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
       <div className="flex items-center justify-between pt-2 border-t border-neutral-800/15">
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onOpenApp?.();

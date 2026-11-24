@@ -14,9 +14,7 @@ import {
   AudioWaveform,
   Disc3,
   Layers,
-  Sparkles,
   ExternalLink,
-  Info,
   Clock,
   Music,
   Radio,
@@ -145,75 +143,6 @@ function StudioSpectrumCanvas({ isPlaying, volume }: { isPlaying: boolean; volum
   );
 }
 
-// Extended production credits and hardware chain per track
-const TRACK_PRODUCTION_DETAILS: Record<
-  string,
-  {
-    daw: string;
-    synths: string[];
-    mixingChain: string[];
-    concept: string;
-    tags: string[];
-  }
-> = {
-  'track-tech-house-lover': {
-    daw: 'Ableton Live 12 Suite & Analog Modular',
-    synths: ['Roland TB-303 (Analog Bassline)', 'U-he Diva (Analog Leads)', 'Serum (Vocal Chops)'],
-    mixingChain: ['SSL G-Master Bus Compressor', 'FabFilter Pro-Q 3', 'Soundtoys Decapitator', 'Ozone 11 Maximizer'],
-    concept:
-      'High-energy dancefloor production built around the hypnotic "I Am A Lover" vocal hook. Features a driving 126 BPM analog TB-303 bassline and syncopated percussion polyrhythms.',
-    tags: ['Club Master', 'Analog 303', 'Vocal Chop', 'Peak Time'],
-  },
-  'track-dark-elektro': {
-    daw: 'Logic Pro 11',
-    synths: ['Moog Sub 37 (Hardware Bass)', 'Arturia Pigments', 'Korg MS-20 Mini'],
-    mixingChain: ['Eventide Blackhole (Spatial Reverb)', 'Elysia mpressor', 'Pultec EQP-1A Emulation'],
-    concept:
-      'Cinematic synthwave fused with aggressive industrial electronics. Features modular filter sweeps, distorted analog low-end, and a dark dystopian aesthetic.',
-    tags: ['Analog Moog', 'Industrial', 'Dark Wave', 'Cinematic'],
-  },
-  'track-ethnic-garage': {
-    daw: 'Ableton Live 12',
-    synths: ['Ney & Saz Organic Sampler', 'Native Instruments Kontakt', 'SubBoomBass 2'],
-    mixingChain: ['Valhalla VintageVerb', 'Shadow Hills Mastering Compressor', 'Waves CLA-76'],
-    concept:
-      'Harmonic synthesis of traditional Middle Eastern folk acoustics (ney, saz) with modern syncopated 2-step UK Garage grooves.',
-    tags: ['UK Garage', 'Ethnic Fusion', '2-Step Swing', 'Organic Folk'],
-  },
-  'track-ethnic-psy': {
-    daw: 'Cubase 13 Pro',
-    synths: ['LennarDigital Sylenth1', 'Infected Mushroom Manipulator', 'Serum'],
-    mixingChain: ['Cytomic The Glue', 'Soundtoys Echoboy', 'FabFilter Saturn 2'],
-    concept:
-      'Tribal percussion sequences, 138 BPM rolling basslines, and hypnotic spatial reverberation designed for immersive psychological listening.',
-    tags: ['Psytrance', 'Tribal Rhythms', '138 BPM', 'Hypnotic'],
-  },
-  'track-guitar-house': {
-    daw: 'Logic Pro 11',
-    synths: ['Fender American Stratocaster (Live Recording)', 'Spectrasonics Trilian (Bass)', 'Kontakt Grand Piano'],
-    mixingChain: ['Universal Audio LA-2A (Optical Levelling)', 'Neve 1073 Preamp/EQ', 'Lexicon 224 Reverb'],
-    concept:
-      'Recorded live Stratocaster chords and plucks drifting over a sunset Deep House groove with buoyant bass movement.',
-    tags: ['Live Guitar', 'Deep House', 'Sunset Vibes', 'Organic Acoustic'],
-  },
-  'track-tech-house-club': {
-    daw: 'Ableton Live 12',
-    synths: ['Dave Smith Prophet Rev2', 'Roland Cloud Juno-60', 'Battery 4'],
-    mixingChain: ['SSL Channel Strip', 'Universal Audio Pultec', 'Soothe2 (Resonance Suppression)'],
-    concept:
-      'Minimalist and rhythmically tight club mix. Deep sub-bass pocket, crispy hi-hat layering, and analog Prophet filter sweeps.',
-    tags: ['Minimal Tech', 'Groove Heavy', 'Prophet Synth', 'Dancefloor'],
-  },
-  'track-excalibur': {
-    daw: 'Logic Pro 11 & Pro Tools',
-    synths: ['Cinematic Brass & Taiko Percussion', 'Moog One', 'Custom Sound Design Risers'],
-    mixingChain: ['Dangerous Music BAX EQ', 'Manley Variable Mu Compressor', 'Dolby Atmos Spatial Mastering'],
-    concept:
-      'Official commercial jingle and sound logo composed for the Casper Excalibur gaming campaign. High-impact cinematic sound design symbolizing speed, power, and technological edge.',
-    tags: ['Commercial Campaign', 'Brand Jingle', 'Sound Identity', 'Casper Excalibur'],
-  },
-};
-
 export function StudioApp() {
   const currentTrack = useAudioStore((s) => s.currentTrack);
   const isPlaying = useAudioStore((s) => s.isPlaying);
@@ -230,7 +159,7 @@ export function StudioApp() {
 
   const openFinderToSection = useWindowStore((state) => state.openFinderToSection);
 
-  const [activeTab, setActiveTab] = useState<'arrangement' | 'mixer' | 'credits' | 'beatpad'>('arrangement');
+  const [activeTab, setActiveTab] = useState<'arrangement' | 'beatpad'>('arrangement');
   const [mobileTab, setMobileTab] = useState<'tracks' | 'waveform'>('tracks');
   const [isLooping, setIsLooping] = useState<boolean>(true);
   const [mutedTracks, setMutedTracks] = useState<Record<string, boolean>>({});
@@ -241,19 +170,8 @@ export function StudioApp() {
   const rightMeterRef = useRef<HTMLDivElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
-  // Active track production details
+  // Active track
   const activeTrack = currentTrack || ORIGINAL_TRACKS[0];
-  const activeDetails = useMemo(() => {
-    return (
-      TRACK_PRODUCTION_DETAILS[activeTrack.id] || {
-        daw: 'Ableton Live & Logic Pro',
-        synths: ['Analog Hardware & Virtual Synths'],
-        mixingChain: ['SSL Bus Compressor, FabFilter Pro-Q 3, Ozone Mastering'],
-        concept: activeTrack.description,
-        tags: [activeTrack.genre, `${activeTrack.bpm} BPM`, activeTrack.year],
-      }
-    );
-  }, [activeTrack]);
 
   // Real-time Level Meter Animation via direct DOM mutation & Web Audio metrics
   useEffect(() => {
@@ -554,19 +472,6 @@ export function StudioApp() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('credits')}
-            className={`px-2.5 sm:px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'credits'
-                ? 'bg-white/15 text-white shadow-xs'
-                : 'text-neutral-400 hover:text-neutral-200'
-            }`}
-          >
-            <Info className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Production Notes & Stems</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab('beatpad')}
             className={`px-2.5 sm:px-3 py-1 rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'beatpad'
@@ -589,7 +494,7 @@ export function StudioApp() {
         </button>
       </div>
 
-      {/* 3. MAIN WORKSPACE (Arrangement or Credits or Beat Pad) */}
+      {/* 3. MAIN WORKSPACE (Arrangement or Beat Pad) */}
       {activeTab === 'beatpad' ? (
         <div className="flex-1 flex overflow-hidden">
           <StudioBeatPad />
@@ -716,7 +621,6 @@ export function StudioApp() {
             activeTab === 'arrangement' && mobileTab === 'tracks' ? 'hidden' : 'flex'
           } flex-1 flex-col bg-[#121217] overflow-y-auto no-scrollbar`}
         >
-          {activeTab === 'arrangement' ? (
             <div className="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4">
               {/* Mobile Back Button to Tracklist */}
               <div className="flex md:hidden items-center justify-between pb-1 border-b border-white/10">
@@ -870,65 +774,6 @@ export function StudioApp() {
                 <StudioSpectrumCanvas isPlaying={isPlaying} volume={volume} />
               </div>
             </div>
-          ) : (
-            /* Credits & Production Deep Dive Tab */
-            <div className="p-5 flex flex-col gap-5">
-              <div className="p-4 rounded-xl bg-violet-950/20 border border-violet-500/30 flex flex-col gap-2">
-                <span className="text-xs font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Creative Direction & Production Philosophy</span>
-                </span>
-                <p className="text-sm text-neutral-200 leading-relaxed">{activeDetails.concept}</p>
-              </div>
-
-              {/* Tech Stack Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Synths and Instruments */}
-                <div className="p-4 rounded-xl bg-[#191924] border border-white/10 flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
-                    <Music className="w-3.5 h-3.5" />
-                    <span>Synthesizers & Instruments Used</span>
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-neutral-300">
-                    {activeDetails.synths.map((item, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Mixing & Mastering Chain */}
-                <div className="p-4 rounded-xl bg-[#191924] border border-white/10 flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2 text-xs font-bold text-cyan-300">
-                    <Sliders className="w-3.5 h-3.5" />
-                    <span>Mixing & Mastering Hardware / Plugin Chain</span>
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-neutral-300">
-                    {activeDetails.mixingChain.map((item, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* DAW and Format Info */}
-              <div className="p-3.5 rounded-xl bg-[#15151F] border border-white/5 flex items-center justify-between text-xs text-neutral-300">
-                <div className="flex items-center gap-2">
-                  <span className="text-neutral-400">Recording & DAW Environment:</span>
-                  <span className="font-semibold text-white">{activeDetails.daw}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-neutral-400">Mastering Delivery:</span>
-                  <span className="font-mono text-emerald-400 font-bold">WAV 96kHz / 24-bit PCM</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     )}

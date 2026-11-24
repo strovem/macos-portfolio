@@ -73,6 +73,7 @@ export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetPr
         </span>
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onOpenApp?.();

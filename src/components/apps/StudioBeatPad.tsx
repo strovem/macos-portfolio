@@ -103,12 +103,12 @@ const PADS: PadSpec[] = [
 ];
 
 export const StudioBeatPad: React.FC = () => {
-  const [activePadId, setActivePadId] = useState<string | null>(null);
+  const [activePadIds, setActivePadIds] = useState<string[]>([]);
   const [lastPlayedName, setLastPlayedName] = useState<string>('Ready • Tap a Pad');
   const [hitCount, setHitCount] = useState<number>(0);
   const windowContext = useContext(WindowContext);
   const padMasterGainRef = useRef<GainNode | null>(null);
-  const hitTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hitTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   // Initialize or reuse shared Web Audio Context so AnalyserNode FFT tracks Beat Pad hits
   const getAudioContext = useCallback(() => {
@@ -126,8 +126,10 @@ export const StudioBeatPad: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const timers = hitTimersRef.current;
     return () => {
-      if (hitTimerRef.current) clearTimeout(hitTimerRef.current);
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
       if (padMasterGainRef.current) {
         try {
           padMasterGainRef.current.disconnect();
@@ -331,19 +333,23 @@ export const StudioBeatPad: React.FC = () => {
 
   const handlePadHit = useCallback(
     (pad: PadSpec) => {
-      setActivePadId(pad.id);
+      setActivePadIds((prev) => (prev.includes(pad.id) ? prev : [...prev, pad.id]));
       triggerSound(pad.type, pad.name);
-      if (hitTimerRef.current) clearTimeout(hitTimerRef.current);
-      hitTimerRef.current = setTimeout(() => {
-        setActivePadId(null);
-      }, 140);
+      const existingTimer = hitTimersRef.current.get(pad.id);
+      if (existingTimer) clearTimeout(existingTimer);
+      const timer = setTimeout(() => {
+        setActivePadIds((prev) => prev.filter((id) => id !== pad.id));
+        hitTimersRef.current.delete(pad.id);
+      }, 150);
+      hitTimersRef.current.set(pad.id, timer);
     },
     [triggerSound]
   );
 
-  // Keyboard shortcut listener scoped to active Studio window
+  // Keyboard shortcut listener scoped to active Studio window (supports polyphonic multi-key hits)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
       if (!windowContext?.isActive) return;
       const lockState = useLockStore.getState();
       if (lockState.isLocked || lockState.isSleeping) return;
@@ -408,13 +414,16 @@ export const StudioBeatPad: React.FC = () => {
       <div className="flex-1 my-4 flex items-center justify-center">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl">
           {PADS.map((pad) => {
-            const isActive = activePadId === pad.id;
+            const isActive = activePadIds.includes(pad.id);
             return (
               <motion.button
                 key={pad.id}
                 type="button"
                 whileTap={{ scale: 0.94 }}
-                onClick={() => handlePadHit(pad)}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handlePadHit(pad);
+                }}
                 style={{
                   boxShadow: isActive
                     ? `0 0 25px ${pad.neonGlow}, inset 0 0 15px rgba(255,255,255,0.4)`

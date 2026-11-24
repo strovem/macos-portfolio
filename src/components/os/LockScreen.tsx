@@ -1,10 +1,23 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Unlock, Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import {
+  Unlock,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Music,
+  Sun,
+  Moon,
+  Cloud,
+  CloudRain,
+  Snowflake,
+} from 'lucide-react';
 import { useLockStore } from '@/stores/useLockStore';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useWeatherStore } from '@/stores/useWeatherStore';
 import { playUnlockSound } from '@/utils/soundEffects';
 import { Z_INDEX } from '@/constants/zIndex';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,6 +34,10 @@ export function LockScreen() {
   const togglePlay = useAudioStore((state) => state.togglePlay);
   const nextTrack = useAudioStore((state) => state.nextTrack);
   const prevTrack = useAudioStore((state) => state.prevTrack);
+
+  const weather = useWeatherStore((state) => state.weather);
+  const solarPhase = useWeatherStore((state) => state.solarPhase);
+  const prefersReducedMotion = useReducedMotion();
 
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -77,23 +94,75 @@ export function LockScreen() {
     unlock();
   };
 
+  const auroraPalette =
+    solarPhase === 'sunset' || solarPhase === 'dawn'
+      ? ['rgba(251,146,60,0.34)', 'rgba(168,85,247,0.30)', 'rgba(56,189,248,0.22)']
+      : solarPhase === 'night'
+      ? ['rgba(56,189,248,0.28)', 'rgba(99,102,241,0.32)', 'rgba(16,185,129,0.20)']
+      : ['rgba(56,189,248,0.32)', 'rgba(139,92,246,0.26)', 'rgba(52,211,153,0.22)'];
+
+  const renderWeatherIcon = () => {
+    switch (weather.category) {
+      case 'rain':
+      case 'storm':
+        return <CloudRain className="w-3.5 h-3.5 text-sky-300" />;
+      case 'snow':
+        return <Snowflake className="w-3.5 h-3.5 text-cyan-200" />;
+      case 'cloudy':
+      case 'partly-cloudy':
+      case 'fog':
+        return <Cloud className="w-3.5 h-3.5 text-slate-200" />;
+      default:
+        return solarPhase === 'night' ? (
+          <Moon className="w-3.5 h-3.5 text-indigo-200" />
+        ) : (
+          <Sun className="w-3.5 h-3.5 text-amber-300" />
+        );
+    }
+  };
+
   return (
     <>
-      {/* 1. Sleep Mode: Pitch Black Screen */}
+      {/* 1. Sleep Mode: Ambient OLED Standby Display */}
       <AnimatePresence>
         {isSleeping && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.45 }}
             onClick={wake}
             style={{ zIndex: Z_INDEX.SLEEP_SCREEN }}
-            className="fixed inset-0 bg-black cursor-pointer flex flex-col items-center justify-center select-none"
+            className="fixed inset-0 bg-[#030307] cursor-pointer flex flex-col items-center justify-center select-none overflow-hidden"
           >
-            <span className="text-xs font-mono text-white/20 animate-pulse">
-              {t('wakeHint')}
-            </span>
+            {/* Subtle Breathing Standby Halo */}
+            <motion.div
+              aria-hidden="true"
+              animate={
+                prefersReducedMotion
+                  ? { opacity: 0.35 }
+                  : { scale: [0.92, 1.08, 0.92], opacity: [0.22, 0.45, 0.22] }
+              }
+              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute w-[340px] h-[340px] rounded-full pointer-events-none blur-3xl"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(56,189,248,0.18) 0%, rgba(99,102,241,0.12) 45%, transparent 72%)',
+              }}
+            />
+
+            <div className="relative z-10 flex flex-col items-center gap-3 text-center px-6">
+              <span className="text-xs font-medium tracking-widest uppercase text-white/25 capitalize">
+                {dateStr || 'Salı, 24 Kasım'}
+              </span>
+              <div className="text-6xl sm:text-7xl font-extralight tracking-tight text-white/35 tabular-nums">
+                {timeStr || '23:32'}
+              </div>
+              <div className="mt-4 flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03] text-[11px] font-mono text-white/35 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400/60" />
+                <span>{t('wakeHint')}</span>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -110,21 +179,75 @@ export function LockScreen() {
             style={{ zIndex: Z_INDEX.LOCK_SCREEN }}
             className="fixed inset-0 h-[100dvh] w-full flex flex-col justify-between items-center py-12 px-6 select-none overflow-hidden"
           >
-            {/* Lightweight Frosted Scrim over the underlying Desktop Wallpaper */}
-            <div className="absolute inset-0 -z-10 bg-black/35 backdrop-blur-3xl saturate-150 pointer-events-none" />
+            {/* Lightweight Frosted Scrim + Dynamic Solar Aurora Orbs */}
+            <div className="absolute inset-0 -z-10 bg-slate-950/45 backdrop-blur-3xl saturate-150 pointer-events-none overflow-hidden">
+              <motion.div
+                aria-hidden="true"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        x: ['-6%', '8%', '-6%'],
+                        y: ['-4%', '6%', '-4%'],
+                        scale: [1, 1.12, 1],
+                      }
+                }
+                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -top-28 -left-24 w-[440px] h-[440px] rounded-full blur-[90px]"
+                style={{ background: auroraPalette[0] }}
+              />
+              <motion.div
+                aria-hidden="true"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        x: ['6%', '-8%', '6%'],
+                        y: ['5%', '-6%', '5%'],
+                        scale: [1.05, 0.95, 1.05],
+                      }
+                }
+                transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -bottom-32 -right-24 w-[480px] h-[480px] rounded-full blur-[100px]"
+                style={{ background: auroraPalette[1] }}
+              />
+              <motion.div
+                aria-hidden="true"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        scale: [0.95, 1.1, 0.95],
+                        opacity: [0.45, 0.75, 0.45],
+                      }
+                }
+                transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[360px] h-[220px] rounded-full blur-[95px]"
+                style={{ background: auroraPalette[2] }}
+              />
+            </div>
 
-            {/* Top Section: Date & Giant Thin Typography Clock */}
+            {/* Top Section: Date, Giant Thin Typography Clock & Live Weather Pill */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
-              className="text-center mt-4 sm:mt-8"
+              className="text-center mt-4 sm:mt-8 flex flex-col items-center"
             >
               <div className="text-base sm:text-lg font-medium text-white/80 tracking-wide drop-shadow-md mb-1 capitalize">
                 {dateStr || 'Salı, 24 Kasım'}
               </div>
               <div className="text-7xl sm:text-8xl md:text-9xl font-extralight tracking-tight text-white drop-shadow-lg tabular-nums">
                 {timeStr || '17:20'}
+              </div>
+              <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-xs font-medium text-white/90 shadow-lg">
+                {renderWeatherIcon()}
+                <span>{weather.cityName}</span>
+                <span className="text-white/40">•</span>
+                <span className="font-semibold tabular-nums">{Math.round(weather.temperature)}°C</span>
+                <span className="hidden sm:inline text-white/70">
+                  · {language === 'tr' ? weather.conditionTextTr : weather.conditionTextEn}
+                </span>
               </div>
             </motion.div>
 
@@ -166,8 +289,16 @@ export function LockScreen() {
               {currentTrack && (
                 <div className="w-full liquid-glass rounded-2xl p-3 border border-white/20 shadow-xl flex items-center justify-between gap-3 text-white">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-blue-500/30 flex items-center justify-center shrink-0 border border-white/20 shadow-xs">
-                      <Music className="w-4 h-4 text-blue-300" />
+                    <div className="relative w-9 h-9 rounded-lg bg-blue-500/30 flex items-center justify-center shrink-0 border border-white/20 shadow-xs">
+                      {isPlaying && !prefersReducedMotion ? (
+                        <div className="flex items-end gap-0.5 h-3.5" aria-hidden="true">
+                          <span className="w-0.5 bg-sky-300 rounded-full animate-[pulse_0.8s_ease-in-out_infinite] h-2" />
+                          <span className="w-0.5 bg-sky-200 rounded-full animate-[pulse_0.55s_ease-in-out_infinite] h-3.5" />
+                          <span className="w-0.5 bg-sky-300 rounded-full animate-[pulse_0.7s_ease-in-out_infinite] h-2.5" />
+                        </div>
+                      ) : (
+                        <Music className="w-4 h-4 text-blue-300" />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold truncate">

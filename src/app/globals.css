@@ -87,7 +87,6 @@ body {
       inset 0 1px 0.5px rgba(255, 255, 255, 0.65),
       inset 0 -1px 0.5px rgba(255, 255, 255, 0.12),
       0 20px 45px -12px rgba(0, 0, 0, 0.28);
-    position: relative;
   }
 
   /* Optical Micro Film Grain on Liquid Glass to eliminate gradient banding */
