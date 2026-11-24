@@ -161,32 +161,36 @@ export default function Home() {
       {/* Menubar (top-0 fixed z-50) */}
       <Menubar activeAppName={activeAppName} />
 
-      {/* Draggable Desktop Canvas Playground (Responsive vertical stack on mobile, free-canvas on desktop) */}
-      {isMobile ? (
-        <div className="absolute inset-0 pt-10 pb-24 px-4 overflow-y-auto no-scrollbar z-[15] pointer-events-auto flex flex-col items-center gap-4">
+      {/* Draggable Desktop Canvas Playground (Pure CSS Responsive: Vertical stack on mobile, free-canvas on desktop) */}
+      {/* 1. Mobile Desktop Stack: block md:hidden. Zero-delay vertical stack, no horizontal overflow or swiping */}
+      <div className="block md:hidden absolute inset-0 pt-10 pb-28 px-3 overflow-y-auto overflow-x-hidden no-scrollbar z-[15] pointer-events-auto">
+        <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto py-2">
           {DESKTOP_ITEMS.map((item) => (
-            <DesktopItem
-              key={item.id}
-              item={item}
-              isMobile={true}
-              zIndex={itemZIndices[item.id] || 1}
-              onFocus={() => bringItemToFront(item.id)}
-            />
+            <div key={`mobile-wrap-${item.id}`} className="w-full flex justify-center">
+              <DesktopItem
+                key={`mobile-${item.id}`}
+                item={item}
+                isMobile={true}
+                zIndex={itemZIndices[item.id] || 1}
+                onFocus={() => bringItemToFront(item.id)}
+              />
+            </div>
           ))}
         </div>
-      ) : (
-        <div className="absolute inset-0 pt-7 pb-20 pointer-events-none z-[15] overflow-hidden">
-          {DESKTOP_ITEMS.map((item) => (
-            <DesktopItem
-              key={item.id}
-              item={item}
-              isMobile={false}
-              zIndex={itemZIndices[item.id] || 1}
-              onFocus={() => bringItemToFront(item.id)}
-            />
-          ))}
-        </div>
-      )}
+      </div>
+
+      {/* 2. Desktop Canvas: hidden md:block. Draggable tactile playground for desktop screens */}
+      <div className="hidden md:block absolute inset-0 pt-7 pb-20 pointer-events-none z-[15] overflow-hidden">
+        {DESKTOP_ITEMS.map((item) => (
+          <DesktopItem
+            key={`desktop-${item.id}`}
+            item={item}
+            isMobile={false}
+            zIndex={itemZIndices[item.id] || 1}
+            onFocus={() => bringItemToFront(item.id)}
+          />
+        ))}
+      </div>
 
       {/* Desktop Canvas Root */}
       <div className="absolute inset-0 pt-7 flex flex-col justify-between pointer-events-none z-20">

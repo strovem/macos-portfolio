@@ -84,7 +84,7 @@ export function DesktopFolderItem({
     return (
       <div
         onClick={() => onOpenApp?.()}
-        className="flex items-center gap-3 p-3 w-full rounded-2xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-lg cursor-pointer active:scale-98 transition-transform"
+        className="flex items-center gap-3 p-3 w-full max-w-[310px] rounded-2xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-lg cursor-pointer active:scale-98 transition-transform"
       >
         {renderMacFolderIcon('w-12 h-10')}
         <div className="flex-1 min-w-0">

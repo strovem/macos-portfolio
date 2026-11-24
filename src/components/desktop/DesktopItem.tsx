@@ -125,7 +125,7 @@ export function DesktopItem({
       onClick={handleClick}
       initial={
         isMobile
-          ? { opacity: 0, y: 15, scale: 0.98 }
+          ? false
           : item.alignRight
           ? {
               x: 0,
@@ -144,7 +144,7 @@ export function DesktopItem({
       }
       animate={
         isMobile
-          ? { opacity: 1, y: 0, scale: 1 }
+          ? { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }
           : {
               opacity: 1,
               scale: 1,
@@ -171,6 +171,8 @@ export function DesktopItem({
               zIndex: effectiveZIndex,
               display: 'flex',
               justifyContent: 'center',
+              width: '100%',
+              maxWidth: '100%',
             }
           : item.alignRight
           ? {

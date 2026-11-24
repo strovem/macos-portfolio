@@ -119,10 +119,24 @@ function getDayOfYear(year: number, month: number, day: number): number {
 export function CatYearWidget({ item }: CatYearWidgetProps) {
   const [activeTab, setActiveTab] = useState<'calendar' | 'reading'>('calendar');
 
-  // Calendar State (Default November 2026)
-  const [currentYear, setCurrentYear] = useState<number>(2026);
-  const [currentMonth, setCurrentMonth] = useState<number>(11); // 1-12
-  const [selectedDay, setSelectedDay] = useState<number>(22); // Day 22 selected
+  // Calendar State (Defaults dynamically to Real-time Current Date)
+  const [currentYear, setCurrentYear] = useState<number>(() => {
+    return typeof window !== 'undefined' ? new Date().getFullYear() : 2026;
+  });
+  const [currentMonth, setCurrentMonth] = useState<number>(() => {
+    return typeof window !== 'undefined' ? new Date().getMonth() + 1 : 11;
+  });
+  const [selectedDay, setSelectedDay] = useState<number>(() => {
+    return typeof window !== 'undefined' ? new Date().getDate() : 24;
+  });
+
+  // Client mount synchronization to user's real local time
+  useEffect(() => {
+    const now = new Date();
+    setCurrentYear(now.getFullYear());
+    setCurrentMonth(now.getMonth() + 1);
+    setSelectedDay(now.getDate());
+  }, []);
 
   // Birthdate Reading State (Empty by default unless saved in localStorage: Day / Month / Year)
   const [birthDay, setBirthDay] = useState<string>('');
@@ -203,6 +217,16 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     };
   }, [currentMonth, selectedDay, currentYear]);
 
+  // Is selected day today's date?
+  const isSelectedToday = useMemo(() => {
+    const now = new Date();
+    return (
+      now.getFullYear() === currentYear &&
+      now.getMonth() + 1 === currentMonth &&
+      now.getDate() === selectedDay
+    );
+  }, [currentYear, currentMonth, selectedDay]);
+
   // Is valid birthdate entered?
   const isBirthdateEntered = useMemo(() => {
     const d = parseInt(birthDay, 10);
@@ -230,9 +254,10 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
     const dayOfYear = getDayOfYear(y, m, d);
     const weekOfYear = Math.ceil(dayOfYear / 7);
 
-    // Current Year 2026 data
-    const age = 2026 - y;
-    const currentYearDigits = sumDigits(2026);
+    // Current Year dynamic data
+    const calYear = new Date().getFullYear();
+    const age = calYear - y;
+    const currentYearDigits = sumDigits(calYear);
     const pyRaw = m + d + currentYearDigits;
     const { reduced: pyReduced } = reduceToSingleDigit(pyRaw, true);
 
@@ -244,7 +269,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
       weekOfYear,
       chineseZodiac: cz,
       age: Math.max(0, age),
-      personalYear: `${pyReduced}/${pyRaw} Personal Year (2026)`,
+      personalYear: `${pyReduced}/${pyRaw} Personal Year (${calYear})`,
     };
   }, [birthDay, birthMonth, birthYear, isBirthdateEntered]);
 
@@ -298,7 +323,7 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
   ];
 
   return (
-    <div className="relative w-76 p-3 rounded-2xl backdrop-blur-2xl bg-[#FFE4BA]/92 dark:bg-neutral-900/92 border border-amber-300/60 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 font-sans text-slate-800 dark:text-neutral-100">
+    <div className="relative w-full max-w-[310px] p-3 rounded-2xl backdrop-blur-2xl bg-[#FFE4BA]/92 dark:bg-neutral-900/92 border border-amber-300/60 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200 font-sans text-slate-800 dark:text-neutral-100">
       {/* Top Header & Tab Toggle */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-900/10 dark:border-white/10">
         <div className="flex items-center gap-1.5">
@@ -359,6 +384,20 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  const now = new Date();
+                  setCurrentYear(now.getFullYear());
+                  setCurrentMonth(now.getMonth() + 1);
+                  setSelectedDay(now.getDate());
+                }}
+                className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-amber-500/20 text-amber-950 dark:text-amber-200 hover:bg-amber-500/30 transition-colors cursor-pointer"
+                title="Go to Today"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
                   handlePrevMonth();
                 }}
                 className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
@@ -399,6 +438,11 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                   );
                 }
 
+                const today = new Date();
+                const isRealToday =
+                  today.getFullYear() === currentYear &&
+                  today.getMonth() + 1 === currentMonth &&
+                  today.getDate() === cell.day;
                 const isSelected = selectedDay === cell.day;
 
                 // Color styles
@@ -411,6 +455,13 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                   cellClasses =
                     'bg-[#380e0e] text-white border-red-950/80 shadow-xs font-semibold';
                   subColor = 'text-red-400 font-bold';
+                }
+
+                if (isRealToday && !isSelected) {
+                  // Today's date when not selected: Distinct highlight border & background
+                  cellClasses =
+                    'bg-amber-100/90 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border-2 border-amber-500 shadow-xs font-bold';
+                  subColor = 'text-amber-700 dark:text-amber-400 font-bold';
                 }
 
                 if (isSelected) {
@@ -431,7 +482,12 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
                   >
                     {isSelected && (
                       <span className="text-[7px] leading-none text-yellow-300 -mt-0.5">
-                        ♐
+                        {isRealToday ? '★' : '♐'}
+                      </span>
+                    )}
+                    {!isSelected && isRealToday && (
+                      <span className="text-[6px] leading-none text-amber-600 dark:text-amber-400 font-bold -mt-0.5 uppercase tracking-tighter">
+                        TODAY
                       </span>
                     )}
                     <span className="text-[10px] font-bold leading-tight">
@@ -453,6 +509,11 @@ export function CatYearWidget({ item }: CatYearWidgetProps) {
             </span>
             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
               <span>{selectedDateInfo.dateStr}</span>
+              {isSelectedToday && (
+                <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-600 text-white font-bold tracking-tight">
+                  TODAY
+                </span>
+              )}
               <span className="text-amber-600 dark:text-amber-400">
                 {selectedDateInfo.lp}
               </span>

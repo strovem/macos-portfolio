@@ -20,7 +20,7 @@ export function MessageSnippetWidget({ item, onOpenApp }: MessageSnippetWidgetPr
   ];
 
   return (
-    <div className="relative w-72 p-3.5 rounded-2xl backdrop-blur-xl bg-white/85 dark:bg-[#1E1E1E]/85 border border-black/5 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200">
+    <div className="relative w-full max-w-[310px] sm:w-72 p-3.5 rounded-2xl backdrop-blur-xl bg-white/85 dark:bg-[#1E1E1E]/85 border border-black/5 dark:border-white/10 shadow-xl select-none hover:shadow-2xl transition-all duration-200">
       {/* Top Header: Avatar & Contact Info */}
       <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-black/5 dark:border-white/5">
         <div className="flex items-center gap-2">

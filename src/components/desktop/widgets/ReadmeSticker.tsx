@@ -17,7 +17,7 @@ export function ReadmeSticker({ item, onOpenApp }: ReadmeStickerProps) {
   ];
 
   return (
-    <div className="relative w-64 p-4 rounded-sm font-mono text-neutral-800 bg-[#FEF08A] dark:bg-[#FDE047] border border-yellow-300/80 shadow-xl select-none transition-shadow hover:shadow-2xl">
+    <div className="relative w-full max-w-[310px] sm:w-64 p-4 rounded-sm font-mono text-neutral-800 bg-[#FEF08A] dark:bg-[#FDE047] border border-yellow-300/80 shadow-xl select-none transition-shadow hover:shadow-2xl">
       {/* Scotch Tape / Pin at top center */}
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-14 h-5 bg-white/60 dark:bg-white/40 backdrop-blur-sm border border-white/50 shadow-sm rotate-[-1deg] rounded-[1px] pointer-events-none" />
 
