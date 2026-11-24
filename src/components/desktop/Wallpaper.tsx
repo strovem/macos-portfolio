@@ -4,6 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
+import { useWeatherStore } from '@/stores/useWeatherStore';
 import { WALLPAPERS, WallpaperOption } from '@/data/wallpapers';
 
 interface TrackAuraConfig {
@@ -89,6 +90,24 @@ export const Wallpaper: React.FC = () => {
   // Calculate 2-beat rhythmic pulse period in seconds based on current BPM
   const bpm = currentTrack?.bpm || 126;
   const pulseDuration = (60 / bpm) * 2;
+
+  // Solar lighting calculation
+  const dynamicAtmosphereEnabled = useSettingsStore((state) => state.dynamicAtmosphereEnabled);
+  const atmospherePreview = useSettingsStore((state) => state.atmospherePreview);
+  const rawSolarPhase = useWeatherStore((state) => state.solarPhase);
+
+  let effectiveSolarPhase: 'dawn' | 'day' | 'sunset' | 'night' = rawSolarPhase || 'day';
+  if (atmospherePreview === 'dawn') effectiveSolarPhase = 'dawn';
+  else if (atmospherePreview === 'day') effectiveSolarPhase = 'day';
+  else if (atmospherePreview === 'sunset') effectiveSolarPhase = 'sunset';
+  else if (atmospherePreview === 'night') effectiveSolarPhase = 'night';
+
+  const solarGradients = {
+    dawn: 'linear-gradient(135deg, rgba(254, 215, 170, 0.16) 0%, rgba(251, 146, 60, 0.10) 35%, transparent 70%), radial-gradient(circle at 85% 15%, rgba(253, 164, 175, 0.22) 0%, transparent 55%)',
+    day: 'linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 60%)',
+    sunset: 'linear-gradient(145deg, rgba(245, 158, 11, 0.22) 0%, rgba(244, 63, 94, 0.18) 45%, rgba(147, 51, 234, 0.20) 80%, rgba(30, 27, 75, 0.32) 100%)',
+    night: 'linear-gradient(180deg, rgba(15, 23, 42, 0.38) 0%, rgba(30, 41, 59, 0.24) 50%, rgba(15, 23, 42, 0.44) 100%), radial-gradient(circle at 50% 12%, rgba(56, 189, 248, 0.08) 0%, transparent 65%)',
+  };
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none">
@@ -199,6 +218,14 @@ export const Wallpaper: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Solar Lighting Overlay (Dawn, Noon, Golden Sunset, Twilight Night) */}
+      <div
+        className="absolute inset-0 w-full h-full pointer-events-none transition-all duration-[1200ms] ease-in-out"
+        style={{
+          background: solarGradients[effectiveSolarPhase],
+          opacity: dynamicAtmosphereEnabled ? 1 : 0,
+        }}
+      />
     </div>
   );
 };

@@ -5,7 +5,8 @@
 export const Z_INDEX = {
   // Desktop Layer
   WALLPAPER: 0,
-  FLOATING_BUBBLES: 1,
+  WEATHER_ATMOSPHERE: 2,
+  FLOATING_BUBBLES: 3,
   DESKTOP_CANVAS: 15,
   WINDOWS_BASE: 20, // Windows dynamically elevate between 20 and 39
   WINDOWS_MAX: 39,

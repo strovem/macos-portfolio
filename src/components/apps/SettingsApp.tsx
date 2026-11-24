@@ -45,6 +45,8 @@ export const SettingsApp: React.FC = () => {
     toggleTapeWarmth,
     audioReactiveAmbience,
     toggleAudioReactiveAmbience,
+    dynamicAtmosphereEnabled,
+    toggleDynamicAtmosphere,
   } = useSettingsStore();
 
   return (
@@ -496,6 +498,33 @@ export const SettingsApp: React.FC = () => {
                   <div
                     className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
                       bubblesEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Dynamic Weather & Daylight Toggle */}
+              <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-black/5 dark:border-white/5 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white">
+                    {language === 'tr' ? 'Dinamik Hava & Gün Işığı' : 'Dynamic Weather & Daylight'}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                    {language === 'tr'
+                      ? 'Günün saatine (şafak, öğle, gün batımı, gece) ve canlı hava durumuna göre duvar kağıdı ışığını ve yağmur/sis efektlerini uyarlar.'
+                      : 'Dynamically adapts wallpaper solar lighting and atmospheric rain/fog effects based on real-time weather and time of day.'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleDynamicAtmosphere}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                    dynamicAtmosphereEnabled ? 'bg-[#007AFF]' : 'bg-slate-300 dark:bg-neutral-700'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      dynamicAtmosphereEnabled ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>

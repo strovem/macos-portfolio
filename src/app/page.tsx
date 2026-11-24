@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence } from 'framer-motion';
 import { Wallpaper } from '@/components/desktop/Wallpaper';
+import { WeatherAtmosphere } from '@/components/os/WeatherAtmosphere';
 import { FloatingBubbles } from '@/components/desktop/FloatingBubbles';
 import { Menubar } from '@/components/menubar/Menubar';
 import { Dock } from '@/components/dock/Dock';
@@ -327,6 +328,9 @@ export default function Home() {
     >
       {/* Dynamic Wallpaper Canvas */}
       <Wallpaper />
+
+      {/* Atmospheric Weather Effects (Rain, Snow, Mist & Stars) */}
+      <WeatherAtmosphere />
 
       {/* Floating Ambient Glass Bubbles */}
       <FloatingBubbles />

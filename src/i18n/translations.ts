@@ -41,6 +41,15 @@ export const TRANSLATIONS = {
     english: 'English (EN)',
     share: 'Paylaş',
 
+    // Weather & Atmosphere
+    weatherTitle: 'Hava Durumu',
+    feelsLike: 'Hissedilen',
+    humidity: 'Nem',
+    wind: 'Rüzgar',
+    sunTimes: 'Gün Doğumu / Batımı',
+    atmospherePreview: 'Atmosfer Önizleme',
+    dynamicWeatherLabel: 'Dinamik Hava & Gün Işığı',
+
     // Context Menu
     missionControl: 'Mission Control',
     changeWallpaper: 'Duvar Kağıdını Değiştir',
@@ -159,6 +168,15 @@ export const TRANSLATIONS = {
     turkish: 'Türkçe (TR)',
     english: 'English (EN)',
     share: 'Share',
+
+    // Weather & Atmosphere
+    weatherTitle: 'Weather',
+    feelsLike: 'Feels Like',
+    humidity: 'Humidity',
+    wind: 'Wind',
+    sunTimes: 'Sun Rise / Set',
+    atmospherePreview: 'Atmosphere Preview',
+    dynamicWeatherLabel: 'Dynamic Weather & Daylight',
 
     // Context Menu
     missionControl: 'Mission Control',

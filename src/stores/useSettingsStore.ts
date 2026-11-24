@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type AuraIntensity = 'subtle' | 'vibrant' | 'max';
+export type AtmospherePreviewMode = 'auto' | 'dawn' | 'day' | 'sunset' | 'night' | 'rain' | 'snow';
 
 export interface SettingsState {
   _hasHydrated: boolean;
@@ -16,6 +17,9 @@ export interface SettingsState {
   auraIntensity: AuraIntensity;
   tapeWarmth: boolean;
   audioReactiveAmbience: boolean;
+  dynamicAtmosphereEnabled: boolean;
+  weatherCityId: string;
+  atmospherePreview: AtmospherePreviewMode;
   setHasHydrated: (val: boolean) => void;
   setLanguage: (lang: 'tr' | 'en') => void;
   toggleLanguage: () => void;
@@ -25,6 +29,10 @@ export interface SettingsState {
   toggleBubbles: () => void;
   toggleAudioReactiveAmbience: () => void;
   setAudioReactiveAmbience: (val: boolean) => void;
+  toggleDynamicAtmosphere: () => void;
+  setDynamicAtmosphere: (val: boolean) => void;
+  setWeatherCityId: (id: string) => void;
+  setAtmospherePreview: (mode: AtmospherePreviewMode) => void;
   setBrightness: (val: number) => void;
   setVolume: (val: number) => void;
   setAuraIntensity: (val: AuraIntensity) => void;
@@ -45,6 +53,9 @@ export const useSettingsStore = create<SettingsState>()(
       auraIntensity: 'vibrant',
       tapeWarmth: false,
       audioReactiveAmbience: true,
+      dynamicAtmosphereEnabled: true,
+      weatherCityId: 'eskisehir',
+      atmospherePreview: 'auto',
       setHasHydrated: (val: boolean) => set({ _hasHydrated: val }),
       setLanguage: (lang: 'tr' | 'en') => set({ language: lang }),
       toggleLanguage: () => set((state) => ({ language: state.language === 'tr' ? 'en' : 'tr' })),
@@ -61,6 +72,10 @@ export const useSettingsStore = create<SettingsState>()(
       toggleBubbles: () => set((state) => ({ bubblesEnabled: !state.bubblesEnabled })),
       toggleAudioReactiveAmbience: () => set((state) => ({ audioReactiveAmbience: !state.audioReactiveAmbience })),
       setAudioReactiveAmbience: (val: boolean) => set({ audioReactiveAmbience: val }),
+      toggleDynamicAtmosphere: () => set((state) => ({ dynamicAtmosphereEnabled: !state.dynamicAtmosphereEnabled })),
+      setDynamicAtmosphere: (val: boolean) => set({ dynamicAtmosphereEnabled: val }),
+      setWeatherCityId: (id: string) => set({ weatherCityId: id }),
+      setAtmospherePreview: (mode: AtmospherePreviewMode) => set({ atmospherePreview: mode }),
       setBrightness: (val: number) => set({ brightness: val }),
       setVolume: (val: number) => set({ volume: val }),
       setAuraIntensity: (val: AuraIntensity) => set({ auraIntensity: val }),

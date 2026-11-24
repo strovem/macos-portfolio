@@ -19,6 +19,8 @@ import { Clock } from './Clock';
 import { MenuDropdown, MenuItem } from './MenuDropdown';
 import { ControlCenter } from './ControlCenter';
 import { NowPlayingPopover } from './NowPlayingPopover';
+import { WeatherPopover, getWeatherCategoryIcon } from '@/components/os/WeatherPopover';
+import { useWeatherStore } from '@/stores/useWeatherStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
@@ -123,71 +125,30 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       alert('macOS / Mobil Kurulum: Tarayıcınızın Paylaş (Share) veya Adres çubuğu menüsünden "Uygulama Olarak Yükle" ya da "Ana Ekrana Ekle"yi seçebilirsiniz.');
     }
   };
-  const [weatherHover, setWeatherHover] = useState(false);
-  const [weatherData, setWeatherData] = useState({
-    temp: 12,
-    code: 2,
-    condition: 'Partly Cloudy',
-    high: 16,
-    low: 11,
-    city: 'Istanbul',
-  });
+  // Live Open-Meteo Weather Store Integration
+  const weather = useWeatherStore((state) => state.weather);
+  const isWeatherOpen = useWeatherStore((state) => state.isPopoverOpen);
+  const setWeatherOpen = useWeatherStore((state) => state.setPopoverOpen);
+  const toggleWeatherPopover = useWeatherStore((state) => state.togglePopover);
+  const initWeather = useWeatherStore((state) => state.initWeather);
+  const updateSolarPhase = useWeatherStore((state) => state.updateSolarPhase);
 
-  // Fetch real-time weather for Istanbul with European standard (°C)
   useEffect(() => {
-    let isMounted = true;
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch(
-          'https://api.open-meteo.com/v1/forecast?latitude=41.0082&longitude=28.9784&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FIstanbul'
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!isMounted || !data.current) return;
+    initWeather();
+    const interval = setInterval(() => {
+      updateSolarPhase();
+    }, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [initWeather, updateSolarPhase]);
 
-        const currentTemp = Math.round(data.current.temperature_2m);
-        const code = data.current.weather_code;
-        const high = Math.round(data.daily?.temperature_2m_max?.[0] ?? currentTemp + 3);
-        const low = Math.round(data.daily?.temperature_2m_min?.[0] ?? currentTemp - 3);
-
-        let condition = 'Partly Cloudy';
-        if (code === 0) condition = 'Clear';
-        else if (code === 1) condition = 'Mostly Clear';
-        else if (code === 2) condition = 'Partly Cloudy';
-        else if (code === 3) condition = 'Overcast';
-        else if (code === 45 || code === 48) condition = 'Foggy';
-        else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) condition = 'Rainy';
-        else if ([71, 73, 75, 85, 86].includes(code)) condition = 'Snowy';
-        else if ([95, 96, 99].includes(code)) condition = 'Thunderstorm';
-
-        setWeatherData({
-          temp: currentTemp,
-          code,
-          condition,
-          high,
-          low,
-          city: 'Istanbul',
-        });
-      } catch {
-        // Retain fallback initial state
-      }
-    };
-
-    fetchWeather();
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  const getWeatherIcon = (code: number) => {
-    if (code === 0) return <Sun className="w-3.5 h-3.5 text-amber-500" />;
-    if (code === 1 || code === 2) return <CloudSun className="w-3.5 h-3.5 text-amber-500" />;
-    if (code === 3 || code === 45 || code === 48) return <Cloud className="w-3.5 h-3.5 text-slate-400" />;
-    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return <CloudRain className="w-3.5 h-3.5 text-sky-500" />;
-    if ([71, 73, 75, 85, 86].includes(code)) return <CloudSnow className="w-3.5 h-3.5 text-sky-200" />;
-    return <CloudSun className="w-3.5 h-3.5 text-amber-500" />;
+  const handleWeatherClick = () => {
+    const next = !isWeatherOpen;
+    toggleWeatherPopover();
+    if (next) {
+      setIsControlCenterOpen(false);
+      setIsNowPlayingOpen(false);
+      setIsLanguageMenuOpen(false);
+    }
   };
 
   const { soundEnabled, toggleSound, volume, isDarkMode, toggleDarkMode, activeWallpaperId, setWallpaper } = useSettingsStore();
@@ -729,8 +690,13 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             type="button"
             data-now-playing-trigger
             onClick={() => {
-              setIsNowPlayingOpen(!isNowPlayingOpen);
-              if (!isNowPlayingOpen) setIsControlCenterOpen(false);
+              const next = !isNowPlayingOpen;
+              setIsNowPlayingOpen(next);
+              if (next) {
+                setIsControlCenterOpen(false);
+                setWeatherOpen(false);
+                setIsLanguageMenuOpen(false);
+              }
             }}
             title={
               currentTrack
@@ -751,22 +717,26 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             </span>
           </button>
 
-          {/* Weather Pill (Istanbul - Celsius / European Standards) */}
-          <div
-            className="hidden md:block relative"
-            onMouseEnter={() => setWeatherHover(true)}
-            onMouseLeave={() => setWeatherHover(false)}
-          >
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default text-[11px] font-medium text-slate-700 dark:text-slate-300">
-              {getWeatherIcon(weatherData.code)}
-              <span>{weatherData.temp}°C</span>
-            </div>
-
-            {weatherHover && (
-              <div className="absolute top-full right-0 mt-1 px-2.5 py-1.5 rounded-lg backdrop-blur-xl bg-white/90 dark:bg-neutral-900/90 border border-black/10 dark:border-white/10 shadow-xl text-[11px] whitespace-nowrap z-50 text-slate-800 dark:text-slate-200">
-                <span className="font-semibold">{weatherData.city}</span> · {weatherData.condition} · H: {weatherData.high}°C L: {weatherData.low}°C
-              </div>
-            )}
+          {/* Real-Time Live Weather Badge & Weather Popover Trigger */}
+          <div className="hidden md:block relative">
+            <button
+              type="button"
+              data-weather-trigger
+              onClick={handleWeatherClick}
+              title={
+                language === 'tr'
+                  ? `${weather.cityName}: ${weather.conditionTextTr} (${weather.temperature}°C) — Detaylar için tıklayın`
+                  : `${weather.cityName}: ${weather.conditionTextEn} (${weather.temperature}°C) — Click for weather`
+              }
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full transition-all focus:outline-none cursor-pointer ${
+                isWeatherOpen
+                  ? 'bg-amber-500/25 text-amber-600 dark:text-amber-300 border border-amber-500/40 shadow-xs'
+                  : 'hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {getWeatherCategoryIcon(weather.category, weather.isDay, 'w-3.5 h-3.5')}
+              <span className="tabular-nums text-[11px] font-medium">{weather.temperature}°C</span>
+            </button>
           </div>
 
           {/* Sound / Volume Indicator */}
@@ -825,9 +795,11 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             type="button"
             data-control-center-trigger
             onClick={() => {
-              setIsControlCenterOpen(!isControlCenterOpen);
-              if (!isControlCenterOpen) {
+              const next = !isControlCenterOpen;
+              setIsControlCenterOpen(next);
+              if (next) {
                 setIsNowPlayingOpen(false);
+                setWeatherOpen(false);
                 setIsLanguageMenuOpen(false);
               }
             }}
@@ -853,10 +825,12 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             <button
               type="button"
               onClick={() => {
-                setIsLanguageMenuOpen(!isLanguageMenuOpen);
-                if (!isLanguageMenuOpen) {
+                const next = !isLanguageMenuOpen;
+                setIsLanguageMenuOpen(next);
+                if (next) {
                   setIsControlCenterOpen(false);
                   setIsNowPlayingOpen(false);
+                  setWeatherOpen(false);
                 }
               }}
               title={t('language')}
@@ -929,6 +903,9 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
         isOpen={isNowPlayingOpen}
         onClose={() => setIsNowPlayingOpen(false)}
       />
+
+      {/* Live macOS Weather Popover */}
+      <WeatherPopover />
 
       {/* "About This Mac" Modal */}
       {showAboutMac && (
