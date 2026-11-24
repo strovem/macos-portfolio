@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Korumtaş OS",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {

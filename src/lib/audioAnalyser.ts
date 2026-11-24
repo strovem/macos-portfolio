@@ -26,11 +26,11 @@ export function getSharedAudioContext(): AudioContext | null {
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return null;
-    sharedAudioCtx = new AudioCtx();
-  }
-
-  if (sharedAudioCtx.state === 'suspended') {
-    sharedAudioCtx.resume().catch(() => {});
+    try {
+      sharedAudioCtx = new AudioCtx();
+    } catch {
+      return null;
+    }
   }
 
   return sharedAudioCtx;

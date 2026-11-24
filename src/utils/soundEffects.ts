@@ -16,7 +16,7 @@ function getAudioContext(): AudioContext | null {
       sfxAudioCtx = new AudioCtx();
     }
     if (sfxAudioCtx.state === 'suspended') {
-      sfxAudioCtx.resume();
+      sfxAudioCtx.resume().catch(() => {});
     }
     return sfxAudioCtx;
   } catch {

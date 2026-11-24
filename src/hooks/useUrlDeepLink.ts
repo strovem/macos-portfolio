@@ -34,19 +34,10 @@ export function useUrlDeepLink() {
   const openWindow = useWindowStore((s) => s.openWindow);
   const focusWindow = useWindowStore((s) => s.focusWindow);
   const openFinderToSection = useWindowStore((s) => s.openFinderToSection);
-  const activeWindowId = useWindowStore((s) => s.activeWindowId);
-  const isTargetActive = useWindowStore((s) =>
-    Boolean(
-      s.activeWindowId &&
-        s.windows[s.activeWindowId]?.isOpen &&
-        !s.windows[s.activeWindowId]?.isMinimized
-    )
-  );
-  const finderSection = useWindowStore((s) => s.finderSection);
 
   const initialParsedRef = useRef(false);
 
-  // 1. Initial mount: Parse query params and open targeted app/section
+  // 1. Initial mount: If user lands with query params (?app=...), handle it once cleanly
   useEffect(() => {
     if (typeof window === 'undefined' || initialParsedRef.current) return;
     initialParsedRef.current = true;
@@ -63,36 +54,15 @@ export function useUrlDeepLink() {
           openWindow(appParam);
         }
         focusWindow(appParam);
+
+        // Clean the URL query params immediately so the address bar remains clean and error-free
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState(null, '', cleanUrl);
       }
     } catch {
       // ignore
     }
   }, [openWindow, focusWindow, openFinderToSection]);
-
-  // 2. Synchronize active window state with browser URL using replaceState (does not pollute history)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !initialParsedRef.current) return;
-
-    try {
-      const url = new URL(window.location.href);
-
-      if (isTargetActive && activeWindowId) {
-        url.searchParams.set('app', activeWindowId);
-        if (activeWindowId === 'finder' && finderSection) {
-          url.searchParams.set('section', finderSection);
-        } else {
-          url.searchParams.delete('section');
-        }
-      } else {
-        url.searchParams.delete('app');
-        url.searchParams.delete('section');
-      }
-
-      window.history.replaceState(null, '', url.pathname + url.search);
-    } catch {
-      // ignore
-    }
-  }, [activeWindowId, isTargetActive, finderSection]);
 }
 
 /**
@@ -102,30 +72,26 @@ export async function copyPortfolioDeepLink(appId: AppId, section?: FinderSectio
   if (typeof window === 'undefined') return;
 
   const language = useSettingsStore.getState().language;
-  const url = new URL(window.location.origin + window.location.pathname);
-  url.searchParams.set('app', appId);
-  if (appId === 'finder' && section) {
-    url.searchParams.set('section', section);
-  }
+  const cleanUrl = window.location.origin + window.location.pathname;
 
   const appMeta = APPS.find((a) => a.id === appId);
   const appName = appMeta ? appMeta.title : appId;
 
   try {
-    await navigator.clipboard.writeText(url.toString());
+    await navigator.clipboard.writeText(cleanUrl);
     useNotificationStore.getState().pushNotification({
       title: language === 'tr' ? 'Bağlantı Kopyalandı' : 'Link Copied',
       message:
         language === 'tr'
-          ? `${appName}${section ? ` (${section})` : ''} için doğrudan link panoya kopyalandı.`
-          : `Direct link for ${appName}${section ? ` (${section})` : ''} copied to clipboard.`,
+          ? `${appName} portfolyo bağlantısı panoya kopyalandı.`
+          : `Portfolio link for ${appName} copied to clipboard.`,
       appId: appId,
       duration: 3500,
     });
   } catch {
     useNotificationStore.getState().pushNotification({
       title: language === 'tr' ? 'Bağlantı Hazır' : 'Link Ready',
-      message: url.toString(),
+      message: cleanUrl,
       appId: appId,
       duration: 5000,
     });
