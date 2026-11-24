@@ -53,18 +53,8 @@ export function useKeyboardShortcuts() {
 
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
 
-      // 1. Esc Key — Close modals in priority order
+      // 1. Esc Key — Close modals in priority order: Spotlight > ContextMenu > Switcher > MissionControl > NotificationCenter
       if (e.key === 'Escape') {
-        if (isMissionControlOpen) {
-          e.preventDefault();
-          closeMissionControl();
-          return;
-        }
-        if (isCenterOpen) {
-          e.preventDefault();
-          closeCenter();
-          return;
-        }
         if (isSpotlightOpen) {
           e.preventDefault();
           closeSpotlight();
@@ -78,6 +68,16 @@ export function useKeyboardShortcuts() {
         if (isSwitcherOpen) {
           e.preventDefault();
           closeSwitcher();
+          return;
+        }
+        if (isMissionControlOpen) {
+          e.preventDefault();
+          closeMissionControl();
+          return;
+        }
+        if (isCenterOpen) {
+          e.preventDefault();
+          closeCenter();
           return;
         }
       }

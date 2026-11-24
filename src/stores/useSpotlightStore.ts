@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { playSpotlightSound } from '@/utils/soundEffects';
 
 interface SpotlightStoreState {
   isOpen: boolean;
@@ -9,7 +10,15 @@ interface SpotlightStoreState {
 
 export const useSpotlightStore = create<SpotlightStoreState>((set) => ({
   isOpen: false,
-  openSpotlight: () => set({ isOpen: true }),
+  openSpotlight: () => {
+    playSpotlightSound();
+    set({ isOpen: true });
+  },
   closeSpotlight: () => set({ isOpen: false }),
-  toggleSpotlight: () => set((state) => ({ isOpen: !state.isOpen })),
+  toggleSpotlight: () =>
+    set((state) => {
+      const next = !state.isOpen;
+      if (next) playSpotlightSound();
+      return { isOpen: next };
+    }),
 }));

@@ -26,6 +26,7 @@ import {
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useWindowStore } from '@/stores/useWindowStore';
+import { useDragStore } from '@/stores/useDragStore';
 import { StudioBeatPad } from './StudioBeatPad';
 
 // Extended production credits and hardware chain per track
@@ -207,8 +208,40 @@ export function StudioApp() {
     setSoloTrackId((prev) => (prev === trackId ? null : trackId));
   };
 
+  const isDragging = useDragStore((state) => state.isDragging);
+  const dragItem = useDragStore((state) => state.dragItem);
+  const hoverTarget = useDragStore((state) => state.hoverTarget);
+  const isStudioDropActive = isDragging && dragItem?.type === 'music-track';
+
   return (
-    <div className="flex flex-col h-full w-full bg-[#141419] text-neutral-200 select-none overflow-hidden font-sans">
+    <div
+      data-drop-zone="studio"
+      className="relative flex flex-col h-full w-full bg-[#141419] text-neutral-200 select-none overflow-hidden font-sans"
+    >
+      {/* Interactive Drag & Drop Active Overlay */}
+      {isStudioDropActive && (
+        <div
+          className={`absolute inset-0 z-50 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none transition-all duration-200 ${
+            hoverTarget === 'studio'
+              ? 'bg-indigo-950/70 border-4 border-indigo-400/80 shadow-[inset_0_0_50px_rgba(99,102,241,0.5)]'
+              : 'bg-black/60 border-2 border-dashed border-indigo-400/50'
+          }`}
+        >
+          <div className="liquid-glass p-6 rounded-2xl flex flex-col items-center text-center gap-3 border border-indigo-400/40 shadow-2xl max-w-sm">
+            <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(99,102,241,0.8)] animate-pulse">
+              <AudioWaveform className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">
+                {hoverTarget === 'studio' ? 'Parçayı Çalmak İçin Bırak' : 'Studio\'ya Sürükle'}
+              </h3>
+              <p className="text-xs text-indigo-200 mt-1">
+                "{dragItem.title}" parçasını doğrudan Studio DAW'a yükleyip dinle
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* 1. TOP TRANSPORT BAR (Logic Pro / Ableton style header) */}
       <header className="h-14 bg-[#1C1C24] border-b border-white/10 px-3 sm:px-4 flex items-center justify-between shrink-0 shadow-md gap-2 overflow-x-auto no-scrollbar">
         {/* Left: Branding & Status */}

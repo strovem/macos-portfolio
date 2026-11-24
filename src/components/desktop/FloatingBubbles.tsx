@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useAudioStore } from '@/stores/useAudioStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface BubbleData {
@@ -176,6 +177,7 @@ const BUBBLES: BubbleData[] = [
 
 export const FloatingBubbles: React.FC = () => {
   const bubblesEnabled = useSettingsStore((state) => state.bubblesEnabled);
+  const isPlaying = useAudioStore((state) => state.isPlaying);
   const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
 
@@ -196,7 +198,9 @@ export const FloatingBubbles: React.FC = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
-          className="relative w-full h-full"
+          className={`relative w-full h-full transition-all duration-1000 ${
+            isPlaying ? 'scale-[1.012] brightness-[1.04]' : 'scale-100 brightness-100'
+          }`}
         >
           {activeBubbles.map((bubble) => (
             <motion.div
@@ -244,9 +248,11 @@ export const FloatingBubbles: React.FC = () => {
                   }}
                 />
 
-                {/* Iridescent soft color sheen */}
+                {/* Iridescent soft color sheen with subtle audio breathing */}
                 <div
-                  className="absolute rounded-full opacity-60 mix-blend-overlay pointer-events-none"
+                  className={`absolute rounded-full pointer-events-none transition-all duration-700 ${
+                    isPlaying ? 'opacity-80 mix-blend-color-dodge' : 'opacity-60 mix-blend-overlay'
+                  }`}
                   style={{
                     inset: '10%',
                     background:

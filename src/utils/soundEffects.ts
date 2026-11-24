@@ -65,6 +65,148 @@ export function playWindowOpenSound() {
 }
 
 /**
+ * Spotlight Search opening shimmer — soft rising glass shimmer (520Hz -> 780Hz, ~45ms)
+ */
+export function playSpotlightSound() {
+  const ctx = getAudioContext();
+  const vol = getMasterVolume();
+  if (!ctx || vol <= 0) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(780, now + 0.045);
+
+    gain.gain.setValueAtTime(vol * 0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.055);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Window minimize swoop — descending soft air transition (480Hz -> 210Hz, ~90ms)
+ */
+export function playMinimizeSound() {
+  const ctx = getAudioContext();
+  const vol = getMasterVolume();
+  if (!ctx || vol <= 0) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(480, now);
+    osc.frequency.exponentialRampToValueAtTime(210, now + 0.09);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(900, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + 0.09);
+
+    gain.gain.setValueAtTime(vol * 0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.1);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Drag & Drop snap sound — satisfying tactile snap (low-pass triangle + transient, ~35ms)
+ */
+export function playDropSnapSound() {
+  const ctx = getAudioContext();
+  const vol = getMasterVolume();
+  if (!ctx || vol <= 0) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(240, now);
+    osc.frequency.exponentialRampToValueAtTime(75, now + 0.035);
+
+    gain.gain.setValueAtTime(vol * 0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.045);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Trash crumple effect — layered band-passed noise burst simulating paper crumple into trash (~160ms)
+ */
+export function playTrashCrumpleSound() {
+  const ctx = getAudioContext();
+  const vol = getMasterVolume();
+  if (!ctx || vol <= 0) return;
+
+  try {
+    const now = ctx.currentTime;
+    const bufferSize = Math.floor(ctx.sampleRate * 0.16);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Procedural noise burst with modulated amplitude
+    for (let i = 0; i < bufferSize; i++) {
+      const progress = i / bufferSize;
+      const envelope = Math.sin(progress * Math.PI) * (1 - progress * 0.5);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1200, now);
+    filter.frequency.exponentialRampToValueAtTime(600, now + 0.16);
+    filter.Q.setValueAtTime(1.8, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol * 0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    noiseSource.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noiseSource.start(now);
+  } catch {
+    // ignore
+  }
+}
+
+
+
+/**
  * Window close click — soft descending tap (450Hz -> 200Hz)
  */
 export function playWindowCloseSound() {
@@ -387,3 +529,5 @@ export function playUnlockSound() {
     // ignore
   }
 }
+
+

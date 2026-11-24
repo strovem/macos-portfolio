@@ -30,6 +30,7 @@ import { NotificationStack } from '@/components/os/NotificationStack';
 import { NotificationCenter } from '@/components/os/NotificationCenter';
 import { MissionControl } from '@/components/os/MissionControl';
 import { LockScreen } from '@/components/os/LockScreen';
+import { DragPillOverlay } from '@/components/os/DragPillOverlay';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useContextMenuStore } from '@/stores/useContextMenuStore';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
@@ -340,6 +341,7 @@ export default function Home() {
       <NotificationStack />
       <NotificationCenter />
       <LockScreen />
+      <DragPillOverlay />
     </main>
   );
 }

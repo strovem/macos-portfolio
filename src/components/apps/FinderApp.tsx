@@ -43,7 +43,9 @@ import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import { AppId } from '@/types/os';
 import { ToneGeneratorApp } from '@/components/apps/ToneGeneratorApp';
 import { FinderQuickLookModal } from './FinderQuickLookModal';
-import { playDockClickSound, playTrashSound } from '@/utils/soundEffects';
+import { playDockClickSound, playTrashSound, playDropSnapSound, playTrashCrumpleSound } from '@/utils/soundEffects';
+import { useDragStore } from '@/stores/useDragStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 
 type SidebarSection =
   | 'recents'
@@ -436,6 +438,81 @@ export const FinderApp: React.FC = () => {
 
   const { handleContextMenu } = useContextMenu();
   const openSpotlight = useSpotlightStore((state) => state.openSpotlight);
+
+  const startDrag = useDragStore((state) => state.startDrag);
+  const updateCursor = useDragStore((state) => state.updateCursor);
+  const setHoverTarget = useDragStore((state) => state.setHoverTarget);
+  const endDrag = useDragStore((state) => state.endDrag);
+  const pushNotification = useNotificationStore((state) => state.pushNotification);
+
+  const handleFilePointerDown = (e: React.PointerEvent, file: FinderFileItem) => {
+    if (e.button !== 0) return;
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let draggingInitiated = false;
+
+    const handlePointerMove = (moveEvt: PointerEvent) => {
+      const dist = Math.hypot(moveEvt.clientX - startX, moveEvt.clientY - startY);
+      if (!draggingInitiated && dist > 5) {
+        draggingInitiated = true;
+        startDrag(
+          {
+            type: file.track ? 'music-track' : 'file',
+            id: file.id,
+            title: file.name,
+            track: file.track,
+            fileName: file.name,
+          },
+          { x: moveEvt.clientX, y: moveEvt.clientY }
+        );
+      }
+
+      if (draggingInitiated) {
+        updateCursor({ x: moveEvt.clientX, y: moveEvt.clientY });
+        const el = document.elementFromPoint(moveEvt.clientX, moveEvt.clientY);
+        const dropZone = el?.closest('[data-drop-zone]')?.getAttribute('data-drop-zone') as 'studio' | 'trash' | null;
+        setHoverTarget(dropZone);
+      }
+    };
+
+    const handlePointerUp = (upEvt: PointerEvent) => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+
+      if (draggingInitiated) {
+        const el = document.elementFromPoint(upEvt.clientX, upEvt.clientY);
+        const dropZone = el?.closest('[data-drop-zone]')?.getAttribute('data-drop-zone');
+
+        if (dropZone === 'studio') {
+          playDropSnapSound();
+          if (file.track) {
+            playTrack(file.track);
+          }
+          openWindow('studio');
+          pushNotification({
+            title: 'Studio DAW',
+            message: `"${file.name}" Studio'ya yüklendi ve çalınıyor.`,
+            appId: 'studio',
+            duration: 4000,
+          });
+        } else if (dropZone === 'trash') {
+          playTrashCrumpleSound();
+          pushNotification({
+            title: 'Çöp Sepeti',
+            message: `"${file.name}" çöp sepetine taşındı.`,
+            appId: 'trash',
+            duration: 3500,
+          });
+        }
+        endDrag();
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
 
   const onFileContextMenu = (e: React.MouseEvent, file: FinderFileItem) => {
     setSelectedFileId(file.id);
@@ -957,6 +1034,7 @@ export const FinderApp: React.FC = () => {
                     <tr
                       key={file.id}
                       onClick={() => setSelectedFileId(file.id)}
+                      onPointerDown={(e) => handleFilePointerDown(e, file)}
                       onContextMenu={(e) => onFileContextMenu(e, file)}
                       onDoubleClick={() => {
                         if (file.kind === 'Folder' || file.targetSection) {
@@ -1061,6 +1139,7 @@ export const FinderApp: React.FC = () => {
                   <div
                     key={file.id}
                     onClick={() => setSelectedFileId(file.id)}
+                    onPointerDown={(e) => handleFilePointerDown(e, file)}
                     onContextMenu={(e) => onFileContextMenu(e, file)}
                     onDoubleClick={() => {
                       if (file.kind === 'Folder' || file.targetSection) {

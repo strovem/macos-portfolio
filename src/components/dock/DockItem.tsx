@@ -12,6 +12,7 @@ import { AppMetadata } from '@/data/apps';
 import { AppId } from '@/types/os';
 import { AppIcon } from './AppIcon';
 import { playDockClickSound } from '@/utils/soundEffects';
+import { useDragStore } from '@/stores/useDragStore';
 
 export interface DockItemProps {
   app: AppMetadata;
@@ -45,6 +46,11 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
   });
 
   const width = isMobile ? baseSize : springWidth;
+
+  const isDragging = useDragStore((state) => state.isDragging);
+  const hoverTarget = useDragStore((state) => state.hoverTarget);
+  const isTargetActive = (app.id === 'studio' || app.id === 'trash') && isDragging;
+  const isHoveredTarget = hoverTarget === app.id;
 
   const handleClick = () => {
     playDockClickSound();
@@ -81,11 +87,22 @@ export function DockItem({ app, mouseX, isOpen = false, onClick, isMobile = fals
       <motion.button
         type="button"
         data-dock-app={app.id}
+        data-drop-zone={app.id === 'studio' ? 'studio' : app.id === 'trash' ? 'trash' : undefined}
         aria-label={app.title}
         onClick={handleClick}
         whileTap={{ scale: 0.88 }}
         style={{ width, height: width }}
-        className="relative flex items-center justify-center rounded-2xl cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-blue-400 active:opacity-90"
+        className={`relative flex items-center justify-center rounded-2xl cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-blue-400 active:opacity-90 transition-all duration-150 ${
+          isHoveredTarget
+            ? app.id === 'studio'
+              ? 'ring-4 ring-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.6)] scale-110'
+              : 'ring-4 ring-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.6)] scale-110'
+            : isTargetActive
+            ? app.id === 'studio'
+              ? 'ring-2 ring-indigo-400/60 animate-pulse'
+              : 'ring-2 ring-rose-400/60 animate-pulse'
+            : ''
+        }`}
       >
         <motion.div
           animate={

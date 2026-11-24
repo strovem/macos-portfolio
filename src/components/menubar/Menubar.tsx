@@ -635,13 +635,19 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
             }`}
           >
             {isAudioPlaying ? (
-              <div className="flex items-end gap-0.5 h-2.5">
-                <span className="w-0.5 h-2 bg-current rounded-full animate-bounce" style={{ animationDuration: '0.6s' }} />
-                <span className="w-0.5 h-2.5 bg-current rounded-full animate-bounce" style={{ animationDuration: '0.4s', animationDelay: '0.15s' }} />
-                <span className="w-0.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDuration: '0.7s', animationDelay: '0.3s' }} />
+              <div className="flex items-end gap-[2px] h-3 text-[#007AFF] dark:text-[#38BDF8]">
+                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.6s_ease-in-out_infinite] h-2.5" />
+                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.4s_ease-in-out_infinite_0.1s] h-3.5" />
+                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.7s_ease-in-out_infinite_0.2s] h-2" />
+                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.5s_ease-in-out_infinite_0.15s] h-3" />
               </div>
             ) : (
-              <Music2 className="w-3.5 h-3.5" />
+              <div className="flex items-end gap-[2px] h-3 opacity-60">
+                <span className="w-0.5 rounded-full bg-current h-1" />
+                <span className="w-0.5 rounded-full bg-current h-1.5" />
+                <span className="w-0.5 rounded-full bg-current h-1" />
+                <span className="w-0.5 rounded-full bg-current h-1.5" />
+              </div>
             )}
             <span className="hidden lg:inline-block truncate max-w-[120px] text-[10px] font-medium">
               {currentTrack?.title || 'Now Playing'}

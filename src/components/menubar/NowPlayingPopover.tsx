@@ -108,7 +108,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
           transition={{ duration: 0.16, ease: 'easeOut' }}
-          className="fixed top-9 right-2 sm:right-28 w-[calc(100vw-1rem)] sm:w-[320px] max-w-[320px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3.5 rounded-2xl backdrop-blur-2xl bg-white/85 dark:bg-neutral-900/85 border border-black/10 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.35)] z-50 select-none text-slate-800 dark:text-slate-100 flex flex-col gap-3 font-sans text-xs touch-pan-y"
+          className="fixed top-9 right-2 sm:right-28 w-[calc(100vw-1rem)] sm:w-[320px] max-w-[320px] max-h-[calc(100dvh-3.5rem)] overflow-y-auto no-scrollbar p-3.5 rounded-2xl liquid-glass border border-white/25 dark:border-white/10 shadow-2xl z-50 select-none text-slate-800 dark:text-slate-100 flex flex-col gap-3 font-sans text-xs touch-pan-y"
         >
           {/* Header Row */}
           <div className="flex items-center justify-between border-b border-black/5 dark:border-white/10 pb-2">
@@ -200,7 +200,7 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
             </div>
-            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-neutral-400 font-mono">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-neutral-400 font-mono tabular-nums">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration || activeTrack.durationSeconds)}</span>
             </div>
@@ -287,6 +287,16 @@ export const NowPlayingPopover: React.FC<NowPlayingPopoverProps> = ({ isOpen, on
               {Math.round(volume * 100)}%
             </span>
           </div>
+
+          {/* Quick Studio DAW Trigger */}
+          <button
+            type="button"
+            onClick={handleOpenStudio}
+            className="w-full py-1.5 px-3 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 shadow-xs"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Studio DAW'da Aç ve Karıştır ↗</span>
+          </button>
 
           {/* Expandable Tracklist Dropdown */}
           <AnimatePresence>

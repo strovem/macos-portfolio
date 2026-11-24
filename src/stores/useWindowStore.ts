@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { AppId, WindowState } from '@/types/os';
-import { playWindowOpenSound, playWindowCloseSound } from '@/utils/soundEffects';
+import { playWindowOpenSound, playWindowCloseSound, playMinimizeSound } from '@/utils/soundEffects';
 
 export type FinderSection =
   | 'recents'
@@ -259,6 +259,8 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     const { windows, activeWindowId } = get();
     const target = windows[id];
     if (!target) return;
+
+    playMinimizeSound();
 
     const updatedWindows = {
       ...windows,
