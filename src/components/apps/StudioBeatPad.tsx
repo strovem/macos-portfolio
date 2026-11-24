@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, Play, Sparkles, Disc, Radio, RotateCcw } from 'lucide-react';
+import { connectNodeToAnalyser } from '@/lib/audioAnalyser';
 
 interface PadSpec {
   id: string;
@@ -103,6 +104,7 @@ export const StudioBeatPad: React.FC = () => {
   const [lastPlayedName, setLastPlayedName] = useState<string>('Ready • Tap a Pad');
   const [hitCount, setHitCount] = useState<number>(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const padMasterGainRef = useRef<GainNode | null>(null);
 
   // Initialize or get Web Audio Context
   const getAudioContext = useCallback(() => {
@@ -118,6 +120,11 @@ export const StudioBeatPad: React.FC = () => {
     if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
       audioCtxRef.current.resume();
     }
+    if (audioCtxRef.current && !padMasterGainRef.current) {
+      padMasterGainRef.current = audioCtxRef.current.createGain();
+      padMasterGainRef.current.connect(audioCtxRef.current.destination);
+      connectNodeToAnalyser(padMasterGainRef.current);
+    }
     return audioCtxRef.current;
   }, []);
 
@@ -126,6 +133,7 @@ export const StudioBeatPad: React.FC = () => {
     (type: PadSpec['type'], name: string) => {
       const ctx = getAudioContext();
       if (!ctx) return;
+      const outputNode = padMasterGainRef.current || ctx.destination;
       const t = ctx.currentTime;
 
       setLastPlayedName(name);
@@ -144,7 +152,7 @@ export const StudioBeatPad: React.FC = () => {
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
 
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(outputNode);
             osc.start(t);
             osc.stop(t + 0.3);
             break;
@@ -171,7 +179,7 @@ export const StudioBeatPad: React.FC = () => {
 
             noise.connect(noiseFilter);
             noiseFilter.connect(noiseGain);
-            noiseGain.connect(ctx.destination);
+            noiseGain.connect(outputNode);
             noise.start(t);
 
             // Snare tone body
@@ -183,7 +191,7 @@ export const StudioBeatPad: React.FC = () => {
             oscGain.gain.setValueAtTime(0.5, t);
             oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
             osc.connect(oscGain);
-            oscGain.connect(ctx.destination);
+            oscGain.connect(outputNode);
             osc.start(t);
             osc.stop(t + 0.1);
             break;
@@ -210,7 +218,7 @@ export const StudioBeatPad: React.FC = () => {
               gain.gain.exponentialRampToValueAtTime(0.01, burstT + 0.12);
               noise.connect(filter);
               filter.connect(gain);
-              gain.connect(ctx.destination);
+              gain.connect(outputNode);
               noise.start(burstT);
             }
             break;
@@ -233,7 +241,7 @@ export const StudioBeatPad: React.FC = () => {
             gain.gain.exponentialRampToValueAtTime(0.005, t + 0.14);
             noise.connect(filter);
             filter.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(outputNode);
             noise.start(t);
             break;
           }
@@ -247,7 +255,7 @@ export const StudioBeatPad: React.FC = () => {
             gain.gain.setValueAtTime(0.95, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(outputNode);
             osc.start(t);
             osc.stop(t + 0.68);
             break;
@@ -262,7 +270,7 @@ export const StudioBeatPad: React.FC = () => {
             gain.gain.setValueAtTime(0.65, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(outputNode);
             osc.start(t);
             osc.stop(t + 0.07);
             break;
@@ -282,7 +290,7 @@ export const StudioBeatPad: React.FC = () => {
             gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
             osc.connect(filter);
             filter.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(outputNode);
             osc.start(t);
             osc.stop(t + 0.24);
             break;
@@ -297,7 +305,7 @@ export const StudioBeatPad: React.FC = () => {
             gain.gain.setValueAtTime(0.4, t);
             gain.gain.exponentialRampToValueAtTime(0.01, t + 0.24);
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(outputNode);
             osc.start(t);
             osc.stop(t + 0.25);
             break;

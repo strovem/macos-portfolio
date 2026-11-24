@@ -30,6 +30,120 @@ import { useWindowStore } from '@/stores/useWindowStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { copyPortfolioDeepLink } from '@/hooks/useUrlDeepLink';
 import { StudioBeatPad } from './StudioBeatPad';
+import { getFrequencyBars } from '@/lib/audioAnalyser';
+
+function StudioSpectrumCanvas({ isPlaying, volume }: { isPlaying: boolean; volume: number }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+
+    const render = () => {
+      if (document.hidden) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = rect.width;
+      const height = rect.height;
+
+      if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
+
+      // Subtle background grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let y = height * 0.25; y < height; y += height * 0.25) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      const barCount = 40;
+      const bars = getFrequencyBars(barCount, isPlaying);
+      const gap = 2;
+      const barWidth = Math.max(2, (width - (barCount - 1) * gap) / barCount);
+
+      // Gradient for bars
+      const grad = ctx.createLinearGradient(0, height, 0, 0);
+      grad.addColorStop(0, '#10b981'); // emerald
+      grad.addColorStop(0.5, '#06b6d4'); // cyan
+      grad.addColorStop(1, '#8b5cf6'); // violet
+
+      ctx.fillStyle = grad;
+
+      // Peak line points
+      const peakPoints: { x: number; y: number }[] = [];
+
+      for (let i = 0; i < barCount; i++) {
+        const val = bars[i] || 0;
+        const normalized = isPlaying ? Math.max(0.04, Math.min(1, val * (volume || 1))) : 0.03;
+        const barHeight = normalized * (height - 6);
+        const x = i * (barWidth + gap);
+        const y = height - barHeight;
+
+        // Draw rounded top bar
+        const r = Math.min(2, barWidth / 2);
+        ctx.beginPath();
+        ctx.moveTo(x, height);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.lineTo(x + barWidth - r, y);
+        ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + r);
+        ctx.lineTo(x + barWidth, height);
+        ctx.closePath();
+        ctx.fill();
+
+        peakPoints.push({ x: x + barWidth / 2, y });
+      }
+
+      // Draw luminous peak spline curve across tops
+      if (peakPoints.length > 1 && isPlaying) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = 'rgba(56, 189, 248, 0.9)';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.moveTo(peakPoints[0].x, peakPoints[0].y);
+        for (let i = 1; i < peakPoints.length; i++) {
+          const xc = (peakPoints[i - 1].x + peakPoints[i].x) / 2;
+          const yc = (peakPoints[i - 1].y + peakPoints[i].y) / 2;
+          ctx.quadraticCurveTo(peakPoints[i - 1].x, peakPoints[i - 1].y, xc, yc);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, [isPlaying, volume]);
+
+  return (
+    <div className="h-18 bg-[#0E0E14] rounded-lg p-2 border border-white/5 relative overflow-hidden flex items-center justify-center">
+      <canvas ref={canvasRef} className="w-full h-full block" />
+    </div>
+  );
+}
 
 // Extended production credits and hardware chain per track
 const TRACK_PRODUCTION_DETAILS: Record<
@@ -738,23 +852,7 @@ export function StudioApp() {
                   <span className="text-[10px] text-neutral-400 font-mono">Master Bus Output</span>
                 </div>
 
-                <div className="h-16 bg-[#0E0E14] rounded-lg p-2 flex items-end justify-between gap-1 border border-white/5">
-                  {Array.from({ length: 32 }).map((_, idx) => {
-                    const freqScale = Math.sin((idx / 32) * Math.PI) * 0.8 + 0.2;
-                    const randomJitter = isPlaying ? (Math.random() - 0.5) * 0.3 : 0;
-                    const heightPercent = isPlaying
-                      ? Math.max(10, Math.min(100, (freqScale + randomJitter) * 90 * volume))
-                      : 8;
-
-                    return (
-                      <div
-                        key={idx}
-                        className="flex-1 bg-gradient-to-t from-emerald-500 via-cyan-400 to-violet-500 rounded-t-xs transition-all duration-75"
-                        style={{ height: `${heightPercent}%` }}
-                      />
-                    );
-                  })}
-                </div>
+                <StudioSpectrumCanvas isPlaying={isPlaying} volume={volume} />
               </div>
             </div>
           ) : (

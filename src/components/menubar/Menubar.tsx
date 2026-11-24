@@ -31,6 +31,62 @@ import { WALLPAPERS } from '@/data/wallpapers';
 import { AppId } from '@/types/os';
 import { useTranslation } from '@/hooks/useTranslation';
 import { playClickSound } from '@/utils/systemSounds';
+import { getFrequencyBars } from '@/lib/audioAnalyser';
+
+function MenubarAudioVisualizer({ isPlaying }: { isPlaying: boolean }) {
+  const bar0Ref = React.useRef<HTMLSpanElement>(null);
+  const bar1Ref = React.useRef<HTMLSpanElement>(null);
+  const bar2Ref = React.useRef<HTMLSpanElement>(null);
+  const bar3Ref = React.useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      if (bar0Ref.current) bar0Ref.current.style.height = '4px';
+      if (bar1Ref.current) bar1Ref.current.style.height = '6px';
+      if (bar2Ref.current) bar2Ref.current.style.height = '4px';
+      if (bar3Ref.current) bar3Ref.current.style.height = '6px';
+      return;
+    }
+
+    let animId: number;
+    const bars = [bar0Ref, bar1Ref, bar2Ref, bar3Ref];
+
+    const update = () => {
+      if (document.hidden) {
+        animId = requestAnimationFrame(update);
+        return;
+      }
+
+      const freqs = getFrequencyBars(4, true);
+      bars.forEach((ref, idx) => {
+        if (ref.current) {
+          const val = freqs[idx] || 0.1;
+          const h = Math.max(3, Math.min(13, 3 + Math.round(val * 10)));
+          ref.current.style.height = `${h}px`;
+        }
+      });
+
+      animId = requestAnimationFrame(update);
+    };
+
+    animId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animId);
+  }, [isPlaying]);
+
+  return (
+    <div
+      className={`flex items-end gap-[2px] h-3.5 transition-opacity ${
+        isPlaying ? 'text-[#007AFF] dark:text-[#38BDF8]' : 'opacity-60'
+      }`}
+      aria-label="Equalizer Spectrum"
+    >
+      <span ref={bar0Ref} className="w-0.5 rounded-full bg-current" style={{ height: '4px' }} />
+      <span ref={bar1Ref} className="w-0.5 rounded-full bg-current" style={{ height: '6px' }} />
+      <span ref={bar2Ref} className="w-0.5 rounded-full bg-current" style={{ height: '4px' }} />
+      <span ref={bar3Ref} className="w-0.5 rounded-full bg-current" style={{ height: '6px' }} />
+    </div>
+  );
+}
 
 interface MenubarProps {
   activeAppName?: string;
@@ -689,21 +745,7 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
                 : 'hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
             }`}
           >
-            {isAudioPlaying ? (
-              <div className="flex items-end gap-[2px] h-3 text-[#007AFF] dark:text-[#38BDF8]">
-                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.6s_ease-in-out_infinite] h-2.5" />
-                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.4s_ease-in-out_infinite_0.1s] h-3.5" />
-                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.7s_ease-in-out_infinite_0.2s] h-2" />
-                <span className="w-0.5 rounded-full bg-current animate-[bounce_0.5s_ease-in-out_infinite_0.15s] h-3" />
-              </div>
-            ) : (
-              <div className="flex items-end gap-[2px] h-3 opacity-60">
-                <span className="w-0.5 rounded-full bg-current h-1" />
-                <span className="w-0.5 rounded-full bg-current h-1.5" />
-                <span className="w-0.5 rounded-full bg-current h-1" />
-                <span className="w-0.5 rounded-full bg-current h-1.5" />
-              </div>
-            )}
+            <MenubarAudioVisualizer isPlaying={isAudioPlaying} />
             <span className="hidden lg:inline-block truncate max-w-[120px] text-[10px] font-medium">
               {currentTrack?.title || 'Now Playing'}
             </span>

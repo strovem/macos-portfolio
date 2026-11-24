@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
+import { connectAudioElementToAnalyser, connectNodeToAnalyser } from '@/lib/audioAnalyser';
 
 interface AudioStoreState {
   currentTrack: MusicTrack | null;
@@ -96,7 +97,9 @@ function playProceduralTrack(track: MusicTrack, volume: number) {
     try {
       stopAllAudio();
       const audio = new Audio(track.src);
+      audio.crossOrigin = 'anonymous';
       audio.volume = Math.max(0, Math.min(1, volume));
+      connectAudioElementToAnalyser(audio);
 
       audio.onloadedmetadata = () => {
         useAudioStore.getState().setDuration(audio.duration || track.durationSeconds);
@@ -145,6 +148,7 @@ function fallbackSynth(track: MusicTrack, volume: number) {
     if (!masterGainNode) {
       masterGainNode = globalAudioCtx.createGain();
       masterGainNode.connect(globalAudioCtx.destination);
+      connectNodeToAnalyser(masterGainNode);
     }
     masterGainNode.gain.setValueAtTime(volume * 0.15, globalAudioCtx.currentTime);
 

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { getAudioMetrics } from '@/lib/audioAnalyser';
 
 interface BubbleData {
   id: number;
@@ -177,10 +178,12 @@ const BUBBLES: BubbleData[] = [
 
 export const FloatingBubbles: React.FC = () => {
   const bubblesEnabled = useSettingsStore((state) => state.bubblesEnabled);
+  const audioReactiveAmbience = useSettingsStore((state) => state.audioReactiveAmbience);
   const isPlaying = useAudioStore((state) => state.isPlaying);
   const [mounted, setMounted] = useState(false);
   const [isTabVisible, setIsTabVisible] = useState(true);
   const isMobile = useIsMobile();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -195,6 +198,40 @@ export const FloatingBubbles: React.FC = () => {
     };
   }, []);
 
+  // Real-time Audio-Reactive FFT Bass Modulation (60 FPS, CSS Custom Property, zero state re-render)
+  useEffect(() => {
+    if (!isPlaying || !audioReactiveAmbience || !isTabVisible) {
+      if (containerRef.current) {
+        containerRef.current.style.setProperty('--audio-bass', '0');
+      }
+      return;
+    }
+
+    let animId: number;
+
+    const update = () => {
+      if (document.hidden) {
+        animId = requestAnimationFrame(update);
+        return;
+      }
+
+      const metrics = getAudioMetrics(true);
+      if (containerRef.current) {
+        containerRef.current.style.setProperty('--audio-bass', metrics.bass.toFixed(3));
+      }
+
+      animId = requestAnimationFrame(update);
+    };
+
+    animId = requestAnimationFrame(update);
+    return () => {
+      cancelAnimationFrame(animId);
+      if (containerRef.current) {
+        containerRef.current.style.setProperty('--audio-bass', '0');
+      }
+    };
+  }, [isPlaying, audioReactiveAmbience, isTabVisible]);
+
   if (!mounted || !bubblesEnabled || !isTabVisible) return null;
 
   // On mobile devices, throttle to 3 lightweight ambient bubbles to preserve 60fps and mobile battery
@@ -204,13 +241,18 @@ export const FloatingBubbles: React.FC = () => {
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-[1] select-none">
       <AnimatePresence>
         <motion.div
+          ref={containerRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
-          className={`relative w-full h-full transition-all duration-1000 ${
-            isPlaying ? 'scale-[1.012] brightness-[1.04]' : 'scale-100 brightness-100'
+          className={`relative w-full h-full transition-[filter,transform] duration-150 ${
+            isPlaying ? 'brightness-[1.04]' : 'brightness-100'
           }`}
+          style={{
+            transform: 'scale(calc(1 + var(--audio-bass, 0) * 0.06))',
+            filter: 'brightness(calc(1 + var(--audio-bass, 0) * 0.15))',
+          }}
         >
           {activeBubbles.map((bubble) => (
             <motion.div

@@ -15,6 +15,7 @@ export interface SettingsState {
   volume: number;
   auraIntensity: AuraIntensity;
   tapeWarmth: boolean;
+  audioReactiveAmbience: boolean;
   setHasHydrated: (val: boolean) => void;
   setLanguage: (lang: 'tr' | 'en') => void;
   toggleLanguage: () => void;
@@ -22,6 +23,8 @@ export interface SettingsState {
   toggleDarkMode: () => void;
   toggleSound: () => void;
   toggleBubbles: () => void;
+  toggleAudioReactiveAmbience: () => void;
+  setAudioReactiveAmbience: (val: boolean) => void;
   setBrightness: (val: number) => void;
   setVolume: (val: number) => void;
   setAuraIntensity: (val: AuraIntensity) => void;
@@ -41,6 +44,7 @@ export const useSettingsStore = create<SettingsState>()(
       volume: 80,
       auraIntensity: 'vibrant',
       tapeWarmth: false,
+      audioReactiveAmbience: true,
       setHasHydrated: (val: boolean) => set({ _hasHydrated: val }),
       setLanguage: (lang: 'tr' | 'en') => set({ language: lang }),
       toggleLanguage: () => set((state) => ({ language: state.language === 'tr' ? 'en' : 'tr' })),
@@ -55,6 +59,8 @@ export const useSettingsStore = create<SettingsState>()(
         }),
       toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
       toggleBubbles: () => set((state) => ({ bubblesEnabled: !state.bubblesEnabled })),
+      toggleAudioReactiveAmbience: () => set((state) => ({ audioReactiveAmbience: !state.audioReactiveAmbience })),
+      setAudioReactiveAmbience: (val: boolean) => set({ audioReactiveAmbience: val }),
       setBrightness: (val: number) => set({ brightness: val }),
       setVolume: (val: number) => set({ volume: val }),
       setAuraIntensity: (val: AuraIntensity) => set({ auraIntensity: val }),
