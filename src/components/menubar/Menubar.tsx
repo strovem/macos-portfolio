@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import {
   Wifi,
   Volume2,
@@ -114,8 +113,6 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const setActivePopover = useOverlayStore((state) => state.setActivePopover);
   const toggleOverlayPopover = useOverlayStore((state) => state.togglePopover);
   const closeAllPopovers = useOverlayStore((state) => state.closeAllPopovers);
-  const registerQuickLook = useOverlayStore((state) => state.registerQuickLook);
-  const unregisterQuickLook = useOverlayStore((state) => state.unregisterQuickLook);
 
   const isControlCenterOpen = activePopover === 'controlCenter';
   const isNowPlayingOpen = activePopover === 'nowPlaying';
@@ -153,16 +150,14 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const isWeatherOpen = useWeatherStore((state) => state.isPopoverOpen);
   const setWeatherOpen = useWeatherStore((state) => state.setPopoverOpen);
   const toggleWeatherPopover = useWeatherStore((state) => state.togglePopover);
-  const initWeather = useWeatherStore((state) => state.initWeather);
-  const updateSolarPhase = useWeatherStore((state) => state.updateSolarPhase);
 
   useEffect(() => {
-    initWeather();
+    useWeatherStore.getState().initWeather();
     const interval = setInterval(() => {
-      updateSolarPhase();
+      useWeatherStore.getState().updateSolarPhase();
     }, 60 * 1000);
     return () => clearInterval(interval);
-  }, [initWeather, updateSolarPhase]);
+  }, []);
 
   const handleWeatherClick = () => {
     const next = !isWeatherOpen;
@@ -209,11 +204,13 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
   const toggleCenter = useNotificationStore((state) => state.toggleCenter);
 
   // Sync local activeMenuId when overlay store clears menu popover (e.g. Esc or another popover opening)
+  // Note: activeMenuId intentionally excluded from deps — we only want to react to activePopover changes
   useEffect(() => {
-    if (activePopover !== 'menu' && activeMenuId !== null) {
+    if (activePopover !== 'menu') {
       setActiveMenuId(null);
     }
-  }, [activePopover, activeMenuId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePopover]);
 
   // Register About This Mac / Shortcuts Modal Escape closer
   useEffect(() => {
@@ -222,9 +219,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       setShowAboutMac(false);
       setShowShortcutsModal(false);
     };
-    registerQuickLook(closer);
-    return () => unregisterQuickLook(closer);
-  }, [showAboutMac, showShortcutsModal, registerQuickLook, unregisterQuickLook]);
+    // Use getState() to avoid putting Zustand functions in dep array
+    useOverlayStore.getState().registerQuickLook(closer);
+    return () => useOverlayStore.getState().unregisterQuickLook(closer);
+  }, [showAboutMac, showShortcutsModal]);
 
   // Click outside listener for language menu
   useEffect(() => {
@@ -473,12 +471,21 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
     },
   ];
 
-  const openWindowList = useWindowStore(
-    useShallow((state) =>
-      Object.values(state.windows)
-        .filter((w) => w.isOpen)
-        .map((w) => ({ id: w.id, title: w.title }))
-    )
+  const openWindowsKey = useWindowStore((state) =>
+    Object.values(state.windows)
+      .filter((w) => w.isOpen)
+      .map((w) => `${w.id}\x01${w.title}`)
+      .join('\x02')
+  );
+  const openWindowList = React.useMemo(
+    () =>
+      openWindowsKey
+        ? openWindowsKey.split('\x02').map((entry) => {
+            const [id, title] = entry.split('\x01');
+            return { id: id as AppId, title };
+          })
+        : [],
+    [openWindowsKey]
   );
   const focusWindow = useWindowStore((state) => state.focusWindow);
   const windowMenuItems: MenuItem[] = [

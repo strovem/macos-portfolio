@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useShallow } from 'zustand/react/shallow';
 import { X, Disc3, Folder, Terminal, Compass } from 'lucide-react';
 import { useWindowStore } from '@/stores/useWindowStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -91,13 +90,22 @@ function MiniWindowContent({ id }: { id: AppId }) {
 
 export function StageManagerStrip() {
   const stageManagerEnabled = useSettingsStore((state) => state.stageManagerEnabled);
-  const displayWindows = useWindowStore(
-    useShallow((state) =>
-      Object.values(state.windows)
-        .filter((win) => win.isOpen && !win.isMinimized && !state.stageWindowIds.includes(win.id))
-        .slice(0, 5)
-        .map((win) => ({ id: win.id, title: win.title }))
-    )
+  const displayWindowsKey = useWindowStore((state) =>
+    Object.values(state.windows)
+      .filter((win) => win.isOpen && !win.isMinimized && !state.stageWindowIds.includes(win.id))
+      .slice(0, 5)
+      .map((win) => `${win.id}\x01${win.title}`)
+      .join('\x02')
+  );
+  const displayWindows = React.useMemo(
+    () =>
+      displayWindowsKey
+        ? displayWindowsKey.split('\x02').map((entry) => {
+            const [id, title] = entry.split('\x01');
+            return { id: id as AppId, title };
+          })
+        : [],
+    [displayWindowsKey]
   );
   const switchStageTo = useWindowStore((state) => state.switchStageTo);
   const addWindowToStage = useWindowStore((state) => state.addWindowToStage);
