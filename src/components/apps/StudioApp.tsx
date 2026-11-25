@@ -525,10 +525,10 @@ export function StudioApp() {
             </div>
           )}
 
-          {/* Left: Tracklist (8 Tracks with Mute/Solo and Details) */}
+          {/* Left: Tracklist (with Mute/Solo and Details) */}
           <div
             className={`${
-              activeTab === 'arrangement' && mobileTab === 'waveform' ? 'hidden' : 'flex'
+              activeTab === 'arrangement' && mobileTab === 'waveform' ? 'hidden md:flex' : 'flex'
             } w-full md:w-72 lg:w-80 bg-[#17171F] border-r border-white/10 flex-col shrink-0 overflow-hidden`}
           >
             <div className="p-2.5 px-3 bg-[#13131A] border-b border-white/5 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
@@ -618,7 +618,7 @@ export function StudioApp() {
         {/* Center/Right: Interactive Waveform & Production Inspector */}
         <div
           className={`${
-            activeTab === 'arrangement' && mobileTab === 'tracks' ? 'hidden' : 'flex'
+            activeTab === 'arrangement' && mobileTab === 'tracks' ? 'hidden md:flex' : 'flex'
           } flex-1 flex-col bg-[#121217] overflow-y-auto no-scrollbar`}
         >
             <div className="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4">
