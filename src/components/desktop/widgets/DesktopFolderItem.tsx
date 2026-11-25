@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { DesktopCardItem } from '@/types/os';
 import { ArrowUpRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAudioStore } from '@/stores/useAudioStore';
 
 interface DesktopFolderItemProps {
   item: DesktopCardItem;
@@ -17,68 +18,114 @@ export function DesktopFolderItem({
   isMobile = false,
 }: DesktopFolderItemProps) {
   const { t } = useTranslation();
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const rawUid = useId();
+  const uid = rawUid.replace(/:/g, '');
   const [isSelected, setIsSelected] = useState(false);
   const title = item.id === 'my-musics-folder' ? t('folderMusicTitle') : item.title;
-  const subtitle = item.id === 'my-musics-folder' ? t('folderMusicSubtitle') : (item.subtitle || '7 items');
+  const subtitle = item.id === 'my-musics-folder' ? t('folderMusicSubtitle') : (item.subtitle || '16 items');
 
-  // SVG representation of macOS blue folder with embossed music note
-  const renderMacFolderIcon = (size = 'w-16 h-14') => (
-    <div className={`relative ${size} shrink-0 select-none`}>
+  // Unique SVG gradient/filter IDs prevent duplicate-ID collisions between
+  // the hidden mobile stack and desktop canvas (which previously hid gradients).
+  const backGradId = `folderBack-${uid}`;
+  const frontGradId = `folderFront-${uid}`;
+  const waveGradId = `folderWave-${uid}`;
+  const rimGradId = `folderRim-${uid}`;
+
+  // Eye-catching macOS Sonic Waveform Folder icon
+  const renderMacFolderIcon = (size = 'w-20 h-[68px]') => (
+    <div
+      className={`relative ${size} shrink-0 select-none transition-transform duration-200 group-hover:scale-105 ${
+        isPlaying ? 'drop-shadow-[0_0_16px_rgba(56,189,248,0.45)]' : ''
+      }`}
+    >
       <svg
-        viewBox="0 0 68 56"
-        className="w-full h-full drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)] transition-transform duration-150 group-hover:scale-105"
+        viewBox="0 0 80 68"
+        className="w-full h-full drop-shadow-[0_10px_18px_rgba(0,0,0,0.42)]"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="macosFolderBackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3B92E8" />
-            <stop offset="100%" stopColor="#1B60C4" />
+          <linearGradient id={backGradId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#312E81" />
+            <stop offset="100%" stopColor="#1E1B4B" />
           </linearGradient>
 
-          <linearGradient id="macosFolderFrontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#55B0FF" />
-            <stop offset="35%" stopColor="#2A86E9" />
-            <stop offset="100%" stopColor="#0B56BE" />
+          <linearGradient id={frontGradId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6366F1" />
+            <stop offset="48%" stopColor="#4338CA" />
+            <stop offset="100%" stopColor="#1E1B4B" />
           </linearGradient>
 
-          <linearGradient id="macosFolderRimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          <linearGradient id={waveGradId} x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22D3EE" />
+            <stop offset="50%" stopColor="#A855F7" />
+            <stop offset="100%" stopColor="#FB7185" />
           </linearGradient>
 
-          <filter id="folderInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.25" />
-          </filter>
+          <linearGradient id={rimGradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.65)" />
+            <stop offset="50%" stopColor="rgba(165,243,252,0.85)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.25)" />
+          </linearGradient>
         </defs>
 
-        {/* Back flap with tab */}
+        {/* Back folder body with macOS top tab */}
         <path
-          d="M 6 8 C 6 5.8 7.8 4 10 4 L 26 4 C 28.5 4 30.5 5.5 32 7.5 L 34.5 11 C 35.5 12.2 37 13 38.8 13 L 58 13 C 60.2 13 62 14.8 62 17 L 62 46 C 62 48.2 60.2 50 58 50 L 10 50 C 7.8 50 6 48.2 6 46 Z"
-          fill="url(#macosFolderBackGrad)"
+          d="M 6 11 C 6 7.7 8.7 5 12 5 L 29 5 C 31.8 5 34.2 6.4 35.8 8.8 L 38.4 12.6 C 39.6 14.1 41.3 15 43.2 15 L 68 15 C 71.3 15 74 17.7 74 21 L 74 56 C 74 59.3 71.3 62 68 62 L 12 62 C 8.7 62 6 59.3 6 56 Z"
+          fill={`url(#${backGradId})`}
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1"
         />
 
-        {/* Front pocket */}
-        <path
-          d="M 4 16 C 4 14.2 5.5 12.8 7.3 12.8 L 60.7 12.8 C 62.5 12.8 64 14.2 64 16 L 62.8 47.5 C 62.6 49.5 60.9 51 58.9 51 L 9.1 51 C 7.1 51 5.4 49.5 5.2 47.5 Z"
-          fill="url(#macosFolderFrontGrad)"
-          filter="url(#folderInnerShadow)"
+        {/* Subtle inner sleeve preview edge (looks like studio stem sheets inside folder) */}
+        <rect
+          x="13"
+          y="13"
+          width="54"
+          height="10"
+          rx="3"
+          fill="rgba(224,231,255,0.22)"
         />
 
-        {/* Top pocket highlight bar */}
+        {/* Front folder pocket */}
         <path
-          d="M 6 14 L 62 14"
-          stroke="url(#macosFolderRimGrad)"
-          strokeWidth="1.2"
+          d="M 4 21 C 4 18.2 6.2 16 9 16 L 71 16 C 73.8 16 76 18.2 76 21 L 74.4 57.5 C 74.2 60.6 71.6 63 68.5 63 L 11.5 63 C 8.4 63 5.8 60.6 5.6 57.5 Z"
+          fill={`url(#${frontGradId})`}
+          stroke="rgba(255,255,255,0.28)"
+          strokeWidth="1"
+        />
+
+        {/* Specular glass edge highlight */}
+        <path
+          d="M 8 17.5 L 72 17.5"
+          stroke={`url(#${rimGradId})`}
+          strokeWidth="1.4"
           strokeLinecap="round"
         />
 
-        {/* Embossed music glyph on the front pocket */}
-        <g transform="translate(24, 23)" fill="white" opacity="0.88">
-          <path
-            d="M14 2v10.55A3.5 3.5 0 0 0 11.5 11 3.5 3.5 0 1 0 15 14.5V6h5V2h-6z"
-            filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.3))"
-          />
+        {/* Dark glass inner soundstage plaque */}
+        <rect
+          x="13"
+          y="25"
+          width="54"
+          height="29"
+          rx="7"
+          fill="rgba(9,10,24,0.48)"
+          stroke="rgba(255,255,255,0.16)"
+          strokeWidth="0.9"
+        />
+
+        {/* Glowing multi-bar Audio Waveform spectrum */}
+        <g>
+          <rect x="19" y="37" width="3.2" height="6" rx="1.6" fill={`url(#${waveGradId})`} opacity="0.82" />
+          <rect x="24.5" y="33" width="3.2" height="14" rx="1.6" fill={`url(#${waveGradId})`} opacity="0.92" />
+          <rect x="30" y="29" width="3.2" height="22" rx="1.6" fill={`url(#${waveGradId})`} />
+          <rect x="35.5" y="34" width="3.2" height="12" rx="1.6" fill={`url(#${waveGradId})`} opacity="0.95" />
+          <rect x="41" y="27.5" width="3.2" height="25" rx="1.6" fill={`url(#${waveGradId})`} />
+          <rect x="46.5" y="31.5" width="3.2" height="17" rx="1.6" fill={`url(#${waveGradId})`} opacity="0.95" />
+          <rect x="52" y="34.5" width="3.2" height="11" rx="1.6" fill={`url(#${waveGradId})`} opacity="0.9" />
+          <rect x="57.5" y="36.5" width="3.2" height="7" rx="1.6" fill={`url(#${waveGradId})`} opacity="0.82" />
         </g>
       </svg>
     </div>
@@ -113,13 +160,13 @@ export function DesktopFolderItem({
       }}
       onBlur={() => setIsSelected(false)}
       tabIndex={0}
-      className="flex flex-col items-center justify-center p-1.5 rounded-xl group cursor-pointer focus:outline-none w-24 select-none"
+      className="flex flex-col items-center justify-center p-1.5 rounded-xl group cursor-pointer focus:outline-none w-28 select-none"
     >
       {/* Folder Icon */}
       {renderMacFolderIcon()}
 
       {/* Folder Label */}
-      <div className="mt-1 flex flex-col items-center max-w-[96px]">
+      <div className="mt-1.5 flex flex-col items-center max-w-[112px]">
         <span
           className={`text-[11px] font-semibold text-center leading-tight transition-all px-2 py-0.5 rounded-md break-words line-clamp-2 ${
             isSelected
