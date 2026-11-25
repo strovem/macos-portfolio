@@ -23,7 +23,6 @@ import {
   Volume2,
   Folder,
   ArrowUpRight,
-  AudioWaveform,
   Eye,
   Share2,
 } from 'lucide-react';
@@ -1064,37 +1063,6 @@ export const FinderApp: React.FC = () => {
               >
                 Empty Trash
               </button>
-            </div>
-          )}
-          {activeSection === 'music' && (
-            <div className="mb-3.5 p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-purple-500/10 border border-indigo-500/20 flex items-start gap-3 text-xs">
-              <div className="p-2 rounded-lg bg-indigo-500 text-white shadow-sm mt-0.5 shrink-0">
-                <Music2 className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Hüseyin Korumtaş — Original Compositions & Audio Productions</span>
-                    <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono">
-                      {ORIGINAL_TRACKS.length} Tracks
-                    </span>
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => openWindow('studio')}
-                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
-                  >
-                    <AudioWaveform className="w-3.5 h-3.5" />
-                    <span>Open in Studio.app</span>
-                  </button>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-neutral-300 mt-1 leading-relaxed">
-                  All tracks are rendered with in-browser Web Audio synthesis and original studio stems. Click the play button on any row to preview, or open Studio.app for interactive waveforms and mixing notes.
-                </p>
-                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1">
-                  💡 Drop your own <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.mp3</code> or <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">.wav</code> tracks into the project's <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono">public/music/</code> folder to stream them instantly.
-                </p>
-              </div>
             </div>
           )}
 
