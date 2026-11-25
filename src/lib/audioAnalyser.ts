@@ -36,6 +36,18 @@ export function getSharedAudioContext(): AudioContext | null {
   return sharedAudioCtx;
 }
 
+/**
+ * Resumes the shared AudioContext inside a user-gesture handler so
+ * MediaElementAudioSourceNode and Web Audio synths produce audible output.
+ */
+export function resumeSharedAudioContext(): AudioContext | null {
+  const ctx = getSharedAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+  return ctx;
+}
+
 export function getSharedAnalyser(): AnalyserNode | null {
   const ctx = getSharedAudioContext();
   if (!ctx) return null;
@@ -116,6 +128,9 @@ export interface AudioMetrics {
  * gracefully blends a procedural musical pulse so visualizers never freeze.
  */
 export function getAudioMetrics(isPlaying = false): AudioMetrics {
+  if (!isPlaying && !sharedAnalyser) {
+    return { bass: 0, mid: 0, treble: 0, energy: 0, rawBuffer: null };
+  }
   const analyser = getSharedAnalyser();
 
   if (!analyser || !freqDataBuffer) {
@@ -173,8 +188,11 @@ export function getAudioMetrics(isPlaying = false): AudioMetrics {
  * Returns an array of normalized heights (0.0 to 1.0) for N spectrum bars.
  */
 export function getFrequencyBars(barCount = 32, isPlaying = false): number[] {
-  const analyser = getSharedAnalyser();
   const bars: number[] = new Array(barCount).fill(0);
+  if (!isPlaying && !sharedAnalyser) {
+    return bars;
+  }
+  const analyser = getSharedAnalyser();
 
   if (!analyser || !freqDataBuffer) {
     if (isPlaying) {

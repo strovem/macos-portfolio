@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { ORIGINAL_TRACKS, MusicTrack } from '@/data/music';
 import {
   getSharedAudioContext,
+  resumeSharedAudioContext,
   connectAudioElementToAnalyser,
   connectNodeToAnalyser,
 } from '@/lib/audioAnalyser';
@@ -54,8 +55,9 @@ function stopAmbientSound() {
 }
 
 function updateAmbientDucking(isMusicActive: boolean) {
+  if (!ambientGainNode) return;
   const ctx = getSharedAudioContext();
-  if (!ambientGainNode || !ctx) return;
+  if (!ctx) return;
   const { isAmbientPlaying, ambientVolume } = useAudioStore.getState();
   if (!isAmbientPlaying) return;
 
@@ -97,14 +99,21 @@ function stopAllAudio() {
 function playProceduralTrack(track: MusicTrack, volume: number) {
   if (typeof window === 'undefined') return;
 
+  // Resume AudioContext synchronously inside user-gesture stack before routing MediaElementSource
+  const ctx = resumeSharedAudioContext();
+
   // If track has an actual audio file source defined, try HTMLAudio first
   if (track.src) {
     try {
       stopAllAudio();
       const requestId = ++audioRequestSeq;
-      const audio = new Audio(track.src);
+      const audio = new Audio();
+      // Set crossOrigin BEFORE src so browser/CDN CORS matches MediaElementSource requirements
       audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
+      audio.src = encodeURI(track.src);
       audio.volume = Math.max(0, Math.min(1, volume));
+      currentHtmlAudio = audio;
       connectAudioElementToAnalyser(audio);
 
       audio.onloadedmetadata = () => {
@@ -122,15 +131,22 @@ function playProceduralTrack(track: MusicTrack, volume: number) {
         useAudioStore.getState().nextTrack();
       };
 
+      audio.onerror = () => {
+        if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) return;
+        fallbackSynth(track, volume);
+      };
+
       audio.play().then(() => {
         if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) {
           audio.pause();
           return;
         }
-        currentHtmlAudio = audio;
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
       }).catch(() => {
         if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) return;
-        // Fallback to Web Audio synthesis if file not found
+        // Fallback to Web Audio synthesis if file not found or playback blocked
         fallbackSynth(track, volume);
       });
       return;
@@ -144,12 +160,8 @@ function playProceduralTrack(track: MusicTrack, volume: number) {
 
 function fallbackSynth(track: MusicTrack, volume: number) {
   try {
-    const ctx = getSharedAudioContext();
+    const ctx = resumeSharedAudioContext();
     if (!ctx) return;
-
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
 
     stopCurrentSynthOnly();
 
@@ -243,6 +255,7 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
       updateAmbientDucking(true);
       if (currentHtmlAudio && currentTrack) {
         const requestId = ++audioRequestSeq;
+        resumeSharedAudioContext();
         set({ isPlaying: true });
         currentHtmlAudio.play().then(() => {
           if (requestId !== audioRequestSeq || !useAudioStore.getState().isPlaying) {
@@ -298,9 +311,11 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
     if (currentHtmlAudio) {
       currentHtmlAudio.volume = clamped;
     }
-    const ctx = getSharedAudioContext();
-    if (masterGainNode && ctx) {
-      masterGainNode.gain.setValueAtTime(clamped * 0.15, ctx.currentTime);
+    if (masterGainNode) {
+      const ctx = getSharedAudioContext();
+      if (ctx) {
+        masterGainNode.gain.setValueAtTime(clamped * 0.15, ctx.currentTime);
+      }
     }
   },
 
