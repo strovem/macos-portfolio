@@ -57,6 +57,24 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#160F04',
     gridColor: 'rgba(251, 191, 36, 0.38)',
   },
+  'track-need-your-love': {
+    primary: 'rgba(217, 70, 239, 0.46)', // Neon Fuchsia
+    secondary: 'rgba(225, 29, 72, 0.48)', // Crimson Rose
+    deep: '#180514',
+    gridColor: 'rgba(244, 114, 182, 0.36)',
+  },
+  'track-rainy-lofi': {
+    primary: 'rgba(56, 189, 248, 0.38)', // Rainy Sky Blue
+    secondary: 'rgba(51, 65, 85, 0.52)', // Midnight Slate
+    deep: '#07111E',
+    gridColor: 'rgba(125, 211, 252, 0.28)',
+  },
+  'track-neon-pulse': {
+    primary: 'rgba(249, 115, 22, 0.46)', // Sunset Orange
+    secondary: 'rgba(236, 72, 153, 0.48)', // Retro Pink
+    deep: '#190814',
+    gridColor: 'rgba(251, 146, 60, 0.36)',
+  },
 };
 
 const DEFAULT_AURA: TrackAuraConfig = {

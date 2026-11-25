@@ -41,7 +41,7 @@ export function MusicDesktopWidget({ item, onOpenApp }: MusicDesktopWidgetProps)
         </div>
 
         <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-400/15 text-indigo-600 dark:text-indigo-300 text-[9px] font-mono font-semibold">
-          8 TRACKS
+          {ORIGINAL_TRACKS.length} TRACKS
         </span>
       </div>
 
