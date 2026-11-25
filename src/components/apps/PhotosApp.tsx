@@ -59,7 +59,7 @@ const PHOTOS: PhotoItem[] = [
     renderTool: 'Studio Rack • Universal Audio Apollo x8',
     gradient: 'from-purple-700 via-indigo-800 to-slate-950',
     accentColor: '#8B5CF6',
-    relatedTrackId: 'track-dark-elektro',
+    relatedTrackId: 'track-tech-house-club',
     gearList: ['Roland TB-303', 'Moog Sub 37', 'UAD Manley Massive Passive', 'Neve 1073 Preamp'],
   },
   {

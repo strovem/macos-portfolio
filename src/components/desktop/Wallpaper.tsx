@@ -21,12 +21,6 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#060E23',
     gridColor: 'rgba(56, 189, 248, 0.38)',
   },
-  'track-dark-elektro': {
-    primary: 'rgba(168, 85, 247, 0.40)', // Neon Purple
-    secondary: 'rgba(67, 56, 202, 0.48)', // Deep Indigo
-    deep: '#0C0618',
-    gridColor: 'rgba(192, 132, 252, 0.32)',
-  },
   'track-ethnic-garage': {
     primary: 'rgba(16, 185, 129, 0.42)', // Emerald
     secondary: 'rgba(13, 148, 136, 0.48)', // Teal
@@ -105,7 +99,7 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#04160E',
     gridColor: 'rgba(163, 230, 53, 0.36)',
   },
-  'track-satisfaction-remix': {
+  'track-kalabak-suyu-remix': {
     primary: 'rgba(34, 211, 238, 0.48)', // Laser Cyan
     secondary: 'rgba(20, 184, 166, 0.48)', // Club Teal
     deep: '#04151A',

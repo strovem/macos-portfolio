@@ -82,15 +82,15 @@ export const EXPERIENCE: ExperienceItem[] = [
   {
     id: 'award-club-selection',
     role: 'Electronic Club Master & Dancefloor Hit',
-    company: 'Club Masters & Underground Electronic',
+    company: 'Club Masters & Electronic',
     period: '2026',
     location: 'Global',
     description:
-      'Featured dancefloor selection for "I AM A LOVER" (Tech House) and "Dark Elektro" across electronic music venues.',
+      'Featured dancefloor selection for "I AM A LOVER" (Tech House) and "Tech House (Club Mix)" across electronic music venues.',
     achievements: [
       'Engineered for maximum dancefloor energy, sub-bass articulation, and peak-time momentum.',
     ],
-    technologies: ['Tech House', 'Dark Electro', 'Club Mastering'],
+    technologies: ['Tech House', 'Bass House', 'Club Mastering'],
     type: 'award',
   },
 ];
