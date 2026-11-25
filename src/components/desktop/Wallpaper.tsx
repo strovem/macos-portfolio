@@ -105,6 +105,12 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#04160E',
     gridColor: 'rgba(163, 230, 53, 0.36)',
   },
+  'track-satisfaction-remix': {
+    primary: 'rgba(34, 211, 238, 0.48)', // Laser Cyan
+    secondary: 'rgba(20, 184, 166, 0.48)', // Club Teal
+    deep: '#04151A',
+    gridColor: 'rgba(45, 212, 191, 0.38)',
+  },
 };
 
 const DEFAULT_AURA: TrackAuraConfig = {
