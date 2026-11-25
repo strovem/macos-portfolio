@@ -87,6 +87,24 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#050E1E',
     gridColor: 'rgba(56, 189, 248, 0.40)',
   },
+  'track-electric-trap': {
+    primary: 'rgba(245, 158, 11, 0.46)', // Electric Amber
+    secondary: 'rgba(220, 38, 38, 0.48)', // Deep Crimson
+    deep: '#190705',
+    gridColor: 'rgba(251, 191, 36, 0.36)',
+  },
+  'track-eurodance-anthem': {
+    primary: 'rgba(56, 189, 248, 0.48)', // Euphoric Sky Blue
+    secondary: 'rgba(79, 70, 229, 0.48)', // Royal Indigo
+    deep: '#050C21',
+    gridColor: 'rgba(96, 165, 250, 0.38)',
+  },
+  'track-8bit-hyperpop': {
+    primary: 'rgba(132, 204, 22, 0.45)', // Arcade Lime
+    secondary: 'rgba(16, 185, 129, 0.48)', // Neon Emerald
+    deep: '#04160E',
+    gridColor: 'rgba(163, 230, 53, 0.36)',
+  },
 };
 
 const DEFAULT_AURA: TrackAuraConfig = {
