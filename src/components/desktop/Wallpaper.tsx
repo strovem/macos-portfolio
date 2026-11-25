@@ -75,6 +75,18 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#190814',
     gridColor: 'rgba(251, 146, 60, 0.36)',
   },
+  'track-central-park-nights': {
+    primary: 'rgba(99, 102, 241, 0.44)', // Midnight Indigo
+    secondary: 'rgba(56, 189, 248, 0.36)', // City Lights Cyan
+    deep: '#070919',
+    gridColor: 'rgba(129, 140, 248, 0.32)',
+  },
+  'track-liquid-horizon': {
+    primary: 'rgba(34, 211, 238, 0.48)', // Electric Cyan
+    secondary: 'rgba(124, 58, 237, 0.48)', // Kinetic Violet
+    deep: '#050E1E',
+    gridColor: 'rgba(56, 189, 248, 0.40)',
+  },
 };
 
 const DEFAULT_AURA: TrackAuraConfig = {
