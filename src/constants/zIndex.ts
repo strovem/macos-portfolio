@@ -31,6 +31,7 @@ export const Z_INDEX = {
   APP_SWITCHER: 90,
   SPOTLIGHT: 100,
   CONTEXT_MENU: 110,
+  PRESENTATION_FULLSCREEN: 150,
 
   // Ultimate Security Layer (Blocks everything else when locked or sleeping)
   LOCK_SCREEN: 200,

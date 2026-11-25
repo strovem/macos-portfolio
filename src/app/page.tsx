@@ -74,6 +74,10 @@ const StudioApp = dynamic(() => import('@/components/apps/StudioApp').then((m) =
   ssr: false,
   loading: WindowLoadingSkeleton,
 });
+const PowerPointApp = dynamic(() => import('@/components/apps/PowerPointApp').then((m) => m.PowerPointApp), {
+  ssr: false,
+  loading: WindowLoadingSkeleton,
+});
 
 // Heavy Full-Screen System Overlays — Lazy Loaded
 const MissionControl = dynamic(() => import('@/components/os/MissionControl').then((m) => m.MissionControl), {
@@ -328,6 +332,8 @@ export default function Home() {
         return <ToneGeneratorApp />;
       case 'studio':
         return <StudioApp />;
+      case 'powerpoint':
+        return <PowerPointApp />;
       case 'trash':
         return (
           <div className="h-full p-6 flex flex-col items-center justify-center text-center text-xs bg-white dark:bg-neutral-900 text-slate-800 dark:text-neutral-100 font-sans">

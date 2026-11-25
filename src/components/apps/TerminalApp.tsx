@@ -61,6 +61,7 @@ const VALID_APPS: AppId[] = [
   'terminal',
   'settings',
   'studio',
+  'powerpoint',
   'tonegenerator',
   'trash',
 ];

@@ -17,6 +17,7 @@ export interface WindowStoreState {
   activeWindowId: AppId | null;
   maxZIndex: number;
   finderSection: FinderSection;
+  activePresentationSlug: string | null;
   stageWindowIds: AppId[];
   isDesktopPeeked: boolean;
   setStageWindows: (ids: AppId[]) => void;
@@ -27,6 +28,8 @@ export interface WindowStoreState {
   toggleDesktopPeek: () => void;
   setFinderSection: (section: FinderSection) => void;
   openFinderToSection: (section: FinderSection) => void;
+  setActivePresentationSlug: (slug: string | null) => void;
+  openPresentation: (slug: string | null) => void;
   openWindow: (id: AppId) => void;
   closeWindow: (id: AppId) => void;
   minimizeWindow: (id: AppId) => void;
@@ -181,6 +184,18 @@ const DEFAULT_WINDOWS: Record<AppId, WindowState> = {
     size: { width: 940, height: 580 },
     defaultSize: { width: 940, height: 580 },
   },
+  powerpoint: {
+    id: 'powerpoint',
+    title: 'PowerPoint',
+    icon: 'powerpoint',
+    isOpen: false,
+    isMinimized: false,
+    isMaximized: false,
+    zIndex: 1,
+    position: { x: 135, y: 54 },
+    size: { width: 960, height: 610 },
+    defaultSize: { width: 960, height: 610 },
+  },
 };
 
 /**
@@ -205,6 +220,7 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
   activeWindowId: 'finder',
   maxZIndex: 20,
   finderSection: 'documents',
+  activePresentationSlug: null,
   stageWindowIds: ['finder'],
   isDesktopPeeked: false,
 
@@ -214,6 +230,14 @@ export const useWindowStore = create<WindowStoreState>((set, get) => ({
     get().openWindow('finder');
     get().focusWindow('finder');
     set({ finderSection: section });
+  },
+
+  setActivePresentationSlug: (slug: string | null) => set({ activePresentationSlug: slug }),
+
+  openPresentation: (slug: string | null) => {
+    set({ activePresentationSlug: slug });
+    get().openWindow('powerpoint');
+    get().focusWindow('powerpoint');
   },
 
   setStageWindows: (ids: AppId[]) => set({ stageWindowIds: ids, isDesktopPeeked: false }),

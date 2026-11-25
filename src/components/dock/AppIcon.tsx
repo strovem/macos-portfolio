@@ -21,6 +21,7 @@ const ICON_MAP: Record<AppMetadata['iconType'], string> = {
   trash: '/icons/macos/app_trash.png',
   studio: '',
   instagram: '',
+  powerpoint: '',
 };
 
 export function AppIcon({ iconType, badge, className = '' }: AppIconProps) {
@@ -81,6 +82,60 @@ export function AppIcon({ iconType, badge, className = '' }: AppIconProps) {
             <span className="w-1.5 h-7 bg-gradient-to-t from-indigo-500 to-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
             <span className="w-1.5 h-3.5 bg-gradient-to-t from-violet-500 to-sky-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.6)]" />
           </div>
+        </div>
+        {badge !== undefined && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-white dark:border-slate-800 shadow-md pointer-events-none z-20">
+            {badge}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (iconType === 'powerpoint') {
+    return (
+      <div className={`relative w-full h-full select-none flex items-center justify-center ${className}`}>
+        <div
+          className="w-full h-full rounded-[22%] flex items-center justify-center p-[14%] relative overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.38),inset_0_1px_1.5px_rgba(255,255,255,0.48)] border border-orange-300/35"
+          style={{
+            background: 'linear-gradient(145deg, #FF8A65 0%, #E85935 45%, #B83114 100%)',
+          }}
+        >
+          {/* Specular Apple top gloss */}
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 via-white/8 to-transparent pointer-events-none rounded-t-[22%]" />
+
+          {/* macOS PowerPoint Pie Chart + "P" Badge SVG */}
+          <svg
+            viewBox="0 0 48 48"
+            className="w-full h-full relative z-10 drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)]"
+            aria-hidden="true"
+          >
+            {/* Pie chart circle (offset right) */}
+            <circle cx="27" cy="24" r="15.5" fill="#FFCCB8" fillOpacity="0.95" />
+            {/* Top-left pie quadrant */}
+            <path d="M27 24 L27 8.5 A15.5 15.5 0 0 0 11.5 24 Z" fill="#FF9875" />
+            {/* Top-right warm wedge */}
+            <path d="M27 24 L42.5 24 A15.5 15.5 0 0 0 27 8.5 Z" fill="#FFE8DE" />
+            {/* Bottom-right deeper coral slice */}
+            <path d="M27 24 L27 39.5 A15.5 15.5 0 0 0 42.5 24 Z" fill="#F06A46" />
+
+            {/* Foreground squircle "P" tile */}
+            <rect
+              x="4.5"
+              y="12.5"
+              width="22"
+              height="23"
+              rx="5.5"
+              fill="#B32B10"
+              stroke="rgba(255,255,255,0.28)"
+              strokeWidth="1"
+            />
+            {/* Crisp geometric white "P" */}
+            <path
+              d="M11.6 30.2V17.8h5.1c2.95 0 4.85 1.58 4.85 4.18 0 2.62-1.9 4.22-4.85 4.22h-2.32v4h-2.78zm2.78-6.3h2.1c1.38 0 2.22-.72 2.22-1.92 0-1.18-.84-1.88-2.22-1.88h-2.1v3.8z"
+              fill="#FFFFFF"
+            />
+          </svg>
         </div>
         {badge !== undefined && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-white dark:border-slate-800 shadow-md pointer-events-none z-20">

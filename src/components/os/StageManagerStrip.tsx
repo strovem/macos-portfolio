@@ -77,6 +77,16 @@ function MiniWindowContent({ id }: { id: AppId }) {
           <div className="w-3/5 h-0.5 bg-amber-400/20 rounded" />
         </div>
       );
+    case 'powerpoint':
+      return (
+        <div className="w-full h-full rounded-md bg-gradient-to-br from-[#2B120D] to-[#7A2714] p-1.5 flex flex-col justify-between border border-orange-400/20">
+          <div className="w-3/4 h-1.5 rounded bg-orange-200/70" />
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-3 rounded-xs bg-white/15" />
+            <div className="w-3 h-3 rounded-full bg-[#FF8A65]/80" />
+          </div>
+        </div>
+      );
     default:
       return (
         <div className="w-full h-full rounded-md bg-white/5 p-1.5 flex items-center justify-center border border-white/5">

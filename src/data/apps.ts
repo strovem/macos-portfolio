@@ -5,7 +5,7 @@ export interface AppMetadata {
   title: string;
   category: string;
   description: string;
-  iconType: 'finder' | 'safari' | 'messages' | 'mail' | 'notes' | 'photos' | 'terminal' | 'settings' | 'trash' | 'studio' | 'instagram';
+  iconType: 'finder' | 'safari' | 'messages' | 'mail' | 'notes' | 'photos' | 'terminal' | 'settings' | 'trash' | 'studio' | 'instagram' | 'powerpoint';
   gradient: string;
   badge?: string | number;
 }
@@ -17,6 +17,7 @@ export const APPS: AppMetadata[] = [
   { id: 'messages', title: 'Messages', category: 'Social', description: 'Direct Contact & Chat', iconType: 'messages', gradient: 'from-emerald-400 to-green-600', badge: '1' },
   { id: 'instagram', title: 'Instagram', category: 'Social', description: '@korumtashuseyin on Instagram', iconType: 'instagram', gradient: 'from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]' },
   { id: 'notes', title: 'Notes', category: 'Productivity', description: 'About Me, Skills & Experience', iconType: 'notes', gradient: 'from-amber-200 to-yellow-400' },
+  { id: 'powerpoint', title: 'PowerPoint', category: 'Productivity', description: 'Presentations & Interactive Decks', iconType: 'powerpoint', gradient: 'from-[#FF7D54] via-[#D24726] to-[#982510]' },
   { id: 'photos', title: 'Photos', category: 'Media', description: 'Gallery & Highlights', iconType: 'photos', gradient: 'from-pink-400 via-purple-400 to-indigo-500' },
   { id: 'terminal', title: 'Terminal', category: 'Developer', description: 'Interactive CLI Shell', iconType: 'terminal', gradient: 'from-neutral-800 to-black' },
   { id: 'settings', title: 'Settings', category: 'System', description: 'Preferences & Themes', iconType: 'settings', gradient: 'from-neutral-300 to-neutral-500' },

@@ -399,6 +399,10 @@ export const Menubar: React.FC<MenubarProps> = ({ activeAppName = 'Finder' }) =>
       label: language === 'tr' ? "Studio (DAW)'ı Aç" : 'Open Studio (DAW)',
       action: () => openWindow('studio'),
     },
+    {
+      label: language === 'tr' ? "PowerPoint Sunumlarını Aç" : 'Open PowerPoint Decks',
+      action: () => openWindow('powerpoint'),
+    },
     { isDivider: true },
     {
       label: language === 'tr' ? 'Pencereyi Kapat' : 'Close Window',

@@ -23,6 +23,7 @@ import {
   HelpCircle,
   ArrowRight,
   AppWindow,
+  Presentation,
 } from 'lucide-react';
 import { useSpotlightStore } from '@/stores/useSpotlightStore';
 import { useWindowStore } from '@/stores/useWindowStore';
@@ -32,6 +33,7 @@ import { Z_INDEX } from '@/constants/zIndex';
 import { APPS } from '@/data/apps';
 import { PROJECTS } from '@/data/projects';
 import { ORIGINAL_TRACKS } from '@/data/music';
+import { PRESENTATIONS, getLocalizedText } from '@/data/presentations';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { playClickSound } from '@/utils/soundEffects';
 import { AppId } from '@/types/os';
@@ -68,6 +70,7 @@ export const SpotlightModal: React.FC = () => {
   const minimizeAllWindows = useWindowStore((s) => s.minimizeAllWindows);
   const resetWindows = useWindowStore((s) => s.resetWindows);
   const openFinderToSection = useWindowStore((s) => s.openFinderToSection);
+  const openPresentation = useWindowStore((s) => s.openPresentation);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const toggleDarkMode = useSettingsStore((s) => s.toggleDarkMode);
   const activeWallpaperId = useSettingsStore((s) => s.activeWallpaperId);
@@ -111,6 +114,12 @@ export const SpotlightModal: React.FC = () => {
       if (app.id === 'photos') icon = <Camera className="w-4 h-4 text-pink-500" />;
       if (app.id === 'terminal') icon = <Terminal className="w-4 h-4 text-neutral-400" />;
       if (app.id === 'settings') icon = <SlidersHorizontal className="w-4 h-4 text-slate-400" />;
+      if (app.id === 'powerpoint') icon = <Presentation className="w-4 h-4 text-[#D24726]" />;
+
+      const extraKeywords =
+        app.id === 'powerpoint'
+          ? ['sunum', 'sunumlar', 'presentation', 'presentations', 'slayt', 'slide', 'slides', 'deck']
+          : [];
 
       list.push({
         id: `app-${app.id}`,
@@ -125,7 +134,37 @@ export const SpotlightModal: React.FC = () => {
             openWindow(app.id);
           }
         },
-        keywords: [app.id, app.title, app.description, 'app', 'uygulama', 'program'],
+        keywords: [app.id, app.title, app.description, 'app', 'uygulama', 'program', ...extraKeywords],
+      });
+    });
+
+    // Presentations & Decks (PowerPoint)
+    PRESENTATIONS.forEach((deck) => {
+      const trTitle = getLocalizedText(deck.title, 'tr');
+      const enTitle = getLocalizedText(deck.title, 'en');
+      const title = language === 'tr' ? trTitle : enTitle;
+      const subtitle = getLocalizedText(deck.subtitle, language);
+      list.push({
+        id: `deck-${deck.slug}`,
+        title,
+        subtitle: `${subtitle} • PowerPoint`,
+        category: language === 'tr' ? 'Sunumlar' : 'Presentations',
+        icon: <Presentation className="w-4 h-4 text-[#D24726]" />,
+        action: () => openPresentation(deck.slug),
+        keywords: [
+          deck.slug,
+          trTitle,
+          enTitle,
+          getLocalizedText(deck.subtitle, 'tr'),
+          getLocalizedText(deck.subtitle, 'en'),
+          deck.category,
+          'powerpoint',
+          'sunum',
+          'sunumlar',
+          'presentation',
+          'presentations',
+          'slayt',
+        ],
       });
     });
 
@@ -306,6 +345,7 @@ export const SpotlightModal: React.FC = () => {
     language,
     openWindow,
     openFinderToSection,
+    openPresentation,
     playTrack,
     isDarkMode,
     toggleDarkMode,

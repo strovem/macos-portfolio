@@ -9,7 +9,8 @@ export type AppId =
   | 'settings'
   | 'trash'
   | 'tonegenerator'
-  | 'studio';
+  | 'studio'
+  | 'powerpoint';
 
 export type TilePosition = 'left' | 'right' | 'full' | null;
 

@@ -6,6 +6,7 @@ import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { AppId } from '@/types/os';
 import { APPS } from '@/data/apps';
+import { PRESENTATIONS } from '@/data/presentations';
 
 const VALID_APP_IDS: AppId[] = [
   'finder',
@@ -17,6 +18,7 @@ const VALID_APP_IDS: AppId[] = [
   'settings',
   'tonegenerator',
   'studio',
+  'powerpoint',
   'trash',
 ];
 
@@ -46,10 +48,17 @@ export function useUrlDeepLink() {
       const searchParams = new URLSearchParams(window.location.search);
       const appParam = searchParams.get('app')?.toLowerCase() as AppId | null;
       const sectionParam = searchParams.get('section')?.toLowerCase() as FinderSection | null;
+      const deckParam = searchParams.get('deck')?.trim() || null;
 
       if (appParam && VALID_APP_IDS.includes(appParam)) {
         if (appParam === 'finder' && sectionParam && VALID_FINDER_SECTIONS.includes(sectionParam)) {
           openFinderToSection(sectionParam);
+        } else if (appParam === 'powerpoint') {
+          const matchingDeck = deckParam
+            ? PRESENTATIONS.find((d) => d.slug === deckParam || d.id === deckParam)
+            : null;
+          useWindowStore.getState().setActivePresentationSlug(matchingDeck ? matchingDeck.slug : null);
+          openWindow('powerpoint');
         } else {
           openWindow(appParam);
         }
@@ -68,11 +77,21 @@ export function useUrlDeepLink() {
 /**
  * Copies a direct shareable portfolio deep link to clipboard and triggers a macOS toast notification
  */
-export async function copyPortfolioDeepLink(appId: AppId, section?: FinderSection) {
+export async function copyPortfolioDeepLink(
+  appId: AppId,
+  _section?: FinderSection,
+  deckSlug?: string
+) {
   if (typeof window === 'undefined') return;
 
   const language = useSettingsStore.getState().language;
-  const cleanUrl = window.location.origin + window.location.pathname;
+  const baseUrl = window.location.origin + window.location.pathname;
+  const cleanUrl =
+    appId === 'powerpoint'
+      ? deckSlug
+        ? `${baseUrl}?app=powerpoint&deck=${encodeURIComponent(deckSlug)}`
+        : `${baseUrl}?app=powerpoint`
+      : baseUrl;
 
   const appMeta = APPS.find((a) => a.id === appId);
   const appName = appMeta ? appMeta.title : appId;
