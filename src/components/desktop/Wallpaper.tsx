@@ -121,6 +121,18 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#04151A',
     gridColor: 'rgba(45, 212, 191, 0.38)',
   },
+  'track-bumbum-club-edit': {
+    primary: 'rgba(232, 121, 249, 0.48)', // Neon Orchid
+    secondary: 'rgba(139, 92, 246, 0.50)', // Electric Violet
+    deep: '#130522',
+    gridColor: 'rgba(240, 171, 252, 0.38)',
+  },
+  'track-dale-pa-bao': {
+    primary: 'rgba(251, 146, 60, 0.48)', // Latin Mango
+    secondary: 'rgba(244, 63, 94, 0.50)', // Fiesta Crimson
+    deep: '#1B070C',
+    gridColor: 'rgba(253, 186, 116, 0.38)',
+  },
 };
 
 const DEFAULT_AURA: TrackAuraConfig = {

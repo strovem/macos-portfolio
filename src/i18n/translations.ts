@@ -115,7 +115,7 @@ export const TRANSLATIONS = {
     messageCta: 'Mesajlarda Yanıtla ↗',
 
     folderMusicTitle: 'Müziklerim',
-    folderMusicSubtitle: '15 parça • Finder\'da Aç',
+    folderMusicSubtitle: '17 parça • Finder\'da Aç',
 
     calendarTitle: 'Nümeroloji & Astroloji',
     calendarTab: 'Takvim',
@@ -275,7 +275,7 @@ export const TRANSLATIONS = {
     messageCta: 'Reply in Messages ↗',
 
     folderMusicTitle: 'My Music',
-    folderMusicSubtitle: '15 tracks • Open in Finder',
+    folderMusicSubtitle: '17 tracks • Open in Finder',
 
     calendarTitle: 'Numerology & Astrology',
     calendarTab: 'Calendar',

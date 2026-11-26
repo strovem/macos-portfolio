@@ -63,7 +63,7 @@ export function getSharedAnalyser(): AnalyserNode | null {
   if (!sharedAnalyser) {
     sharedAnalyser = ctx.createAnalyser();
     sharedAnalyser.fftSize = 2048; // 1024 bins (~21-24Hz resolution) for tight kick & sub-bass isolation
-    sharedAnalyser.smoothingTimeConstant = 0.25; // Low smoothing keeps 16ms kick transients crisp
+    sharedAnalyser.smoothingTimeConstant = 0.18; // Ultra-low smoothing preserves 16ms transient attacks for spectral flux
     sharedAnalyser.minDecibels = -95;
     sharedAnalyser.maxDecibels = -18; // Balanced headroom for both soft lo-fi and loud club mixes
     freqDataBuffer = new Uint8Array(sharedAnalyser.frequencyBinCount);
@@ -199,13 +199,12 @@ export function getAudioMetrics(isPlaying = false, bpm = 126): AudioMetrics {
   analyser.getByteFrequencyData(freqDataBuffer);
 
   const sampleRate = ctx.sampleRate || 48000;
-  const kickBand = computeBandEnergy(freqDataBuffer, sampleRate, 35, 165);
-  const bass = computeBandEnergy(freqDataBuffer, sampleRate, 35, 250);
+  const rawBass = computeBandEnergy(freqDataBuffer, sampleRate, 35, 250);
   const mid = computeBandEnergy(freqDataBuffer, sampleRate, 250, 4000);
   const treble = computeBandEnergy(freqDataBuffer, sampleRate, 4000, 16000);
   const energy = computeBandEnergy(freqDataBuffer, sampleRate, 35, 16000);
 
-  if (energy >= 0.004) {
+  if (energy >= 0.0025) {
     observedLiveSignal = true;
     silentFramesCount = 0;
   } else {
@@ -219,7 +218,9 @@ export function getAudioMetrics(isPlaying = false, bpm = 126): AudioMetrics {
     }
   }
 
-  const beat = beatDetector.step(kickBand, nowMs, bpm);
+  const beat = beatDetector.stepSpectrum(freqDataBuffer, sampleRate, nowMs, bpm);
+  const bass =
+    energy < 0.0025 ? 0 : Math.min(1, Math.max(rawBass, beat.normalizedBass * 0.92));
   lastAnalyzedPlaying = true;
   lastAnalyzedMs = nowMs;
   cachedMetrics = {

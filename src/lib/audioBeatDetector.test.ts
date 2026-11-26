@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { computeBandEnergy, createBeatDetector } = require('./audioBeatDetector.ts') as typeof import('./audioBeatDetector');
+const { computeBandEnergy, computeSpectralFlux, createBeatDetector } = require('./audioBeatDetector.ts') as typeof import('./audioBeatDetector');
 
 test('computeBandEnergy isolates 40-130Hz kick energy away from 1kHz vocals/mids', () => {
   // 2048 FFT size => 1024 bins at 48kHz sample rate => ~23.4375 Hz/bin
@@ -176,4 +176,64 @@ test('createBeatDetector catches compressed 3-frame kicks (~0.38 -> 0.44) and lo
     if (s1.isKickHit || s2.isKickHit || s3.isKickHit) compHits += 1;
   }
   assert.equal(compHits, 4, `expected 4 compressed groove kicks to trigger, got ${compHits}`);
+});
+
+test('computeSpectralFlux and stepSpectrum detect kicks masked by continuous heavy sub-bass drops and recover after drop ends', () => {
+  const sampleRate = 48000; // 2048 FFT => 1024 bins => ~23.4375 Hz/bin
+  const detector = createBeatDetector(130);
+
+  // Heavy distorted slap/808 sub sustain pinned continuously on bins 1-2 (~23-70Hz)
+  const makeDropFrame = (withKickPunch: boolean) => {
+    const bins = new Uint8Array(1024);
+    bins[1] = 245;
+    bins[2] = 250;
+    bins[3] = withKickPunch ? 235 : 130;
+    bins[4] = withKickPunch ? 225 : 95;
+    bins[5] = withKickPunch ? 205 : 70;
+    bins[6] = withKickPunch ? 185 : 55;
+    bins[7] = withKickPunch ? 155 : 40;
+    return bins;
+  };
+
+  const sustainA = makeDropFrame(false);
+  const sustainB = makeDropFrame(false);
+  const kickFrame = makeDropFrame(true);
+
+  // Spectral flux must be 0 when sustain stays constant, and clearly positive when punch bins jump
+  assert.equal(computeSpectralFlux(sustainB, sustainA, sampleRate, 40, 240), 0);
+  const hitFlux = computeSpectralFlux(kickFrame, sustainA, sampleRate, 40, 240);
+  assert.ok(hitFlux > 0.1, `expected strong spectral flux on punch bins, got ${hitFlux}`);
+
+  // Warm up sustain drop floor
+  for (let t = 0; t <= 800; t += 16) {
+    detector.stepSpectrum(makeDropFrame(false), sampleRate, t, 130);
+  }
+
+  // Simulate 4 beats at 130 BPM (~462ms) during heavy sub-sustain drop
+  let dropHits = 0;
+  for (let beat = 1; beat <= 4; beat++) {
+    const beatMs = 800 + beat * 462;
+    for (let t = beatMs - 380; t < beatMs; t += 16) {
+      detector.stepSpectrum(makeDropFrame(false), sampleRate, t, 130);
+    }
+    const res = detector.stepSpectrum(makeDropFrame(true), sampleRate, beatMs, 130);
+    if (res.isKickHit) dropHits += 1;
+  }
+  assert.equal(dropHits, 4, `expected 4 kicks during heavy sub sustain drop, got ${dropHits}`);
+
+  // Immediately drop into a gentle percussion verse (peak ~0.22 at bins 2-5); baseline must recover fast enough to catch verse kick within 500ms
+  const quietIdle = new Uint8Array(1024);
+  quietIdle[2] = 18;
+  quietIdle[3] = 18;
+  const quietKick = new Uint8Array(1024);
+  quietKick[2] = 65;
+  quietKick[3] = 72;
+  quietKick[4] = 58;
+
+  for (let t = 2800; t <= 3250; t += 16) {
+    detector.stepSpectrum(quietIdle, sampleRate, t, 130);
+  }
+  const postDrop = detector.stepSpectrum(quietKick, sampleRate, 3266, 130);
+  assert.equal(postDrop.isKickHit, true, 'expected fast baseline recovery to catch post-drop verse kick');
+  assert.ok(postDrop.normalizedBass > 0.25, `expected auto-gained bass response, got ${postDrop.normalizedBass}`);
 });
