@@ -111,6 +111,7 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
   let beatPhase = 0;
   let ioiWindow: number[] = [];
   let prevBins: Uint8Array | null = null;
+  let hasPrevSpectrum = false;
 
   const reset = (fallbackBpm = initialBpm) => {
     prevEnergy = 0;
@@ -123,6 +124,7 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
     effectiveBpm = fallbackBpm;
     beatPhase = 0;
     ioiWindow = [];
+    hasPrevSpectrum = false;
     if (prevBins) {
       prevBins.fill(0);
     }
@@ -140,44 +142,48 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
     }
     const clampedEnergy = Math.min(1, Math.max(0, kickEnergy));
 
-    const dtMs =
-      lastFrameMs === null ? 16.67 : Math.max(0, Math.min(100, nowMs - lastFrameMs));
+    const isFirstFrame = lastFrameMs === null;
+    const dtMs = isFirstFrame ? 16.67 : Math.max(0, Math.min(100, nowMs - lastFrameMs!));
     lastFrameMs = nowMs;
 
-    // Auto-gain peak tracker (~2.2s decay) adapts dynamically to soft intros, post-drop verses, and loud mixes
-    const peakDecay = Math.exp(-dtMs / 2200);
-    rollingPeak = Math.max(0.12, rollingPeak * peakDecay, clampedEnergy);
+    if (isFirstFrame) {
+      avgEnergy = clampedEnergy * 0.85;
+    }
 
-    // Frame-rate independent kick decay (~150ms time constant for crisp punch)
+    // Auto-gain peak tracker (~2.2s decay) keeps quiet parts calmer than drops while recovering cleanly
+    const peakDecay = Math.exp(-dtMs / 2200);
+    rollingPeak = Math.max(0.16, rollingPeak * peakDecay, clampedEnergy);
+
+    // Frame-rate independent kick decay (~130ms time constant for crisp groove without blur)
     if (kickEnvelope > 0) {
-      kickEnvelope *= Math.exp(-dtMs / 150);
+      kickEnvelope *= Math.exp(-dtMs / 130);
       if (kickEnvelope < 0.004) kickEnvelope = 0;
     }
 
     // Advance beat phase smoothly by effective tempo
     beatPhase = (beatPhase + (dtMs / 1000) * (effectiveBpm / 60)) % 1;
 
-    // Asymmetric baselines: rise slowly (~550ms) so kicks stand out, drop quickly (~160ms) after drops end
+    // Asymmetric baselines: rise slowly (~550ms) so kicks stand out, drop quickly (~170ms) after drops end
     const riseAlpha = 1 - Math.exp(-dtMs / 550);
-    const fallAlpha = 1 - Math.exp(-dtMs / 160);
+    const fallAlpha = 1 - Math.exp(-dtMs / 170);
     const energyAlpha = clampedEnergy < avgEnergy ? fallAlpha : riseAlpha;
     const fluxAlpha = spectralFlux < avgFlux ? fallAlpha : riseAlpha;
 
     const scalarFlux = clampedEnergy - prevEnergy;
     prevEnergy = clampedEnergy;
 
-    // Tempo-scaled cooldown (150-280ms) catches fast double-kicks without double-firing
-    const minCooldownMs = Math.max(150, Math.min(280, (60000 / effectiveBpm) * 0.45));
+    // Groove-locked cooldown (215-370ms) suppresses off-beat half-beat chatter while catching real beats
+    const minCooldownMs = Math.max(215, Math.min(370, (60000 / effectiveBpm) * 0.62));
     const cooldownElapsed = lastKickMs === null || nowMs - lastKickMs >= minCooldownMs;
 
-    const margin = Math.min(0.085, Math.max(0.022, avgEnergy * 0.08 + 0.018));
-    const scalarThreshold = Math.max(0.085, Math.min(0.92, avgEnergy + margin));
+    const margin = Math.min(0.11, Math.max(0.032, avgEnergy * 0.08 + 0.024));
+    const scalarThreshold = Math.max(0.095, Math.min(0.92, avgEnergy + margin));
     const scalarTriggered =
-      clampedEnergy >= 0.085 && clampedEnergy > scalarThreshold && scalarFlux > 0.005;
+      clampedEnergy >= 0.095 && clampedEnergy > scalarThreshold && scalarFlux > 0.007;
 
-    const fluxThreshold = Math.max(0.016, avgFlux * 1.45 + 0.012);
+    const fluxThreshold = Math.max(0.032, avgFlux * 1.75 + 0.022);
     const fluxTriggered =
-      spectralFlux > 0 && clampedEnergy >= 0.05 && spectralFlux > fluxThreshold;
+      spectralFlux > 0 && clampedEnergy >= 0.075 && spectralFlux > fluxThreshold;
 
     let isKickHit = false;
     if (cooldownElapsed && (scalarTriggered || fluxTriggered)) {
@@ -199,11 +205,11 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
       lastKickMs = nowMs;
       beatPhase = 0; // Phase-lock beat cycle to the real kick hit
 
-      const dynamicSpan = Math.max(0.06, rollingPeak - avgEnergy);
+      const dynamicSpan = Math.max(0.08, rollingPeak - avgEnergy);
       const scalarDrive = Math.min(1, Math.max(0, clampedEnergy - avgEnergy) / dynamicSpan);
-      const fluxDrive = Math.min(1, spectralFlux / 0.14);
+      const fluxDrive = Math.min(1, spectralFlux / 0.16);
       const drive = Math.max(scalarDrive, fluxDrive * 0.9);
-      const hitLevel = Math.min(1, 0.58 + drive * 0.42);
+      const hitLevel = Math.min(1, 0.36 + drive * 0.64);
       kickEnvelope = Math.max(kickEnvelope, hitLevel);
     }
 
@@ -211,9 +217,9 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
     avgFlux = avgFlux * (1 - fluxAlpha) + spectralFlux * fluxAlpha;
 
     const normalizedBass =
-      clampedEnergy < 0.025
+      clampedEnergy < 0.035
         ? 0
-        : Math.min(1, clampedEnergy / Math.max(0.14, rollingPeak));
+        : Math.min(1, clampedEnergy / Math.max(0.18, rollingPeak));
 
     return {
       kick: kickEnvelope,
@@ -238,10 +244,14 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
   ): BeatDetectorState => {
     if (!prevBins || prevBins.length !== freqData.length) {
       prevBins = new Uint8Array(freqData.length);
+      hasPrevSpectrum = false;
     }
     const kickEnergy = computeBandEnergy(freqData, sampleRate, 35, 165);
-    const fluxScore = computeSpectralFlux(freqData, prevBins, sampleRate, 40, 240);
+    const fluxScore = hasPrevSpectrum
+      ? computeSpectralFlux(freqData, prevBins, sampleRate, 40, 240)
+      : 0;
     prevBins.set(freqData);
+    hasPrevSpectrum = true;
     return processStep(kickEnergy, fluxScore, nowMs, fallbackBpm);
   };
 

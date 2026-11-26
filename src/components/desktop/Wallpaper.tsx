@@ -121,7 +121,7 @@ const TRACK_AURAS: Record<string, TrackAuraConfig> = {
     deep: '#04151A',
     gridColor: 'rgba(45, 212, 191, 0.38)',
   },
-  'track-bumbum-club-edit': {
+  'track-heard': {
     primary: 'rgba(232, 121, 249, 0.48)', // Neon Orchid
     secondary: 'rgba(139, 92, 246, 0.50)', // Electric Violet
     deep: '#130522',
@@ -244,42 +244,42 @@ export const Wallpaper: React.FC = () => {
         ctx.clearRect(0, 0, width, height);
 
         const maxRadius = Math.hypot(width * 0.5, height * 0.5) * 1.05;
-        if (metrics.isKickHit && shockwaves.length < 8) {
+        if (metrics.isKickHit && shockwaves.length < 4) {
           shockwaves.push({
-            radiusPx: Math.min(width, height) * 0.12,
-            alpha: Math.min(0.95, (0.55 + metrics.kick * 0.4) * activeIntensity.canvasScale),
-            lineWidth: 2.4 + metrics.kick * 3.4,
+            radiusPx: Math.min(width, height) * 0.13,
+            alpha: Math.min(0.78, (0.38 + metrics.kick * 0.36) * activeIntensity.canvasScale),
+            lineWidth: 1.9 + metrics.kick * 2.4,
           });
         }
 
         // Expanding concentric shockwave rings synchronized to song tempo
-        const tempoRatio = Math.max(0.65, Math.min(1.6, metrics.effectiveBpm / 120));
-        const ringSpeed = maxRadius * 0.78 * tempoRatio;
+        const tempoRatio = Math.max(0.65, Math.min(1.5, metrics.effectiveBpm / 120));
+        const ringSpeed = maxRadius * 0.72 * tempoRatio;
         const cx = width * 0.5;
         const cy = height * 0.47;
 
-        // Persistent inner & outer bass-breathing resonance rings (always alive during bass/kicks)
-        const pulseDrive = Math.min(1, metrics.kick * 0.85 + metrics.bass * 0.55);
+        // Persistent inner & outer bass-breathing resonance rings (balanced weight, smooth motion)
+        const pulseDrive = Math.min(1, metrics.kick * 0.72 + metrics.bass * 0.34);
         const minDim = Math.min(width, height);
-        const innerR = minDim * (0.14 + pulseDrive * 0.08 * activeIntensity.canvasScale + beatWave * 0.014);
-        const outerR = minDim * (0.34 + pulseDrive * 0.11 * activeIntensity.canvasScale + beatWave * 0.018);
+        const innerR = minDim * (0.14 + pulseDrive * 0.055 * activeIntensity.canvasScale + beatWave * 0.01);
+        const outerR = minDim * (0.34 + pulseDrive * 0.075 * activeIntensity.canvasScale + beatWave * 0.014);
 
         ctx.beginPath();
         ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
         ctx.strokeStyle = withRgbaAlpha(
           currentAura.gridColor,
-          Math.min(0.85, (0.14 + pulseDrive * 0.52) * activeIntensity.canvasScale)
+          Math.min(0.72, (0.12 + pulseDrive * 0.42) * activeIntensity.canvasScale)
         );
-        ctx.lineWidth = 1.6 + pulseDrive * 2.4;
+        ctx.lineWidth = 1.4 + pulseDrive * 1.8;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
         ctx.strokeStyle = withRgbaAlpha(
           currentAura.primary,
-          Math.min(0.7, (0.09 + pulseDrive * 0.38) * activeIntensity.canvasScale)
+          Math.min(0.56, (0.08 + pulseDrive * 0.30) * activeIntensity.canvasScale)
         );
-        ctx.lineWidth = 1.2 + pulseDrive * 1.8;
+        ctx.lineWidth = 1.1 + pulseDrive * 1.4;
         ctx.stroke();
 
         for (let i = shockwaves.length - 1; i >= 0; i--) {
@@ -314,8 +314,8 @@ export const Wallpaper: React.FC = () => {
         const bars = getFrequencyBars(smoothedBars.length, true);
         const pointCount = 72;
         const horizonY = height;
-        const maxWaveHeight = Math.min(220, height * 0.25) * activeIntensity.canvasScale;
-        const kickLift = (metrics.kick * 54 + metrics.bass * 26) * activeIntensity.canvasScale;
+        const maxWaveHeight = Math.min(190, height * 0.22) * activeIntensity.canvasScale;
+        const kickLift = (metrics.kick * 36 + metrics.bass * 18) * activeIntensity.canvasScale;
 
         for (let i = 0; i < smoothedBars.length; i++) {
           const targetVal = bars[i] || 0;

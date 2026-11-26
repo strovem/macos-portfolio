@@ -241,8 +241,8 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     description: 'High-energy Bass House club rework featuring driving slap-bass drops, iconic vocal chops, and rave synths.',
   },
   {
-    id: 'track-bumbum-club-edit',
-    title: 'Bumbum Club Edit',
+    id: 'track-heard',
+    title: 'Heard',
     artist: 'Hüseyin Korumtaş',
     album: 'Club Reworks',
     duration: '2:05',
@@ -251,9 +251,9 @@ export const ORIGINAL_TRACKS: MusicTrack[] = [
     genre: 'Bass House / Brazilian Slap',
     year: '2025',
     coverGradient: 'from-fuchsia-500 via-purple-700 to-slate-950',
-    src: '/music/bumbum club edit.mp3',
+    src: '/music/heard.mp3',
     synthFrequencies: [138.59, 164.81, 207.65, 277.18],
-    description: 'Heavy electro-phonk vocal hooks colliding with distorted Brazilian slap-bass drops and punchy 130 BPM club drums.',
+    description: 'High-energy electro-phonk vocal hooks fused with driving slap-bass drops and 130 BPM club drums.',
   },
   {
     id: 'track-dale-pa-bao',

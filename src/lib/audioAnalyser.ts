@@ -63,7 +63,7 @@ export function getSharedAnalyser(): AnalyserNode | null {
   if (!sharedAnalyser) {
     sharedAnalyser = ctx.createAnalyser();
     sharedAnalyser.fftSize = 2048; // 1024 bins (~21-24Hz resolution) for tight kick & sub-bass isolation
-    sharedAnalyser.smoothingTimeConstant = 0.18; // Ultra-low smoothing preserves 16ms transient attacks for spectral flux
+    sharedAnalyser.smoothingTimeConstant = 0.30; // Balanced smoothing removes jitter while keeping kick snap
     sharedAnalyser.minDecibels = -95;
     sharedAnalyser.maxDecibels = -18; // Balanced headroom for both soft lo-fi and loud club mixes
     freqDataBuffer = new Uint8Array(sharedAnalyser.frequencyBinCount);
@@ -220,7 +220,7 @@ export function getAudioMetrics(isPlaying = false, bpm = 126): AudioMetrics {
 
   const beat = beatDetector.stepSpectrum(freqDataBuffer, sampleRate, nowMs, bpm);
   const bass =
-    energy < 0.0025 ? 0 : Math.min(1, Math.max(rawBass, beat.normalizedBass * 0.92));
+    energy < 0.003 ? 0 : Math.min(1, Math.max(rawBass, beat.normalizedBass * 0.72));
   lastAnalyzedPlaying = true;
   lastAnalyzedMs = nowMs;
   cachedMetrics = {

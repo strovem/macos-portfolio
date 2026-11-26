@@ -237,3 +237,44 @@ test('computeSpectralFlux and stepSpectrum detect kicks masked by continuous hea
   assert.equal(postDrop.isKickHit, true, 'expected fast baseline recovery to catch post-drop verse kick');
   assert.ok(postDrop.normalizedBass > 0.25, `expected auto-gained bass response, got ${postDrop.normalizedBass}`);
 });
+
+test('stepSpectrum ignores minor bass wobble chatter and blocks off-beat half-beat double triggers', () => {
+  const sampleRate = 48000;
+  const detector = createBeatDetector(126);
+
+  // Minor off-beat low-mid chatter (~0.020 spectral flux) must NOT spam kick hits
+  const idle = new Uint8Array(1024);
+  idle[3] = 50;
+  idle[4] = 45;
+  const minorRipple = new Uint8Array(1024);
+  minorRipple[3] = 56;
+  minorRipple[4] = 52;
+  minorRipple[5] = 8;
+
+  let chatterHits = 0;
+  for (let t = 0; t <= 1200; t += 16) {
+    const frame = t % 160 === 0 ? minorRipple : idle;
+    const res = detector.stepSpectrum(frame, sampleRate, t, 126);
+    if (res.isKickHit) chatterHits += 1;
+  }
+  assert.equal(chatterHits, 0, `expected 0 hits on minor ripple chatter, got ${chatterHits}`);
+
+  // Strong beat kick at t = 1500ms, followed by an off-beat clap/bass at 1710ms (+210ms at 126 BPM)
+  const bigKick = new Uint8Array(1024);
+  bigKick[2] = 230;
+  bigKick[3] = 220;
+  bigKick[4] = 190;
+
+  const offBeatStab = new Uint8Array(1024);
+  offBeatStab[4] = 160;
+  offBeatStab[5] = 140;
+
+  const beatHit = detector.stepSpectrum(bigKick, sampleRate, 1500, 126);
+  assert.equal(beatHit.isKickHit, true, 'expected main kick at 1500ms to trigger');
+
+  for (let t = 1516; t <= 1700; t += 16) {
+    detector.stepSpectrum(idle, sampleRate, t, 126);
+  }
+  const halfBeatHit = detector.stepSpectrum(offBeatStab, sampleRate, 1710, 126);
+  assert.equal(halfBeatHit.isKickHit, false, 'expected off-beat stab (+210ms) to be gated by groove cooldown');
+});

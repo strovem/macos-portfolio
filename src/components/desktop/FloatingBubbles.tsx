@@ -260,21 +260,21 @@ export const FloatingBubbles: React.FC = () => {
     if (!isPlaying || !audioReactiveAmbience) return undefined;
     const bounceDir = id % 2 === 0 ? -1 : 1;
     if (size >= 85) {
-      const k = (0.44 * intensityScale).toFixed(3);
-      const b = (0.24 * intensityScale).toFixed(3);
-      const y = (12 * intensityScale * bounceDir).toFixed(1);
-      return `translateZ(0) translateY(calc((var(--audio-kick, 0) * 0.7 + var(--audio-bass, 0) * 0.3) * ${y}px)) scale(calc(1 + var(--audio-kick, 0) * ${k} + var(--audio-bass, 0) * ${b} + var(--audio-beat, 0) * 0.04))`;
+      const k = (0.24 * intensityScale).toFixed(3);
+      const b = (0.14 * intensityScale).toFixed(3);
+      const y = (6 * intensityScale * bounceDir).toFixed(1);
+      return `translateZ(0) translateY(calc((var(--audio-kick, 0) * 0.7 + var(--audio-bass, 0) * 0.3) * ${y}px)) scale(calc(1 + var(--audio-kick, 0) * ${k} + var(--audio-bass, 0) * ${b} + var(--audio-beat, 0) * 0.03))`;
     }
     if (size >= 50) {
-      const k = (0.28 * intensityScale).toFixed(3);
-      const b = (0.2 * intensityScale).toFixed(3);
-      const m = (0.18 * intensityScale).toFixed(3);
-      const y = (8 * intensityScale * bounceDir).toFixed(1);
+      const k = (0.16 * intensityScale).toFixed(3);
+      const b = (0.12 * intensityScale).toFixed(3);
+      const m = (0.1 * intensityScale).toFixed(3);
+      const y = (4 * intensityScale * bounceDir).toFixed(1);
       return `translateZ(0) translateY(calc((var(--audio-kick, 0) * 0.5 + var(--audio-mid, 0) * 0.5) * ${y}px)) scale(calc(1 + var(--audio-kick, 0) * ${k} + var(--audio-bass, 0) * ${b} + var(--audio-mid, 0) * ${m}))`;
     }
-    const t = (0.34 * intensityScale).toFixed(3);
-    const k = (0.18 * intensityScale).toFixed(3);
-    const b = (0.14 * intensityScale).toFixed(3);
+    const t = (0.2 * intensityScale).toFixed(3);
+    const k = (0.1 * intensityScale).toFixed(3);
+    const b = (0.08 * intensityScale).toFixed(3);
     return `translateZ(0) scale(calc(1 + var(--audio-treble, 0) * ${t} + var(--audio-kick, 0) * ${k} + var(--audio-bass, 0) * ${b}))`;
   };
 
@@ -359,9 +359,9 @@ export const FloatingBubbles: React.FC = () => {
                   {/* Kick & bass-reactive luminous glass rim ring */}
                   {isPlaying && audioReactiveAmbience && (
                     <div
-                      className="absolute inset-0 rounded-full pointer-events-none border-2 border-white/85"
+                      className="absolute inset-0 rounded-full pointer-events-none border-2 border-white/80"
                       style={{
-                        opacity: 'min(1, calc(var(--audio-kick, 0) * 0.85 + var(--audio-bass, 0) * 0.5))',
+                        opacity: 'min(0.9, calc(var(--audio-kick, 0) * 0.62 + var(--audio-bass, 0) * 0.30))',
                       }}
                     />
                   )}
