@@ -1,9 +1,11 @@
 'use client';
 
+import { computeBandEnergy, createBeatDetector } from './audioBeatDetector';
+
 /**
  * Singleton Web Audio AnalyserNode FFT Frequency Engine
- * Provides real-time frequency analysis (60 FPS, non-blocking, zero React state re-render)
- * with graceful CORS fallback and safe MediaElementSource guards.
+ * Provides real-time frequency & kick-onset analysis (60 FPS, non-blocking, zero React state re-render)
+ * with graceful CORS fallback, per-frame memoization, and safe MediaElementSource guards.
  */
 
 let sharedAudioCtx: AudioContext | null = null;
@@ -15,8 +17,14 @@ let timeDataBuffer: Uint8Array<ArrayBuffer> | null = null;
 const connectedMediaElements = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
 const connectedNodes = new WeakSet<AudioNode>();
 
+const beatDetector = createBeatDetector();
+let lastAnalyzedMs = -1;
+let lastAnalyzedPlaying = false;
+let observedLiveSignal = false;
+let silentFramesCount = 0;
+
 // Internal timing for graceful CORS/silence fallback simulation
-let fallbackPhase = 0;
+let fallbackStartMs = 0;
 
 export function getSharedAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -54,8 +62,10 @@ export function getSharedAnalyser(): AnalyserNode | null {
 
   if (!sharedAnalyser) {
     sharedAnalyser = ctx.createAnalyser();
-    sharedAnalyser.fftSize = 256; // 128 frequency bins
-    sharedAnalyser.smoothingTimeConstant = 0.8;
+    sharedAnalyser.fftSize = 2048; // 1024 bins (~21-24Hz resolution) for tight 40-130Hz kick isolation
+    sharedAnalyser.smoothingTimeConstant = 0.45;
+    sharedAnalyser.minDecibels = -90;
+    sharedAnalyser.maxDecibels = -12; // Preserve +18dB headroom for loud 0dBFS mastered club tracks
     freqDataBuffer = new Uint8Array(sharedAnalyser.frequencyBinCount);
     timeDataBuffer = new Uint8Array(sharedAnalyser.fftSize);
   }
@@ -115,73 +125,115 @@ export function connectNodeToAnalyser(node: AudioNode) {
 }
 
 export interface AudioMetrics {
-  bass: number; // 0.0 - 1.0 (approx 20Hz - 250Hz, bins 0-8)
-  mid: number; // 0.0 - 1.0 (approx 250Hz - 4kHz, bins 9-45)
-  treble: number; // 0.0 - 1.0 (approx 4kHz - 16kHz, bins 46-127)
-  energy: number; // 0.0 - 1.0 (RMS / overall average)
+  bass: number; // 0.0 - 1.0 (~40Hz - 250Hz)
+  mid: number; // 0.0 - 1.0 (~250Hz - 4kHz)
+  treble: number; // 0.0 - 1.0 (~4kHz - 16kHz)
+  energy: number; // 0.0 - 1.0 (overall audible spectrum energy)
+  kick: number; // 0.0 - 1.0 (fast-attack / exponential-decay kick envelope)
+  isKickHit: boolean; // true on frames where a kick transient crossed adaptive threshold
+  beatPhase: number; // 0.0 - 1.0 tempo cycle phase-locked to kick transients
+  effectiveBpm: number; // dynamic tempo estimate seeded by track BPM
   rawBuffer: Uint8Array | null;
 }
 
-/**
- * Extracts normalized 0-1 metrics from the current FFT frame.
- * If the buffer is completely silent (due to CORS restrictions or track loading),
- * gracefully blends a procedural musical pulse so visualizers never freeze.
- */
-export function getAudioMetrics(isPlaying = false): AudioMetrics {
-  if (!isPlaying && !sharedAnalyser) {
-    return { bass: 0, mid: 0, treble: 0, energy: 0, rawBuffer: null };
-  }
-  const analyser = getSharedAnalyser();
+function createSilentMetrics(bpm = 126): AudioMetrics {
+  const safeBpm = bpm > 30 && bpm < 260 ? bpm : 126;
+  return {
+    bass: 0,
+    mid: 0,
+    treble: 0,
+    energy: 0,
+    kick: 0,
+    isKickHit: false,
+    beatPhase: 0,
+    effectiveBpm: safeBpm,
+    rawBuffer: null,
+  };
+}
 
-  if (!analyser || !freqDataBuffer) {
-    if (isPlaying) {
-      return getProceduralFallbackMetrics();
+let cachedMetrics: AudioMetrics = createSilentMetrics(126);
+
+/**
+ * Reset onset detection & tempo estimation state when switching tracks.
+ */
+export function resetAudioBeatTracker(bpm = 126) {
+  beatDetector.reset(bpm);
+  observedLiveSignal = false;
+  silentFramesCount = 0;
+  lastAnalyzedMs = -1;
+  fallbackStartMs = 0;
+  cachedMetrics = createSilentMetrics(bpm);
+}
+
+/**
+ * Extracts normalized 0-1 metrics + kick onset & tempo phase from the current FFT frame.
+ * Deduplicates calls within the same animation frame (~6ms window) so multiple visualizers
+ * share identical kick envelopes and beat hits without advancing DSP state twice.
+ */
+export function getAudioMetrics(isPlaying = false, bpm = 126): AudioMetrics {
+  const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+  if (!isPlaying) {
+    if (lastAnalyzedPlaying) {
+      beatDetector.reset(bpm);
+      lastAnalyzedPlaying = false;
+      lastAnalyzedMs = -1;
     }
-    return { bass: 0, mid: 0, treble: 0, energy: 0, rawBuffer: null };
+    return createSilentMetrics(bpm);
+  }
+
+  if (lastAnalyzedPlaying && lastAnalyzedMs >= 0 && nowMs - lastAnalyzedMs < 6) {
+    return cachedMetrics;
+  }
+
+  const analyser = getSharedAnalyser();
+  const ctx = getSharedAudioContext();
+
+  if (!analyser || !freqDataBuffer || !ctx) {
+    lastAnalyzedPlaying = true;
+    lastAnalyzedMs = nowMs;
+    cachedMetrics = getProceduralFallbackMetrics(bpm, nowMs);
+    return cachedMetrics;
   }
 
   analyser.getByteFrequencyData(freqDataBuffer);
 
-  // Calculate sum of energies across bands
-  let totalSum = 0;
-  let bassSum = 0;
-  let midSum = 0;
-  let trebleSum = 0;
+  const sampleRate = ctx.sampleRate || 48000;
+  const kickBand = computeBandEnergy(freqDataBuffer, sampleRate, 40, 130);
+  const bass = computeBandEnergy(freqDataBuffer, sampleRate, 40, 250);
+  const mid = computeBandEnergy(freqDataBuffer, sampleRate, 250, 4000);
+  const treble = computeBandEnergy(freqDataBuffer, sampleRate, 4000, 16000);
+  const energy = computeBandEnergy(freqDataBuffer, sampleRate, 40, 16000);
 
-  const binCount = freqDataBuffer.length;
-  const bassEnd = Math.floor(binCount * 0.08); // Bins 0-10 (~0-350Hz)
-  const midEnd = Math.floor(binCount * 0.4); // Bins 11-51 (~350-4000Hz)
-
-  for (let i = 0; i < binCount; i++) {
-    const val = freqDataBuffer[i];
-    totalSum += val;
-    if (i <= bassEnd) {
-      bassSum += val;
-    } else if (i <= midEnd) {
-      midSum += val;
-    } else {
-      trebleSum += val;
+  if (energy >= 0.004) {
+    observedLiveSignal = true;
+    silentFramesCount = 0;
+  } else {
+    silentFramesCount += 1;
+    // Wait briefly during audio startup; if CORS or dead audio blocks FFT permanently, fall back to tempo-locked simulation
+    if (!observedLiveSignal && silentFramesCount > 18) {
+      lastAnalyzedPlaying = true;
+      lastAnalyzedMs = nowMs;
+      cachedMetrics = getProceduralFallbackMetrics(bpm, nowMs);
+      return cachedMetrics;
     }
   }
 
-  const rawEnergy = totalSum / (binCount * 255);
-
-  // If track is playing but CORS zeroed out frequency data, fallback to smooth procedural beat
-  if (isPlaying && rawEnergy < 0.005) {
-    return getProceduralFallbackMetrics();
-  }
-
-  const bassCount = Math.max(1, bassEnd + 1);
-  const midCount = Math.max(1, midEnd - bassEnd);
-  const trebleCount = Math.max(1, binCount - midEnd);
-
-  return {
-    bass: Math.min(1, Math.max(0, bassSum / (bassCount * 255))),
-    mid: Math.min(1, Math.max(0, midSum / (midCount * 255))),
-    treble: Math.min(1, Math.max(0, trebleSum / (trebleCount * 255))),
-    energy: Math.min(1, Math.max(0, rawEnergy)),
+  const beat = beatDetector.step(kickBand, nowMs, bpm);
+  lastAnalyzedPlaying = true;
+  lastAnalyzedMs = nowMs;
+  cachedMetrics = {
+    bass,
+    mid,
+    treble,
+    energy,
+    kick: beat.kick,
+    isKickHit: beat.isKickHit,
+    beatPhase: beat.beatPhase,
+    effectiveBpm: beat.effectiveBpm,
     rawBuffer: freqDataBuffer,
   };
+  return cachedMetrics;
 }
 
 /**
@@ -204,7 +256,8 @@ export function getFrequencyBars(barCount = 32, isPlaying = false): number[] {
   analyser.getByteFrequencyData(freqDataBuffer);
 
   let isSilent = true;
-  const binCount = freqDataBuffer.length;
+  // Cap to lower ~65% of bins (~0-15kHz) so higher spectrum bars stay musically active
+  const binCount = Math.max(barCount, Math.floor(freqDataBuffer.length * 0.65));
   const step = binCount / barCount;
 
   for (let i = 0; i < barCount; i++) {
@@ -241,33 +294,44 @@ export function getTimeDomainData(): Uint8Array<ArrayBuffer> | null {
 }
 
 /**
- * Graceful procedural fallback simulation when audio is playing but CORS blocks FFT read
+ * Graceful tempo-synced procedural fallback simulation when audio plays behind strict CORS
  */
-function getProceduralFallbackMetrics(): AudioMetrics {
-  fallbackPhase += 0.08;
-  const pulse = (Math.sin(fallbackPhase * 4) + 1) * 0.5;
-  const bass = Math.pow(pulse, 3) * 0.75 + Math.random() * 0.12;
-  const mid = (Math.sin(fallbackPhase * 2.5) + 1) * 0.35 + Math.random() * 0.08;
-  const treble = (Math.cos(fallbackPhase * 5) + 1) * 0.25 + Math.random() * 0.05;
-  const energy = bass * 0.5 + mid * 0.3 + treble * 0.2;
+function getProceduralFallbackMetrics(bpm = 126, nowMs = Date.now()): AudioMetrics {
+  const safeBpm = bpm > 30 && bpm < 260 ? bpm : 126;
+  if (fallbackStartMs === 0) {
+    fallbackStartMs = nowMs;
+  }
+  const elapsedSec = Math.max(0, (nowMs - fallbackStartMs) / 1000);
+  const beatPhase = (elapsedSec * (safeBpm / 60)) % 1;
+  // Fast-attack exponential-decay envelope synced to exact track BPM
+  const kick = Math.exp(-beatPhase * 5.2);
+  const isKickHit = beatPhase < 0.05;
+  const bass = Math.min(1, kick * 0.85 + 0.08);
+  const mid = Math.min(1, ((Math.sin(elapsedSec * Math.PI * (safeBpm / 60)) + 1) * 0.25) + 0.15);
+  const treble = Math.min(1, ((Math.cos(elapsedSec * Math.PI * (safeBpm / 30)) + 1) * 0.2) + 0.1);
+  const energy = Math.min(1, bass * 0.5 + mid * 0.3 + treble * 0.2);
 
   return {
-    bass: Math.min(1, bass),
-    mid: Math.min(1, mid),
-    treble: Math.min(1, treble),
-    energy: Math.min(1, energy),
+    bass,
+    mid,
+    treble,
+    energy,
+    kick,
+    isKickHit,
+    beatPhase,
+    effectiveBpm: safeBpm,
     rawBuffer: null,
   };
 }
 
 function getProceduralFallbackBars(barCount: number): number[] {
-  fallbackPhase += 0.06;
+  const nowSec = (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000;
   const bars: number[] = new Array(barCount).fill(0);
-  const pulse = (Math.sin(fallbackPhase * 4) + 1) * 0.5;
+  const pulse = (Math.sin(nowSec * Math.PI * 4) + 1) * 0.5;
 
   for (let i = 0; i < barCount; i++) {
     const curve = Math.sin((i / barCount) * Math.PI);
-    const jitter = Math.sin(fallbackPhase * 2 + i * 0.5) * 0.15;
+    const jitter = Math.sin(nowSec * 6 + i * 0.5) * 0.15;
     const value = Math.max(0.08, (curve * 0.65 + pulse * 0.35 + jitter) * 0.85);
     bars[i] = Math.min(1, value);
   }

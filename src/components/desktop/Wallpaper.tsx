@@ -1,11 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useWeatherStore } from '@/stores/useWeatherStore';
 import { WALLPAPERS, WallpaperOption } from '@/data/wallpapers';
+import { getAudioMetrics, getFrequencyBars } from '@/lib/audioAnalyser';
+
+interface ShockwaveRing {
+  radiusPx: number;
+  alpha: number;
+  lineWidth: number;
+}
+
+function withRgbaAlpha(rgba: string, alpha: number): string {
+  const clamped = Math.max(0, Math.min(1, alpha));
+  const match = rgba.match(/^rgba?\(([^)]+)\)$/);
+  if (!match) return rgba;
+  const parts = match[1].split(',').map((s) => s.trim());
+  if (parts.length < 3) return rgba;
+  return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${clamped.toFixed(3)})`;
+}
 
 interface TrackAuraConfig {
   primary: string;
@@ -117,8 +133,12 @@ const DEFAULT_AURA: TrackAuraConfig = {
 export const Wallpaper: React.FC = () => {
   const activeWallpaperId = useSettingsStore((state) => state.activeWallpaperId);
   const auraIntensity = useSettingsStore((state) => state.auraIntensity);
+  const audioReactiveAmbience = useSettingsStore((state) => state.audioReactiveAmbience);
   const currentTrack = useAudioStore((state) => state.currentTrack);
   const isPlaying = useAudioStore((state) => state.isPlaying);
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  const auraRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const currentWallpaper: WallpaperOption =
     WALLPAPERS.find((w) => w.id === activeWallpaperId) || WALLPAPERS[0];
@@ -128,17 +148,220 @@ export const Wallpaper: React.FC = () => {
     ? TRACK_AURAS[currentTrack.id] || DEFAULT_AURA
     : DEFAULT_AURA;
 
-  // Scale and opacity multiplier based on user settings
+  // Kick-pulse scale & glow boost scaled by user intensity setting
   const intensityMap = {
-    subtle: { scaleMax: 1.02, opacityMin: 0.6, opacityMax: 0.78 },
-    vibrant: { scaleMax: 1.05, opacityMin: 0.82, opacityMax: 1.0 },
-    max: { scaleMax: 1.09, opacityMin: 0.92, opacityMax: 1.15 },
+    subtle: { kickScale: 0.06, kickGlow: 0.55, baseOpacity: 0.62, gridBoost: 0.35, canvasScale: 0.55 },
+    vibrant: { kickScale: 0.13, kickGlow: 0.95, baseOpacity: 0.72, gridBoost: 0.7, canvasScale: 1.0 },
+    max: { kickScale: 0.18, kickGlow: 1.2, baseOpacity: 0.78, gridBoost: 1.0, canvasScale: 1.35 },
   };
   const activeIntensity = intensityMap[auraIntensity] || intensityMap.vibrant;
 
-  // Calculate 2-beat rhythmic pulse period in seconds based on current BPM
   const bpm = currentTrack?.bpm || 126;
-  const pulseDuration = (60 / bpm) * 2;
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      setIsTabVisible(!document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+
+  // Drive live kick transient, shockwave rings & perimeter audio wave at 60 FPS
+  useEffect(() => {
+    const el = auraRef.current;
+    const canvas = canvasRef.current;
+    const resetVars = (target: HTMLDivElement | null) => {
+      if (!target) return;
+      target.style.setProperty('--wp-kick', '0');
+      target.style.setProperty('--wp-beat', '0');
+      target.style.setProperty('--wp-energy', '0');
+      target.style.setProperty('--wp-treble', '0');
+    };
+
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!isReactiveActive || !audioReactiveAmbience || !isTabVisible || reducedMotion) {
+      resetVars(el);
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
+    }
+
+    let animId: number | null = null;
+    let lastTs = performance.now();
+    const shockwaves: ShockwaveRing[] = [];
+    const smoothedBars = new Float32Array(36);
+
+    const update = (nowTs: number) => {
+      if (document.hidden || !auraRef.current) {
+        animId = null;
+        return;
+      }
+
+      const dtSec = Math.max(0.001, Math.min(0.05, (nowTs - lastTs) / 1000));
+      lastTs = nowTs;
+
+      const metrics = getAudioMetrics(true, bpm);
+      const beatWave = (Math.cos(metrics.beatPhase * Math.PI * 2) + 1) * 0.5;
+      auraRef.current.style.setProperty('--wp-kick', metrics.kick.toFixed(3));
+      auraRef.current.style.setProperty('--wp-beat', beatWave.toFixed(3));
+      auraRef.current.style.setProperty('--wp-energy', metrics.energy.toFixed(3));
+      auraRef.current.style.setProperty('--wp-treble', metrics.treble.toFixed(3));
+
+      const targetCanvas = canvasRef.current;
+      const ctx = targetCanvas?.getContext('2d');
+      if (targetCanvas && ctx) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const pixelW = Math.floor(width * dpr);
+        const pixelH = Math.floor(height * dpr);
+        if (targetCanvas.width !== pixelW || targetCanvas.height !== pixelH) {
+          targetCanvas.width = pixelW;
+          targetCanvas.height = pixelH;
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, width, height);
+
+        const maxRadius = Math.hypot(width * 0.5, height * 0.5) * 1.05;
+        if (metrics.isKickHit && shockwaves.length < 6) {
+          shockwaves.push({
+            radiusPx: Math.min(width, height) * 0.1,
+            alpha: Math.min(0.9, (0.42 + metrics.kick * 0.45) * activeIntensity.canvasScale),
+            lineWidth: 1.8 + metrics.kick * 2.8,
+          });
+        }
+
+        // Expanding concentric shockwave rings synchronized to song tempo
+        const tempoRatio = Math.max(0.65, Math.min(1.6, metrics.effectiveBpm / 120));
+        const ringSpeed = maxRadius * 0.78 * tempoRatio;
+        const cx = width * 0.5;
+        const cy = height * 0.47;
+
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const ring = shockwaves[i];
+          ring.radiusPx += ringSpeed * dtSec;
+          const progress = ring.radiusPx / maxRadius;
+          const fade = Math.max(0, 1 - progress);
+          const strokeAlpha = ring.alpha * fade * fade;
+
+          if (progress >= 1 || strokeAlpha < 0.01) {
+            shockwaves.splice(i, 1);
+            continue;
+          }
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, ring.radiusPx, 0, Math.PI * 2);
+          ctx.strokeStyle = withRgbaAlpha(currentAura.gridColor, strokeAlpha);
+          ctx.lineWidth = Math.max(0.8, ring.lineWidth * (0.4 + 0.6 * fade));
+          ctx.stroke();
+
+          // Soft outer harmonic echo ring
+          if (ring.radiusPx > 32) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, ring.radiusPx * 0.88, 0, Math.PI * 2);
+            ctx.strokeStyle = withRgbaAlpha(currentAura.primary, strokeAlpha * 0.42);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+
+        // Edge-visible acoustic horizon wave along bottom & side periphery (around centered windows)
+        const bars = getFrequencyBars(smoothedBars.length, true);
+        const pointCount = 72;
+        const horizonY = height;
+        const maxWaveHeight = Math.min(220, height * 0.25) * activeIntensity.canvasScale;
+        const kickLift = metrics.kick * 46 * activeIntensity.canvasScale;
+
+        for (let i = 0; i < smoothedBars.length; i++) {
+          const targetVal = bars[i] || 0;
+          smoothedBars[i] = smoothedBars[i] * 0.72 + targetVal * 0.28;
+        }
+
+        const waveGrad = ctx.createLinearGradient(0, horizonY - maxWaveHeight - kickLift, 0, horizonY);
+        waveGrad.addColorStop(0, withRgbaAlpha(currentAura.primary, 0.34 * activeIntensity.canvasScale));
+        waveGrad.addColorStop(0.55, withRgbaAlpha(currentAura.secondary, 0.2 * activeIntensity.canvasScale));
+        waveGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        const pts: Array<{ x: number; y: number }> = [];
+        for (let idx = 0; idx <= pointCount; idx++) {
+          const normX = idx / pointCount;
+          const distFromCenter = Math.abs(normX - 0.5) * 2; // 0 at center, 1 at screen edges
+          const barIdx = Math.min(smoothedBars.length - 1, Math.floor(distFromCenter * (smoothedBars.length - 1)));
+          const mag = smoothedBars[barIdx];
+          // Slightly emphasize outer periphery so wave stays clearly visible around open windows
+          const edgeBoost = 0.72 + distFromCenter * 0.48;
+          const elevation =
+            16 +
+            mag * maxWaveHeight * edgeBoost +
+            kickLift * (0.65 + (1 - distFromCenter) * 0.35);
+          pts.push({ x: normX * width, y: horizonY - elevation });
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(0, horizonY);
+        ctx.lineTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          const xc = (pts[i - 1].x + pts[i].x) * 0.5;
+          const yc = (pts[i - 1].y + pts[i].y) * 0.5;
+          ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(width, pts[pts.length - 1].y);
+        ctx.lineTo(width, horizonY);
+        ctx.closePath();
+        ctx.fillStyle = waveGrad;
+        ctx.fill();
+
+        // Luminous horizon crest stroke flaring on kick transients
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          const xc = (pts[i - 1].x + pts[i].x) * 0.5;
+          const yc = (pts[i - 1].y + pts[i].y) * 0.5;
+          ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        ctx.strokeStyle = withRgbaAlpha(
+          currentAura.gridColor,
+          Math.min(0.88, 0.25 + metrics.kick * 0.55 + metrics.treble * 0.2)
+        );
+        ctx.lineWidth = 1.4 + metrics.kick * 1.8;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      animId = requestAnimationFrame(update);
+    };
+
+    animId = requestAnimationFrame(update);
+    return () => {
+      if (animId !== null) cancelAnimationFrame(animId);
+      resetVars(auraRef.current);
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+  }, [
+    isReactiveActive,
+    audioReactiveAmbience,
+    isTabVisible,
+    bpm,
+    currentTrack?.id,
+    currentAura.gridColor,
+    currentAura.primary,
+    currentAura.secondary,
+    activeIntensity.canvasScale,
+  ]);
 
   // Solar lighting calculation
   const dynamicAtmosphereEnabled = useSettingsStore((state) => state.dynamicAtmosphereEnabled);
@@ -212,6 +435,7 @@ export const Wallpaper: React.FC = () => {
       <AnimatePresence>
         {isReactiveActive && (
           <motion.div
+            ref={auraRef}
             key={currentTrack?.id || 'reactive-aura'}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -220,32 +444,43 @@ export const Wallpaper: React.FC = () => {
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{ backgroundColor: currentAura.deep }}
           >
-            {/* Rhythmic Ambient Glow Pulses with Track BPM & User Intensity (GPU accelerated) */}
-            <motion.div
-              animate={{
-                scale: [1, activeIntensity.scaleMax, 1],
-                opacity: [activeIntensity.opacityMin, activeIntensity.opacityMax, activeIntensity.opacityMin],
-              }}
-              transition={{
-                duration: pulseDuration,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              className="absolute inset-0 w-full h-full"
+            {/* Primary Audio-Reactive Ambient Aura (edge-aware lights + tempo breath + kick surge) */}
+            <div
+              className="absolute inset-0 w-full h-full will-change-transform"
               style={{
-                transform: 'translateZ(0)',
+                transform: `translateZ(0) scale(calc(1 + var(--wp-kick, 0) * ${activeIntensity.kickScale} + var(--wp-beat, 0) * 0.024))`,
+                opacity: `calc(${activeIntensity.baseOpacity} + var(--wp-kick, 0) * ${(0.34 * activeIntensity.kickGlow).toFixed(3)} + var(--wp-energy, 0) * 0.16)`,
                 background: `
-                  radial-gradient(circle at 50% 35%, ${currentAura.primary} 0%, transparent 68%),
-                  radial-gradient(circle at 75% 72%, ${currentAura.secondary} 0%, transparent 58%),
-                  radial-gradient(circle at 20% 70%, ${currentAura.primary} 0%, transparent 50%)
+                  radial-gradient(circle at 12% 48%, ${currentAura.primary} 0%, transparent 48%),
+                  radial-gradient(circle at 88% 48%, ${currentAura.secondary} 0%, transparent 48%),
+                  radial-gradient(circle at 50% 85%, ${currentAura.primary} 0%, transparent 55%),
+                  radial-gradient(circle at 50% 18%, ${currentAura.secondary} 0%, transparent 52%)
                 `,
               }}
             />
 
-            {/* Signature Blueprint / Creative Grid over Aura */}
+            {/* Crisp Kick-Hit Radial Bloom Halo (flares on true kick transients, calms on breakdowns) */}
             <div
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-full mix-blend-screen pointer-events-none will-change-transform"
               style={{
+                transform: `translateZ(0) scale(calc(0.86 + var(--wp-kick, 0) * ${(0.42 + activeIntensity.kickScale).toFixed(3)} + var(--wp-beat, 0) * 0.05))`,
+                opacity: `calc(var(--wp-kick, 0) * ${(0.85 * activeIntensity.kickGlow).toFixed(3)})`,
+                background: `radial-gradient(circle at 50% 47%, ${currentAura.primary} 0%, ${currentAura.secondary} 45%, transparent 78%)`,
+              }}
+            />
+
+            {/* Live Expanding Kick Shockwaves + Edge Horizon Acoustic Wave */}
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+            />
+
+            {/* Signature Blueprint / Creative Grid Reactive to Kick & Treble */}
+            <div
+              className="absolute inset-0 w-full h-full will-change-transform"
+              style={{
+                transform: `translateZ(0) scale(calc(1 + var(--wp-kick, 0) * ${(activeIntensity.kickScale * 0.22).toFixed(4)}))`,
+                opacity: `calc(0.55 + var(--wp-kick, 0) * ${activeIntensity.gridBoost} + var(--wp-treble, 0) * 0.22)`,
                 backgroundImage: `
                   linear-gradient(to right, ${currentAura.gridColor} 1px, transparent 1px),
                   linear-gradient(to bottom, ${currentAura.gridColor} 1px, transparent 1px)

@@ -179,11 +179,14 @@ const BUBBLES: BubbleData[] = [
 export const FloatingBubbles: React.FC = () => {
   const bubblesEnabled = useSettingsStore((state) => state.bubblesEnabled);
   const audioReactiveAmbience = useSettingsStore((state) => state.audioReactiveAmbience);
+  const auraIntensity = useSettingsStore((state) => state.auraIntensity);
   const isPlaying = useAudioStore((state) => state.isPlaying);
+  const currentTrack = useAudioStore((state) => state.currentTrack);
   const [mounted, setMounted] = useState(false);
   const [isTabVisible, setIsTabVisible] = useState(true);
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
+  const bpm = currentTrack?.bpm || 126;
 
   useEffect(() => {
     setMounted(true);
@@ -198,31 +201,41 @@ export const FloatingBubbles: React.FC = () => {
     };
   }, []);
 
-  // Real-time Audio-Reactive FFT Bass Modulation (60 FPS CSS custom property, paused when tab hidden)
+  // Real-time Audio-Reactive Kick, Tempo & Spectrum Modulation (60 FPS CSS custom properties)
   useEffect(() => {
+    const resetVars = (target: HTMLDivElement | null) => {
+      if (!target) return;
+      target.style.setProperty('--audio-kick', '0');
+      target.style.setProperty('--audio-bass', '0');
+      target.style.setProperty('--audio-mid', '0');
+      target.style.setProperty('--audio-treble', '0');
+      target.style.setProperty('--audio-beat', '0');
+    };
+
     const reducedMotion =
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (!isPlaying || !audioReactiveAmbience || !isTabVisible || reducedMotion) {
-      if (containerRef.current) {
-        containerRef.current.style.setProperty('--audio-bass', '0');
-      }
+      resetVars(containerRef.current);
       return;
     }
 
     let animId: number | null = null;
 
     const update = () => {
-      if (document.hidden) {
+      if (document.hidden || !containerRef.current) {
         animId = null;
         return;
       }
 
-      const metrics = getAudioMetrics(true);
-      if (containerRef.current) {
-        containerRef.current.style.setProperty('--audio-bass', metrics.bass.toFixed(3));
-      }
+      const metrics = getAudioMetrics(true, bpm);
+      const beatWave = (Math.cos(metrics.beatPhase * Math.PI * 2) + 1) * 0.5;
+      containerRef.current.style.setProperty('--audio-kick', metrics.kick.toFixed(3));
+      containerRef.current.style.setProperty('--audio-bass', metrics.bass.toFixed(3));
+      containerRef.current.style.setProperty('--audio-mid', metrics.mid.toFixed(3));
+      containerRef.current.style.setProperty('--audio-treble', metrics.treble.toFixed(3));
+      containerRef.current.style.setProperty('--audio-beat', beatWave.toFixed(3));
 
       animId = requestAnimationFrame(update);
     };
@@ -230,16 +243,34 @@ export const FloatingBubbles: React.FC = () => {
     animId = requestAnimationFrame(update);
     return () => {
       if (animId !== null) cancelAnimationFrame(animId);
-      if (containerRef.current) {
-        containerRef.current.style.setProperty('--audio-bass', '0');
-      }
+      resetVars(containerRef.current);
     };
-  }, [isPlaying, audioReactiveAmbience, isTabVisible]);
+  }, [isPlaying, audioReactiveAmbience, isTabVisible, bpm]);
 
   if (!mounted || !bubblesEnabled || !isTabVisible) return null;
 
   // On mobile devices, throttle to 3 lightweight ambient bubbles to preserve 60fps and mobile battery
   const activeBubbles = isMobile ? BUBBLES.slice(0, 3) : BUBBLES;
+  const tempoFactor =
+    isPlaying && audioReactiveAmbience ? Math.max(0.58, Math.min(1.35, 126 / bpm)) : 1;
+  const intensityScale =
+    auraIntensity === 'subtle' ? 0.55 : auraIntensity === 'max' ? 1.35 : 1;
+
+  const getReactiveTransform = (size: number) => {
+    if (!isPlaying || !audioReactiveAmbience) return undefined;
+    if (size >= 85) {
+      const k = (0.38 * intensityScale).toFixed(3);
+      return `translateZ(0) scale(calc(1 + var(--audio-kick, 0) * ${k} + var(--audio-beat, 0) * 0.04))`;
+    }
+    if (size >= 50) {
+      const k = (0.22 * intensityScale).toFixed(3);
+      const m = (0.18 * intensityScale).toFixed(3);
+      return `translateZ(0) scale(calc(1 + var(--audio-kick, 0) * ${k} + var(--audio-mid, 0) * ${m}))`;
+    }
+    const t = (0.28 * intensityScale).toFixed(3);
+    const k = (0.12 * intensityScale).toFixed(3);
+    return `translateZ(0) scale(calc(1 + var(--audio-treble, 0) * ${t} + var(--audio-kick, 0) * ${k}))`;
+  };
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-[1] select-none">
@@ -250,13 +281,7 @@ export const FloatingBubbles: React.FC = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
-          className={`relative w-full h-full transition-[filter,transform] duration-150 ${
-            isPlaying ? 'brightness-[1.04]' : 'brightness-100'
-          }`}
-          style={{
-            transform: 'scale(calc(1 + var(--audio-bass, 0) * 0.06))',
-            filter: 'brightness(calc(1 + var(--audio-bass, 0) * 0.15))',
-          }}
+          className="relative w-full h-full"
         >
           {activeBubbles.map((bubble) => (
             <motion.div
@@ -274,59 +299,79 @@ export const FloatingBubbles: React.FC = () => {
                 scale: bubble.scaleKeyframes,
               }}
               transition={{
-                duration: bubble.duration,
+                duration: Number((bubble.duration * tempoFactor).toFixed(2)),
                 repeat: Infinity,
                 ease: 'easeInOut',
                 delay: bubble.delay,
               }}
             >
-              {/* Glassmorphic bubble body (optimized for mobile GPU) */}
+              {/* Instant zero-lag GPU transform driven by live kick, mid & treble bands */}
               <div
-                className={`w-full h-full rounded-full relative overflow-hidden ${
-                  isMobile ? 'backdrop-blur-none border border-white/20' : 'backdrop-blur-[2px] border border-white/40 shadow-inner'
-                }`}
-                style={{
-                  background:
-                    'radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.18) 30%, rgba(255, 255, 255, 0.04) 70%, rgba(255, 255, 255, 0.22) 100%)',
-                  boxShadow:
-                    'inset 0 0 14px rgba(255, 255, 255, 0.6), inset -2px -2px 6px rgba(180, 210, 240, 0.4), 0 8px 24px rgba(0, 0, 0, 0.04)',
-                }}
+                className="w-full h-full will-change-transform"
+                style={{ transform: getReactiveTransform(bubble.size) }}
               >
-                {/* Primary specular highlight arc */}
+                {/* Glassmorphic bubble body (optimized for mobile GPU) */}
                 <div
-                  className="absolute rounded-full bg-gradient-to-br from-white/80 via-white/40 to-transparent blur-[0.5px]"
-                  style={{
-                    top: '12%',
-                    left: '16%',
-                    width: '32%',
-                    height: '18%',
-                    transform: 'rotate(-38deg)',
-                  }}
-                />
-
-                {/* Iridescent soft color sheen with subtle audio breathing */}
-                <div
-                  className={`absolute rounded-full pointer-events-none transition-all duration-700 ${
-                    isPlaying ? 'opacity-80 mix-blend-color-dodge' : 'opacity-60 mix-blend-overlay'
+                  className={`w-full h-full rounded-full relative overflow-hidden ${
+                    isMobile ? 'backdrop-blur-none border border-white/20' : 'backdrop-blur-[2px] border border-white/40 shadow-inner'
                   }`}
                   style={{
-                    inset: '10%',
                     background:
-                      'radial-gradient(circle at 70% 80%, rgba(255, 182, 193, 0.3) 0%, rgba(173, 216, 230, 0.3) 50%, transparent 80%)',
+                      'radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.18) 30%, rgba(255, 255, 255, 0.04) 70%, rgba(255, 255, 255, 0.22) 100%)',
+                    boxShadow:
+                      'inset 0 0 14px rgba(255, 255, 255, 0.6), inset -2px -2px 6px rgba(180, 210, 240, 0.4), 0 8px 24px rgba(0, 0, 0, 0.04)',
                   }}
-                />
+                >
+                  {/* Primary specular highlight arc */}
+                  <div
+                    className="absolute rounded-full bg-gradient-to-br from-white/80 via-white/40 to-transparent blur-[0.5px]"
+                    style={{
+                      top: '12%',
+                      left: '16%',
+                      width: '32%',
+                      height: '18%',
+                      transform: 'rotate(-38deg)',
+                    }}
+                  />
 
-                {/* Secondary rim light */}
-                <div
-                  className="absolute rounded-full bg-white/50 blur-[0.4px]"
-                  style={{
-                    bottom: '16%',
-                    right: '20%',
-                    width: '14%',
-                    height: '8%',
-                    transform: 'rotate(25deg)',
-                  }}
-                />
+                  {/* Iridescent soft color sheen pulsing with kick hits */}
+                  <div
+                    className={`absolute rounded-full pointer-events-none ${
+                      isPlaying ? 'mix-blend-color-dodge' : 'opacity-60 mix-blend-overlay transition-all duration-700'
+                    }`}
+                    style={{
+                      inset: '10%',
+                      opacity:
+                        isPlaying && audioReactiveAmbience
+                          ? 'calc(0.52 + var(--audio-kick, 0) * 0.48)'
+                          : undefined,
+                      background:
+                        'radial-gradient(circle at 70% 80%, rgba(255, 182, 193, 0.35) 0%, rgba(173, 216, 230, 0.35) 50%, transparent 80%)',
+                    }}
+                  />
+
+                  {/* Kick-reactive luminous glass rim ring */}
+                  {isPlaying && audioReactiveAmbience && (
+                    <div
+                      className="absolute inset-0 rounded-full pointer-events-none border-2 border-white/80"
+                      style={{
+                        opacity: 'calc(var(--audio-kick, 0) * 0.85)',
+                      }}
+                    />
+                  )}
+
+                  {/* Secondary rim light */}
+                  <div
+                    className="absolute rounded-full bg-white/50 blur-[0.4px]"
+                    style={{
+                      bottom: '16%',
+                      right: '20%',
+                      width: '14%',
+                      height: '8%',
+                      transform: 'rotate(25deg)',
+                    }}
+                  />
+                </div>
               </div>
             </motion.div>
           ))}

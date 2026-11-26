@@ -5,6 +5,7 @@ import {
   resumeSharedAudioContext,
   connectAudioElementToAnalyser,
   connectNodeToAnalyser,
+  resetAudioBeatTracker,
 } from '@/lib/audioAnalyser';
 
 interface AudioStoreState {
@@ -231,6 +232,7 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
 
   playTrack: (track: MusicTrack) => {
     const { volume } = get();
+    resetAudioBeatTracker(track.bpm);
     set({
       currentTrack: track,
       isPlaying: true,
@@ -284,7 +286,9 @@ export const useAudioStore = create<AudioStoreState>((set, get) => ({
   },
 
   seek: (seconds: number) => {
+    const { currentTrack } = get();
     const targetTime = Math.max(0, seconds);
+    resetAudioBeatTracker(currentTrack?.bpm);
     set({ currentTime: targetTime });
     if (currentHtmlAudio) {
       currentHtmlAudio.currentTime = targetTime;
