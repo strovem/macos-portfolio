@@ -232,11 +232,11 @@ export const Wallpaper: React.FC = () => {
         ctx.clearRect(0, 0, width, height);
 
         const maxRadius = Math.hypot(width * 0.5, height * 0.5) * 1.05;
-        if (metrics.isKickHit && shockwaves.length < 6) {
+        if (metrics.isKickHit && shockwaves.length < 8) {
           shockwaves.push({
-            radiusPx: Math.min(width, height) * 0.1,
-            alpha: Math.min(0.9, (0.42 + metrics.kick * 0.45) * activeIntensity.canvasScale),
-            lineWidth: 1.8 + metrics.kick * 2.8,
+            radiusPx: Math.min(width, height) * 0.12,
+            alpha: Math.min(0.95, (0.55 + metrics.kick * 0.4) * activeIntensity.canvasScale),
+            lineWidth: 2.4 + metrics.kick * 3.4,
           });
         }
 
@@ -245,6 +245,30 @@ export const Wallpaper: React.FC = () => {
         const ringSpeed = maxRadius * 0.78 * tempoRatio;
         const cx = width * 0.5;
         const cy = height * 0.47;
+
+        // Persistent inner & outer bass-breathing resonance rings (always alive during bass/kicks)
+        const pulseDrive = Math.min(1, metrics.kick * 0.85 + metrics.bass * 0.55);
+        const minDim = Math.min(width, height);
+        const innerR = minDim * (0.14 + pulseDrive * 0.08 * activeIntensity.canvasScale + beatWave * 0.014);
+        const outerR = minDim * (0.34 + pulseDrive * 0.11 * activeIntensity.canvasScale + beatWave * 0.018);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+        ctx.strokeStyle = withRgbaAlpha(
+          currentAura.gridColor,
+          Math.min(0.85, (0.14 + pulseDrive * 0.52) * activeIntensity.canvasScale)
+        );
+        ctx.lineWidth = 1.6 + pulseDrive * 2.4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+        ctx.strokeStyle = withRgbaAlpha(
+          currentAura.primary,
+          Math.min(0.7, (0.09 + pulseDrive * 0.38) * activeIntensity.canvasScale)
+        );
+        ctx.lineWidth = 1.2 + pulseDrive * 1.8;
+        ctx.stroke();
 
         for (let i = shockwaves.length - 1; i >= 0; i--) {
           const ring = shockwaves[i];
@@ -279,7 +303,7 @@ export const Wallpaper: React.FC = () => {
         const pointCount = 72;
         const horizonY = height;
         const maxWaveHeight = Math.min(220, height * 0.25) * activeIntensity.canvasScale;
-        const kickLift = metrics.kick * 46 * activeIntensity.canvasScale;
+        const kickLift = (metrics.kick * 54 + metrics.bass * 26) * activeIntensity.canvasScale;
 
         for (let i = 0; i < smoothedBars.length; i++) {
           const targetVal = bars[i] || 0;

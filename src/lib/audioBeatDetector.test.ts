@@ -121,3 +121,59 @@ test('createBeatDetector still detects kicks during loud mastered club sub-bass 
 
   assert.equal(hits, 4, `expected all 4 kicks over heavy sub-bass floor to trigger, got ${hits}`);
 });
+
+test('createBeatDetector triggers on softer tracks and 2-frame ramped kick transients', () => {
+  const detector = createBeatDetector(95);
+
+  // Quiet floor around 0.06 (e.g. lo-fi / low user volume)
+  for (let t = 0; t <= 900; t += 16) {
+    detector.step(0.06, t, 95);
+  }
+
+  // Simulate 4 beats at 95 BPM (~631ms) where kick ramps gradually over 2 frames: 0.06 -> 0.12 -> 0.19
+  let hits = 0;
+  let maxKick = 0;
+  for (let beat = 1; beat <= 4; beat++) {
+    const beatMs = 900 + beat * 632;
+    for (let t = beatMs - 550; t < beatMs - 32; t += 16) {
+      const decay = detector.step(0.06, t, 95);
+      if (decay.isKickHit) hits += 1;
+    }
+    const r1 = detector.step(0.12, beatMs - 16, 95);
+    const r2 = detector.step(0.19, beatMs, 95);
+    if (r1.isKickHit || r2.isKickHit) hits += 1;
+    maxKick = Math.max(maxKick, r1.kick, r2.kick);
+  }
+
+  assert.equal(hits, 4, `expected all 4 softer ramped kicks to trigger, got ${hits}`);
+  assert.ok(maxKick > 0.5, `expected strong normalized kick visual > 0.5 on soft track, got ${maxKick}`);
+});
+
+test('createBeatDetector catches compressed 3-frame kicks (~0.38 -> 0.44) and low-volume kicks (~0.04 -> 0.11)', () => {
+  // Case 1: Low-volume listening (peak ~0.11 over 0.04 floor)
+  const lowVol = createBeatDetector(118);
+  for (let t = 0; t <= 600; t += 16) lowVol.step(0.04, t, 118);
+  let lowHits = 0;
+  for (let beat = 1; beat <= 4; beat++) {
+    const beatMs = 600 + beat * 508;
+    for (let t = beatMs - 440; t < beatMs - 32; t += 16) lowVol.step(0.04, t, 118);
+    const s1 = lowVol.step(0.08, beatMs - 16, 118);
+    const s2 = lowVol.step(0.11, beatMs, 118);
+    if (s1.isKickHit || s2.isKickHit) lowHits += 1;
+  }
+  assert.equal(lowHits, 4, `expected 4 low-volume kicks to trigger, got ${lowHits}`);
+
+  // Case 2: Compressed house groove where kick ramps over 3 FFT frames (+0.02/frame above 0.38 floor)
+  const comp = createBeatDetector(125);
+  for (let t = 0; t <= 800; t += 16) comp.step(0.38, t, 125);
+  let compHits = 0;
+  for (let beat = 1; beat <= 4; beat++) {
+    const beatMs = 800 + beat * 480;
+    for (let t = beatMs - 420; t < beatMs - 48; t += 16) comp.step(0.38, t, 125);
+    const s1 = comp.step(0.40, beatMs - 32, 125);
+    const s2 = comp.step(0.42, beatMs - 16, 125);
+    const s3 = comp.step(0.44, beatMs, 125);
+    if (s1.isKickHit || s2.isKickHit || s3.isKickHit) compHits += 1;
+  }
+  assert.equal(compHits, 4, `expected 4 compressed groove kicks to trigger, got ${compHits}`);
+});

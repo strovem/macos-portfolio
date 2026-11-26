@@ -62,10 +62,10 @@ export function getSharedAnalyser(): AnalyserNode | null {
 
   if (!sharedAnalyser) {
     sharedAnalyser = ctx.createAnalyser();
-    sharedAnalyser.fftSize = 2048; // 1024 bins (~21-24Hz resolution) for tight 40-130Hz kick isolation
-    sharedAnalyser.smoothingTimeConstant = 0.45;
-    sharedAnalyser.minDecibels = -90;
-    sharedAnalyser.maxDecibels = -12; // Preserve +18dB headroom for loud 0dBFS mastered club tracks
+    sharedAnalyser.fftSize = 2048; // 1024 bins (~21-24Hz resolution) for tight kick & sub-bass isolation
+    sharedAnalyser.smoothingTimeConstant = 0.25; // Low smoothing keeps 16ms kick transients crisp
+    sharedAnalyser.minDecibels = -95;
+    sharedAnalyser.maxDecibels = -18; // Balanced headroom for both soft lo-fi and loud club mixes
     freqDataBuffer = new Uint8Array(sharedAnalyser.frequencyBinCount);
     timeDataBuffer = new Uint8Array(sharedAnalyser.fftSize);
   }
@@ -199,11 +199,11 @@ export function getAudioMetrics(isPlaying = false, bpm = 126): AudioMetrics {
   analyser.getByteFrequencyData(freqDataBuffer);
 
   const sampleRate = ctx.sampleRate || 48000;
-  const kickBand = computeBandEnergy(freqDataBuffer, sampleRate, 40, 130);
-  const bass = computeBandEnergy(freqDataBuffer, sampleRate, 40, 250);
+  const kickBand = computeBandEnergy(freqDataBuffer, sampleRate, 35, 165);
+  const bass = computeBandEnergy(freqDataBuffer, sampleRate, 35, 250);
   const mid = computeBandEnergy(freqDataBuffer, sampleRate, 250, 4000);
   const treble = computeBandEnergy(freqDataBuffer, sampleRate, 4000, 16000);
-  const energy = computeBandEnergy(freqDataBuffer, sampleRate, 40, 16000);
+  const energy = computeBandEnergy(freqDataBuffer, sampleRate, 35, 16000);
 
   if (energy >= 0.004) {
     observedLiveSignal = true;

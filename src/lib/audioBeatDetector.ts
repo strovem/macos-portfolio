@@ -55,6 +55,7 @@ export interface BeatDetector {
 export function createBeatDetector(initialBpm = 126): BeatDetector {
   let prevEnergy = 0;
   let avgEnergy = 0;
+  let rollingPeak = 0.12;
   let kickEnvelope = 0;
   let lastFrameMs: number | null = null;
   let lastKickMs: number | null = null;
@@ -65,6 +66,7 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
   const reset = (fallbackBpm = initialBpm) => {
     prevEnergy = 0;
     avgEnergy = 0;
+    rollingPeak = 0.12;
     kickEnvelope = 0;
     lastFrameMs = null;
     lastKickMs = null;
@@ -88,9 +90,13 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
       lastFrameMs === null ? 16.67 : Math.max(0, Math.min(100, nowMs - lastFrameMs));
     lastFrameMs = nowMs;
 
-    // Frame-rate independent decay (~125ms time constant for crisp punchy decay)
+    // Auto-gain peak tracker (~3.5s decay) keeps soft tracks & lower volumes expressive
+    const peakDecay = Math.exp(-dtMs / 3500);
+    rollingPeak = Math.max(0.1, rollingPeak * peakDecay, clampedEnergy);
+
+    // Frame-rate independent decay (~150ms time constant for visible punch without blur)
     if (kickEnvelope > 0) {
-      kickEnvelope *= Math.exp(-dtMs / 125);
+      kickEnvelope *= Math.exp(-dtMs / 150);
       if (kickEnvelope < 0.004) kickEnvelope = 0;
     }
 
@@ -103,25 +109,25 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
     const flux = clampedEnergy - prevEnergy;
     prevEnergy = clampedEnergy;
 
-    // Cooldown scaled by tempo so up to fast 1/8th double kicks or 4-on-the-floor don't double-trigger
-    const minCooldownMs = Math.max(170, Math.min(320, (60000 / effectiveBpm) * 0.48));
-    // Adaptive margin preserves headroom near 1.0 so loud mastered sub-bass doesn't starve kick detection
-    const margin = Math.min(0.14, Math.max(0.05, avgEnergy * 0.13 + 0.04));
-    const threshold = Math.max(0.14, Math.min(0.92, avgEnergy + margin));
+    // Tempo-scaled cooldown (150-280ms) catches fast club double-kicks without double-firing on a single hit
+    const minCooldownMs = Math.max(150, Math.min(280, (60000 / effectiveBpm) * 0.45));
+    // Sensitive adaptive margin handles quiet listening, compressed grooves, and loud club mixes alike
+    const margin = Math.min(0.085, Math.max(0.022, avgEnergy * 0.08 + 0.018));
+    const threshold = Math.max(0.085, Math.min(0.92, avgEnergy + margin));
     const cooldownElapsed = lastKickMs === null || nowMs - lastKickMs >= minCooldownMs;
 
     let isKickHit = false;
     if (
-      clampedEnergy >= 0.05 &&
+      clampedEnergy >= 0.085 &&
       clampedEnergy > threshold &&
-      flux > 0.025 &&
+      flux > 0.005 &&
       cooldownElapsed
     ) {
       isKickHit = true;
 
       if (lastKickMs !== null) {
         const ioi = nowMs - lastKickMs;
-        if (ioi >= 280 && ioi <= 1500) {
+        if (ioi >= 260 && ioi <= 1500) {
           let candidateBpm = 60000 / ioi;
           while (candidateBpm < safeBpm * 0.65) candidateBpm *= 2;
           while (candidateBpm > safeBpm * 1.45) candidateBpm /= 2;
@@ -135,9 +141,9 @@ export function createBeatDetector(initialBpm = 126): BeatDetector {
       lastKickMs = nowMs;
       beatPhase = 0; // Phase-lock beat cycle to the real kick hit
 
-      const headroom = Math.max(0.18, 1 - avgEnergy);
-      const normalizedOvershoot = Math.min(1, Math.max(0, clampedEnergy - avgEnergy) / headroom);
-      const hitLevel = Math.min(1, 0.56 + normalizedOvershoot * 0.44);
+      const dynamicSpan = Math.max(0.06, rollingPeak - avgEnergy);
+      const normalizedOvershoot = Math.min(1, Math.max(0, clampedEnergy - avgEnergy) / dynamicSpan);
+      const hitLevel = Math.min(1, 0.58 + normalizedOvershoot * 0.42);
       kickEnvelope = Math.max(kickEnvelope, hitLevel);
     }
 
